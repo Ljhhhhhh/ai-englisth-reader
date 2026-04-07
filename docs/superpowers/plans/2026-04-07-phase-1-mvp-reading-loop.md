@@ -111,6 +111,14 @@ PRD 涵盖四个交付阶段和几个松耦合子系统。此实施计划仅针�
 7. 事件跟踪和状态强化
 8. 响应式 QA 和发布检查清单
 
+## 当前进度（2026-04-07）
+
+- 状态：Phase 1 MVP 的代码范围已完成，任务 1-8 已落地，任务 9 的文档产物也已补齐。
+- 当前实现：首页、四阶段阅读器、同设备 localStorage 进度恢复、单词查询与保存、生词页、测验与回顾解锁、学习事件、空/错状态、桌面/移动端适配均已可用。
+- 数据层：Prisma 已切换为 SQLite，默认 `DATABASE_URL` 为 `file:./dev.db`，当前仓库不再保留 PostgreSQL 兼容要求。
+- 当前验证：`pnpm lint`、`pnpm test`、`pnpm build`、`pnpm test:e2e`、`pnpm prisma validate`、`pnpm db:push` 已于 2026-04-07 通过；其中 E2E 结果为 28 passed、2 skipped（按项目条件跳过）。
+- 尚未关闭：`docs/testing/mvp-smoke-checklist.md` 的人工 smoke 流程仍建议按桌面和移动视口再执行一轮后，再正式宣布 MVP 试用就绪。
+
 ## 任务 1：引导应用并设置质量关卡
 
 **文件：**
@@ -128,20 +136,20 @@ PRD 涵盖四个交付阶段和几个松耦合子系统。此实施计划仅针�
 - 创建：`src/app/page.test.tsx`
 - 创建：`src/app/globals.css`
 
-- [ ] **步骤 1：初始化应用清单和核心依赖**
+- [x] **步骤 1：初始化应用清单和核心依赖**
 
 运行：`pnpm init`
 运行：`pnpm add next@latest react@latest react-dom@latest`
 运行：`pnpm add -D typescript @types/node @types/react @types/react-dom eslint eslint-config-next`
 预期：仓库具有干净的 Next.js 就绪清单，而不覆盖现有的 PRD 文件
 
-- [ ] **步骤 2：添加运行时和测试依赖**
+- [x] **步骤 2：添加运行时和测试依赖**
 
 运行：`pnpm add @prisma/client @radix-ui/react-dialog vaul zod clsx tailwind-merge`
 运行：`pnpm add -D prisma tsx vitest @vitest/coverage-v8 @testing-library/react @testing-library/jest-dom jsdom playwright tailwindcss postcss autoprefixer`
 预期：依赖安装完成，且 `package.json` 包含应用 + 测试工具链
 
-- [ ] **步骤 3：为首页路由编写第一个失败的烟雾测试**
+- [x] **步骤 3：为首页路由编写第一个失败的烟雾测试**
 
 ```tsx
 import { render, screen } from '@testing-library/react';
@@ -153,12 +161,12 @@ it('shows the product promise on the homepage', () => {
 });
 ```
 
-- [ ] **步骤 4：运行烟雾测试并验证其失败**
+- [x] **步骤 4：运行烟雾测试并验证其失败**
 
 运行：`pnpm vitest run src/app/page.test.tsx`
 预期：失败，因为页面组件或副本尚未存在
 
-- [ ] **步骤 5：实现最小应用壳**
+- [x] **步骤 5：实现最小应用壳**
 
 ```tsx
 export default function HomePage() {
@@ -166,17 +174,17 @@ export default function HomePage() {
 }
 ```
 
-- [ ] **步骤 6：运行单元测试并验证烟雾测试通过**
+- [x] **步骤 6：运行单元测试并验证烟雾测试通过**
 
 运行：`pnpm vitest run src/app/page.test.tsx`
 预期：通过
 
-- [ ] **步骤 7：配置可重用脚本**
+- [x] **步骤 7：配置可重用脚本**
 
 运行：`pnpm pkg set scripts.dev="next dev" scripts.build="next build" scripts.lint="eslint ." scripts.test="vitest run" scripts.test:watch="vitest" scripts.test:e2e="playwright test" scripts.db:push="prisma db push" scripts.db:seed="tsx prisma/seed.ts"`
 预期：包脚本支持可重复的本地验证
 
-- [ ] **步骤 8：提交引导基线**
+- [x] **步骤 8：提交引导基线**
 
 ```bash
 git init
@@ -199,7 +207,7 @@ git commit -m "chore: bootstrap interactive reading app"
 - 创建：`content/articles/second-sample-article.json`
 - 测试：`src/features/articles/article-service.test.ts`
 
-- [ ] **步骤 1：为加载有效文章编写失败测试**
+- [x] **步骤 1：为加载有效文章编写失败测试**
 
 ```ts
 import { loadArticle } from '@/lib/content/load-article';
@@ -212,12 +220,12 @@ it('loads article content with intro, body, quiz, and review data', async () => 
 });
 ```
 
-- [ ] **步骤 2：运行内容测试并验证其失败**
+- [x] **步骤 2：运行内容测试并验证其失败**
 
 运行：`pnpm vitest run src/features/articles/article-service.test.ts`
 预期：失败，因为加载器和内容模式尚未存在
 
-- [ ] **步骤 3：定义文章 JSON 模式**
+- [x] **步骤 3：定义文章 JSON 模式**
 
 ```ts
 export const articleSchema = z.object({
@@ -285,7 +293,7 @@ export const articleSchema = z.object({
 });
 ```
 
-- [ ] **步骤 4：定义数据库表**
+- [x] **步骤 4：定义数据库表**
 
 表：
 
@@ -297,19 +305,19 @@ export const articleSchema = z.object({
 
 关键规则：所有学习者状态行必须包含 `deviceId`
 
-- [ ] **步骤 5：实现加载器和种子脚本**
+- [x] **步骤 5：实现加载器和种子脚本**
 
 运行：`pnpm prisma init --datasource-provider sqlite`
 运行：`pnpm db:push`
 运行：`pnpm db:seed`
 预期：模式应用成功且样本文章数据种子化成功
 
-- [ ] **步骤 6：重新运行内容测试**
+- [x] **步骤 6：重新运行内容测试**
 
 运行：`pnpm vitest run src/features/articles/article-service.test.ts`
 预期：通过
 
-- [ ] **步骤 7：提交内容基础**
+- [x] **步骤 7：提交内容基础**
 
 ```bash
 git add prisma src/lib content
@@ -326,7 +334,7 @@ git commit -m "feat: add article schema and persistence model"
 - 创建：`src/features/articles/article-service.ts`
 - 测试：`tests/e2e/home.spec.ts`
 
-- [ ] **步骤 1：为文章发现编写失败的端到端测试**
+- [x] **步骤 1：为文章发现编写失败的端到端测试**
 
 ```ts
 import { test, expect } from '@playwright/test';
@@ -344,12 +352,12 @@ test('user can open an article from the homepage', async ({ page }) => {
 });
 ```
 
-- [ ] **步骤 2：运行首页端到端测试并验证其失败**
+- [x] **步骤 2：运行首页端到端测试并验证其失败**
 
 运行：`pnpm playwright test tests/e2e/home.spec.ts`
 预期：失败，因为缺少文章卡片和路由
 
-- [ ] **步骤 3：实现文章列表和继续阅读块**
+- [x] **步骤 3：实现文章列表和继续阅读块**
 
 首页要求：
 
@@ -358,7 +366,7 @@ test('user can open an article from the homepage', async ({ page }) => {
 - 当当前设备存在进度记录时显示“继续阅读”
 - 保持桌面和移动端首屏有用
 
-- [ ] **步骤 4：添加文章服务查询**
+- [x] **步骤 4：添加文章服务查询**
 
 服务职责：
 
@@ -366,13 +374,13 @@ test('user can open an article from the homepage', async ({ page }) => {
 - 获取当前设备进行中的文章
 - 仅在继续阅读块内将未完成文章排序到已完成文章之上
 
-- [ ] **步骤 5：重新运行端到端和单元覆盖**
+- [x] **步骤 5：重新运行端到端和单元覆盖**
 
 运行：`pnpm playwright test tests/e2e/home.spec.ts`
 运行：`pnpm vitest run src/features/articles/article-service.test.ts`
 预期：通过
 
-- [ ] **步骤 6：提交首页入口流程**
+- [x] **步骤 6：提交首页入口流程**
 
 ```bash
 git add src/app/page.tsx src/components/home src/features/articles tests/e2e/home.spec.ts
@@ -395,7 +403,7 @@ git commit -m "feat: add homepage article discovery"
 - 测试：`src/features/reader/progress-service.test.ts`
 - 测试：`tests/e2e/reader-flow.spec.ts`
 
-- [ ] **步骤 1：为阶段规则和恢复行为编写失败测试**
+- [x] **步骤 1：为阶段规则和恢复行为编写失败测试**
 
 ```ts
 it('marks an article complete only after quiz submission and review access', () => {
@@ -418,12 +426,12 @@ it('restores last visited stage and paragraph for the same device', async () => 
 });
 ```
 
-- [ ] **步骤 2：运行失败测试**
+- [x] **步骤 2：运行失败测试**
 
 运行：`pnpm vitest run src/features/reader/stage-machine.test.ts src/features/reader/progress-service.test.ts`
 预期：失败，因为阅读器状态逻辑不存在
 
-- [ ] **步骤 3：实现阶段机**
+- [x] **步骤 3：实现阶段机**
 
 阶段：
 
@@ -438,7 +446,7 @@ it('restores last visited stage and paragraph for the same device', async () => 
 - 审查翻译在测验提交前保持折叠
 - 完成事件每个文章/设备仅触发一次
 
-- [ ] **步骤 4：实现同设备本地进度持久化（localStorage）**
+- [x] **步骤 4：实现同设备本地进度持久化（localStorage）**
 
 持久化：
 
@@ -450,7 +458,7 @@ it('restores last visited stage and paragraph for the same device', async () => 
 
 说明：MVP 阶段使用同设备 localStorage（基于 `deviceId`）保存与恢复进度，不新增 `src/app/api/progress/route.ts`。
 
-- [ ] **步骤 5：构建响应式阅读器壳**
+- [x] **步骤 5：构建响应式阅读器壳**
 
 桌面：
 
@@ -464,7 +472,7 @@ it('restores last visited stage and paragraph for the same device', async () => 
 - 粘性紧凑进度条
 - 大型下一步 CTA
 
-- [ ] **步骤 6：添加恢复的全流程端到端测试**
+- [x] **步骤 6：添加恢复的全流程端到端测试**
 
 场景：
 
@@ -474,13 +482,13 @@ it('restores last visited stage and paragraph for the same device', async () => 
 - 重新加载页面
 - 验证阶段和近似阅读位置被恢复
 
-- [ ] **步骤 7：运行测试**
+- [x] **步骤 7：运行测试**
 
 运行：`pnpm vitest run src/features/reader/stage-machine.test.ts src/features/reader/progress-service.test.ts`
 运行：`pnpm playwright test tests/e2e/reader-flow.spec.ts --grep "resume"`
 预期：通过
 
-- [ ] **步骤 8：提交阅读器壳和持久化**
+- [x] **步骤 8：提交阅读器壳和持久化**
 
 ```bash
 git add src/app/reader src/components/reader src/features/reader tests/e2e/reader-flow.spec.ts
@@ -502,7 +510,7 @@ git commit -m "feat: add reader shell and progress persistence"
 - 测试：`tests/e2e/reader-flow.spec.ts`
 - 测试：`tests/e2e/mobile-reader.spec.ts`
 
-- [ ] **步骤 1：为查询稳定性和重复保存规则编写失败测试**
+- [x] **步骤 1：为查询稳定性和重复保存规则编写失败测试**
 
 ```ts
 it('returns lemma, meaning, phonetic, and source sentence in one lookup', async () => {
@@ -534,12 +542,12 @@ it('does not create dirty duplicates when saving the same word twice in one arti
 });
 ```
 
-- [ ] **步骤 2：运行服务测试并验证其失败**
+- [x] **步骤 2：运行服务测试并验证其失败**
 
 运行：`pnpm vitest run src/features/reader/word-lookup-service.test.ts src/features/words/saved-word-service.test.ts`
 预期：失败
 
-- [ ] **步骤 3：针对文章内容实现查询服务**
+- [x] **步骤 3：针对文章内容实现查询服务**
 
 查询响应必须包含：
 
@@ -551,7 +559,7 @@ it('does not create dirty duplicates when saving the same word twice in one arti
 - 源句子
 - 当前保存状态
 
-- [ ] **步骤 4：实现设备范围的保存/取消保存行为**
+- [x] **步骤 4：实现设备范围的保存/取消保存行为**
 
 规则：
 
@@ -559,7 +567,7 @@ it('does not create dirty duplicates when saving the same word twice in one arti
 - 保留源句子和文章标题
 - 返回明确的成功反馈到 UI
 
-- [ ] **步骤 5：渲染桌面和移动查询界面**
+- [x] **步骤 5：渲染桌面和移动查询界面**
 
 桌面：
 
@@ -572,7 +580,7 @@ it('does not create dirty duplicates when saving the same word twice in one arti
 - 保存按钮的大型点击目标
 - 关闭操作将用户返回相同阅读位置
 
-- [ ] **步骤 6：为桌面和移动保存流程添加浏览器测试**
+- [x] **步骤 6：为桌面和移动保存流程添加浏览器测试**
 
 场景：
 
@@ -582,14 +590,14 @@ it('does not create dirty duplicates when saving the same word twice in one arti
 - 关闭面板
 - 确认阅读位置稳定
 
-- [ ] **步骤 7：运行所有相关测试**
+- [x] **步骤 7：运行所有相关测试**
 
 运行：`pnpm vitest run src/features/reader/word-lookup-service.test.ts src/features/words/saved-word-service.test.ts`
 运行：`pnpm playwright test tests/e2e/reader-flow.spec.ts --grep "save word"`
 运行：`pnpm playwright test tests/e2e/mobile-reader.spec.ts`
 预期：通过
 
-- [ ] **步骤 8：提交单词查询和保存流程**
+- [x] **步骤 8：提交单词查询和保存流程**
 
 ```bash
 git add src/features/reader/word-lookup-service.ts src/features/words src/app/api/lookup src/app/api/words src/components/reader tests/e2e
@@ -608,7 +616,7 @@ git commit -m "feat: add word lookup and save flow"
 - 测试：`src/features/quiz/quiz-service.test.ts`
 - 测试：`tests/e2e/reader-flow.spec.ts`
 
-- [ ] **步骤 1：为测验提交和审查解锁编写失败测试**
+- [x] **步骤 1：为测验提交和审查解锁编写失败测试**
 
 ```ts
 it('returns explanations and unlocks translation after submission', async () => {
@@ -623,12 +631,12 @@ it('returns explanations and unlocks translation after submission', async () => 
 });
 ```
 
-- [ ] **步骤 2：运行测验测试并验证其失败**
+- [x] **步骤 2：运行测验测试并验证其失败**
 
 运行：`pnpm vitest run src/features/quiz/quiz-service.test.ts`
 预期：失败
 
-- [ ] **步骤 3：构建 intro 支持面板**
+- [x] **步骤 3：构建 intro 支持面板**
 
 Intro 阶段必须显示：
 
@@ -639,7 +647,7 @@ Intro 阶段必须显示：
 - 1-3 个语法点
 - 1-3 个难点句子预览
 
-- [ ] **步骤 4：实现测验评估和解释返回**
+- [x] **步骤 4：实现测验评估和解释返回**
 
 规则：
 
@@ -648,7 +656,7 @@ Intro 阶段必须显示：
 - 存储分数、提交答案和提交时间
 - 仅当审查可访问时发出完成事件
 
-- [ ] **步骤 5：实现审查阶段**
+- [x] **步骤 5：实现审查阶段**
 
 审查阶段必须显示：
 
@@ -660,7 +668,7 @@ Intro 阶段必须显示：
 
 - 翻译在测验提交成功完成前保持隐藏
 
-- [ ] **步骤 6：添加完整阅读循环的端到端测试**
+- [x] **步骤 6：添加完整阅读循环的端到端测试**
 
 场景：
 
@@ -670,13 +678,13 @@ Intro 阶段必须显示：
 - 验证审查翻译出现
 - 验证文章标记为完成
 
-- [ ] **步骤 7：运行测试**
+- [x] **步骤 7：运行测试**
 
 运行：`pnpm vitest run src/features/quiz/quiz-service.test.ts`
 运行：`pnpm playwright test tests/e2e/reader-flow.spec.ts --grep "full loop"`
 预期：通过
 
-- [ ] **步骤 8：提交学习循环完成流程**
+- [x] **步骤 8：提交学习循环完成流程**
 
 ```bash
 git add src/components/reader src/features/quiz src/app/api/quiz tests/e2e/reader-flow.spec.ts
@@ -694,7 +702,7 @@ git commit -m "feat: add quiz and review completion flow"
 - 测试：`src/features/analytics/event-service.test.ts`
 - 测试：`tests/e2e/reader-flow.spec.ts`
 
-- [ ] **步骤 1：为事件记录和单词列表过滤编写失败测试**
+- [x] **步骤 1：为事件记录和单词列表过滤编写失败测试**
 
 ```ts
 it('records start, lookup, save, quiz-submit, and complete events', async () => {
@@ -715,12 +723,12 @@ it('shows saved words grouped by source article', async () => {
 });
 ```
 
-- [ ] **步骤 2：运行测试并验证其失败**
+- [x] **步骤 2：运行测试并验证其失败**
 
 运行：`pnpm vitest run src/features/analytics/event-service.test.ts src/features/words/saved-word-service.test.ts`
 预期：失败
 
-- [ ] **步骤 3：实现事件记录 API**
+- [x] **步骤 3：实现事件记录 API**
 
 必需事件类型：
 
@@ -732,7 +740,7 @@ it('shows saved words grouped by source article', async () => {
 - `quiz_submitted`
 - `article_completed`
 
-- [ ] **步骤 4：构建保存单词页面**
+- [x] **步骤 4：构建保存单词页面**
 
 MVP 页面必须支持：
 
@@ -741,17 +749,17 @@ MVP 页面必须支持：
 - 按词干或含义搜索
 - 按文章过滤
 
-- [ ] **步骤 5：将阅读器操作连接到事件**
+- [x] **步骤 5：将阅读器操作连接到事件**
 
 每个关键用户操作应记录一次，使用稳定负载，以便后续计算 PRD 中的 MVP 指标。
 
-- [ ] **步骤 6：运行测试**
+- [x] **步骤 6：运行测试**
 
 运行：`pnpm vitest run src/features/analytics/event-service.test.ts src/features/words/saved-word-service.test.ts`
 运行：`pnpm playwright test tests/e2e/reader-flow.spec.ts --grep "saved words"`
 预期：通过
 
-- [ ] **步骤 7：提交保存单词和分析**
+- [x] **步骤 7：提交保存单词和分析**
 
 ```bash
 git add src/app/words src/components/words src/features/analytics src/app/api/events src/features/words
@@ -771,7 +779,7 @@ git commit -m "feat: add saved words page and learning events"
 - 测试：`tests/e2e/reader-flow.spec.ts`
 - 测试：`tests/e2e/mobile-reader.spec.ts`
 
-- [ ] **步骤 1：为空/错误状态编写失败浏览器测试**
+- [x] **步骤 1：为空/错误状态编写失败浏览器测试**
 
 场景：
 
@@ -783,12 +791,12 @@ git commit -m "feat: add saved words page and learning events"
 - 进度保存时的临时网络失败
 - 空保存单词页面
 
-- [ ] **步骤 2：运行端到端覆盖并验证新案例失败**
+- [x] **步骤 2：运行端到端覆盖并验证新案例失败**
 
 运行：`pnpm playwright test tests/e2e/home.spec.ts tests/e2e/reader-flow.spec.ts tests/e2e/mobile-reader.spec.ts`
 预期：新边缘案例断言失败
 
-- [ ] **步骤 3：实现用户面向的回退状态**
+- [x] **步骤 3：实现用户面向的回退状态**
 
 要求：
 
@@ -799,7 +807,7 @@ git commit -m "feat: add saved words page and learning events"
 - 临时进度保存失败保持本地状态，并在下次交互时静默重试
 - 空保存单词页面鼓励首先阅读文章
 
-- [ ] **步骤 4：验证 PRD 中的响应式约束**
+- [x] **步骤 4：验证 PRD 中的响应式约束**
 
 检查清单：
 
@@ -808,14 +816,14 @@ git commit -m "feat: add saved words page and learning events"
 - 旋转或调整大小不重置阶段状态
 - 桌面阅读宽度在长时间阅读会话中保持舒适
 
-- [ ] **步骤 5：运行完整验证**
+- [x] **步骤 5：运行完整验证**
 
 运行：`pnpm lint`
 运行：`pnpm test`
 运行：`pnpm test:e2e`
 预期：通过
 
-- [ ] **步骤 6：提交 MVP 强化**
+- [x] **步骤 6：提交 MVP 强化**
 
 ```bash
 git add src/components/system src/app tests/e2e
@@ -830,7 +838,7 @@ git commit -m "fix: harden responsive states and edge cases"
 - 创建：`.env.example`
 - 创建：`docs/testing/mvp-smoke-checklist.md`
 
-- [ ] **步骤 1：记录本地设置和必需环境变量**
+- [x] **步骤 1：记录本地设置和必需环境变量**
 
 记录：
 
@@ -839,7 +847,7 @@ git commit -m "fix: harden responsive states and edge cases"
 - 测试命令
 - 浏览器测试命令
 
-- [ ] **步骤 2：编写手动烟雾检查清单**
+- [x] **步骤 2：编写手动烟雾检查清单**
 
 检查清单项目：
 
@@ -857,7 +865,7 @@ git commit -m "fix: harden responsive states and edge cases"
 然后在桌面和移动视口浏览器中验证检查清单
 预期：在调用 MVP 完成前，每项均通过
 
-- [ ] **步骤 4：提交发布准备文档**
+- [x] **步骤 4：提交发布准备文档**
 
 ```bash
 git add README.md .env.example docs/testing/mvp-smoke-checklist.md

@@ -2,7 +2,10 @@ import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
 import { notFound } from 'next/navigation';
 import { ReaderShell } from '@/components/reader/reader-shell';
-import { loadArticle } from '@/features/articles/article-service';
+import {
+  listArticles,
+  loadArticle,
+} from '@/features/articles/article-service';
 import type { Article } from '@/lib/content/article-schema';
 
 type ReaderPageProps = {
@@ -74,8 +77,27 @@ async function getReaderArticle(
   searchParams?: Record<string, string | string[] | undefined>,
 ) {
   try {
-    const article = applyReaderMocks(await loadArticle(slug), searchParams);
-    const issue = validateReaderArticle(article);
+    const [article, articles] = await Promise.all([
+      loadArticle(slug),
+      listArticles(),
+    ]);
+    const nextArticle = applyReaderMocks(article, searchParams);
+    const issue = validateReaderArticle(nextArticle);
+    const currentIndex = articles.findIndex((item) => item.slug === slug);
+    const previousArticle =
+      currentIndex > 0
+        ? {
+            slug: articles[currentIndex - 1].slug,
+            title: articles[currentIndex - 1].title,
+          }
+        : undefined;
+    const followingArticle =
+      currentIndex >= 0 && currentIndex < articles.length - 1
+        ? {
+            slug: articles[currentIndex + 1].slug,
+            title: articles[currentIndex + 1].title,
+          }
+        : undefined;
 
     if (issue) {
       return {
@@ -85,8 +107,12 @@ async function getReaderArticle(
     }
 
     return {
-      article,
+      article: nextArticle,
       kind: 'ok' as const,
+      navigation: {
+        nextArticle: followingArticle,
+        previousArticle,
+      },
     };
   } catch (error) {
     if (error instanceof Error && error.message.includes('Article not found')) {
@@ -150,5 +176,5 @@ export default async function ReaderPage({
     );
   }
 
-  return <ReaderShell article={result.article} />;
+  return <ReaderShell article={result.article} navigation={result.navigation} />;
 }

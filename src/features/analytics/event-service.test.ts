@@ -14,7 +14,7 @@ function createMemoryStorage() {
 }
 
 describe('event-service', () => {
-  it('records start, lookup, save, quiz-submit, and complete events', () => {
+  it('records start, lookup, save, and complete events', () => {
     const storage = createMemoryStorage();
 
     recordEvent(
@@ -45,20 +45,12 @@ describe('event-service', () => {
       {
         articleSlug: 'welcome-to-deep-reading',
         deviceId: 'dev-1',
-        type: 'quiz_submitted',
-      },
-      storage,
-    );
-    recordEvent(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        deviceId: 'dev-1',
         type: 'article_completed',
       },
       storage,
       { oncePerArticle: true },
     );
 
-    expect(listEvents('dev-1', storage)).toHaveLength(5);
+    expect(listEvents('dev-1', storage)).toHaveLength(4);
   });
 });

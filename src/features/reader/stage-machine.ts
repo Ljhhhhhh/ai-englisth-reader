@@ -1,11 +1,10 @@
-export const readerStages = ['intro', 'read', 'quiz', 'review'] as const;
+export const readerStages = ['intro', 'read', 'review'] as const;
 
 export type ReaderStage = (typeof readerStages)[number];
 export type CompletionState = 'in-progress' | 'completed';
 
 type CompletionInput = {
   currentStage: ReaderStage;
-  quizSubmitted: boolean;
 };
 
 export function normalizeStage(stage: string | undefined): ReaderStage {
@@ -36,8 +35,6 @@ export function getStageLabel(stage: ReaderStage) {
       return 'Intro';
     case 'read':
       return 'Read';
-    case 'quiz':
-      return 'Quiz';
     case 'review':
       return 'Review';
   }
@@ -45,9 +42,8 @@ export function getStageLabel(stage: ReaderStage) {
 
 export function getCompletionState({
   currentStage,
-  quizSubmitted,
 }: CompletionInput): CompletionState {
-  if (currentStage === 'review' && quizSubmitted) {
+  if (currentStage === 'review') {
     return 'completed';
   }
 

@@ -13,8 +13,6 @@ export type ReaderProgressRecord = {
   currentStage: ReaderStage;
   deviceId: string;
   paragraphId?: string;
-  quizStarted: boolean;
-  quizSubmitted: boolean;
   updatedAt: number;
 };
 
@@ -23,8 +21,6 @@ type SaveProgressInput = {
   currentStage: ReaderStage;
   deviceId: string;
   paragraphId?: string;
-  quizStarted?: boolean;
-  quizSubmitted?: boolean;
 };
 
 function createRecordKey(deviceId: string, articleSlug: string) {
@@ -70,8 +66,6 @@ export function saveProgress(input: SaveProgressInput, storage: StorageLike) {
     currentStage: normalizeStage(input.currentStage),
     deviceId: input.deviceId,
     paragraphId: input.paragraphId ?? existing?.paragraphId,
-    quizStarted: input.quizStarted ?? existing?.quizStarted ?? false,
-    quizSubmitted: input.quizSubmitted ?? existing?.quizSubmitted ?? false,
     updatedAt: Date.now(),
   };
 

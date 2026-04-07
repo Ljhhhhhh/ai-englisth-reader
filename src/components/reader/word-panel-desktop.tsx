@@ -17,16 +17,19 @@ export function WordPanelDesktop({
 }: WordPanelDesktopProps) {
   return (
     <aside
-      aria-label="Word details desktop"
+      aria-label="Word details popover"
       style={{
-        position: 'sticky',
-        top: 84,
+        position: 'fixed',
+        right: 20,
+        bottom: 20,
+        zIndex: 20,
         display: 'grid',
         gap: 16,
         padding: 20,
         borderRadius: 24,
         border: '1px solid var(--border)',
         background: 'var(--surface)',
+        width: 'min(420px, calc(100vw - 40px))',
         boxShadow: '0 18px 40px rgba(104, 71, 33, 0.08)',
       }}
     >

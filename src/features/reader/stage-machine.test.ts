@@ -7,31 +7,29 @@ import {
 } from './stage-machine';
 
 describe('stage-machine', () => {
-  it('marks an article complete only after quiz submission and review access', () => {
+  it('marks an article complete once the reader reaches review', () => {
     expect(
       getCompletionState({
         currentStage: 'review',
-        quizSubmitted: true,
       }),
     ).toBe('completed');
 
     expect(
       getCompletionState({
-        currentStage: 'review',
-        quizSubmitted: false,
+        currentStage: 'read',
       }),
     ).toBe('in-progress');
   });
 
-  it('moves forward and backward through the four reader stages', () => {
+  it('moves forward and backward through the three reader stages', () => {
     expect(getNextStage('intro')).toBe('read');
-    expect(getNextStage('quiz')).toBe('review');
-    expect(getPreviousStage('review')).toBe('quiz');
+    expect(getNextStage('read')).toBe('review');
+    expect(getPreviousStage('review')).toBe('read');
     expect(getPreviousStage('intro')).toBe('intro');
   });
 
   it('normalizes stage values and exposes progress percentages', () => {
     expect(normalizeStage('unknown')).toBe('intro');
-    expect(getStageProgress('quiz')).toBe(75);
+    expect(getStageProgress('review')).toBe(100);
   });
 });

@@ -82,43 +82,5 @@
       "sentenceId": "s1",
       "breakdown": "主句说明很多学习者能读懂一部分，but 后面补充他们在意思变模糊时会失去信心。"
     }
-  ],
-  "quiz": [
-    {
-      "id": "q1",
-      "question": "What problem does the article describe first?",
-      "choices": [
-        "Learners dislike long articles",
-        "Learners lose confidence when meaning becomes unclear",
-        "Teachers explain grammar too slowly",
-        "Mobile screens are too small"
-      ],
-      "correctIndex": 1,
-      "explanation": "The first sentence says learners lose confidence when meaning starts to blur."
-    },
-    {
-      "id": "q2",
-      "question": "Why should explanations stay close to the sentence?",
-      "choices": [
-        "To keep the learner inside the story",
-        "To shorten the article",
-        "To remove vocabulary completely",
-        "To replace comprehension questions"
-      ],
-      "correctIndex": 0,
-      "explanation": "The article says nearby explanations help the learner stay inside the story."
-    },
-    {
-      "id": "q3",
-      "question": "What makes deep reading more sustainable?",
-      "choices": [
-        "Reading faster than before",
-        "Switching to many lookup tools",
-        "Feeling absorbed instead of interrupted",
-        "Skipping difficult sentences"
-      ],
-      "correctIndex": 2,
-      "explanation": "The last sentence states that feeling absorbed instead of interrupted makes deep reading sustainable."
-    }
   ]
 }

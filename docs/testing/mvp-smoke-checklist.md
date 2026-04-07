@@ -16,8 +16,8 @@ Run the app locally with `pnpm dev`, then verify the following on both desktop a
 3. Start reading, jump paragraphs, refresh, and confirm reading position restores.
 4. Tap a highlighted word and confirm the desktop side panel stays visible without losing the paragraph position.
 5. Save a word and confirm the button switches to the saved state.
-6. Continue to the quiz, submit all answers, and confirm explanations render.
-7. Confirm review unlocks the full translation.
+6. Continue to the review stage and confirm the full translation appears without any quiz gate.
+7. Use the reader navigation to jump to the next article, then return to the homepage or saved words page.
 8. Open `/words` and confirm the saved word appears under the correct article.
 
 ## Mobile smoke flow
@@ -27,7 +27,7 @@ Run the app locally with `pnpm dev`, then verify the following on both desktop a
 3. Tap a highlighted word and confirm the bottom drawer opens.
 4. Close the drawer and confirm the current paragraph is unchanged.
 5. Rotate or resize the viewport and confirm the current stage and paragraph remain intact.
-6. Complete the quiz and confirm the review stage remains readable on mobile.
+6. Continue to the review stage and confirm it remains readable on mobile without any quiz UI.
 
 ## Edge-state checks
 

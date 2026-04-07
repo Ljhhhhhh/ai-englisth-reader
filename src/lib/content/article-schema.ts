@@ -42,15 +42,6 @@ export const articleSchema = z.object({
       breakdown: z.string(),
     }),
   ).min(1).max(3),
-  quiz: z.array(
-    z.object({
-      id: z.string(),
-      question: z.string(),
-      choices: z.array(z.string()).length(4),
-      correctIndex: z.number().int().min(0).max(3),
-      explanation: z.string(),
-    }),
-  ).min(3).max(5),
 });
 
 export type Article = z.infer<typeof articleSchema>;

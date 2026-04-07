@@ -12,7 +12,7 @@ type ArticleBodyProps = {
   activeParagraphId?: string;
   article: Article;
   lookupableWords: Set<string>;
-  onContinueToQuiz: () => void;
+  onContinueToReview: () => void;
   onFocusParagraph: (paragraphId: string) => void;
   onLookupWord: (input: { sentenceId: string; surface: string }) => void;
 };
@@ -21,7 +21,7 @@ export function ArticleBody({
   activeParagraphId,
   article,
   lookupableWords,
-  onContinueToQuiz,
+  onContinueToReview,
   onFocusParagraph,
   onLookupWord,
 }: ArticleBodyProps) {
@@ -29,9 +29,14 @@ export function ArticleBody({
     <section style={{ display: 'grid', gap: 20 }}>
       <header style={{ display: 'grid', gap: 8 }}>
         <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          Read in context
+          Consolidate in context
         </p>
         <h1 style={{ margin: 0 }}>{article.title}</h1>
+        <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
+          Re-read the article with the key words, grammar, and sentence
+          patterns already in mind. Tap highlighted words whenever you need a
+          quick reminder.
+        </p>
         <p style={{ margin: 0, color: 'var(--muted)' }}>
           Current paragraph: {activeParagraphId ?? article.paragraphs[0]?.id}
         </p>
@@ -147,7 +152,7 @@ export function ArticleBody({
         </p>
         <button
           type="button"
-          onClick={onContinueToQuiz}
+          onClick={onContinueToReview}
           style={{
             borderRadius: 999,
             border: 'none',
@@ -158,7 +163,7 @@ export function ArticleBody({
             cursor: 'pointer',
           }}
         >
-          Continue to quiz stage
+          Continue to review
         </button>
       </div>
     </section>

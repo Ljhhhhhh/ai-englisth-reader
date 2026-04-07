@@ -45,7 +45,6 @@ describe('progress-service', () => {
         articleSlug: 'welcome-to-deep-reading',
         currentStage: 'review',
         deviceId: 'dev-1',
-        quizSubmitted: true,
       },
       storage,
     );

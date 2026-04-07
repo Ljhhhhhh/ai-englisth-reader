@@ -1,21 +1,13 @@
 import Link from 'next/link';
 import type { SavedWordRecord } from '@/features/words/saved-word-service';
 import type { Article } from '@/lib/content/article-schema';
-import type { QuizAttemptRecord } from '@/features/quiz/quiz-service';
 
 type ReviewPanelProps = {
   article: Article;
-  quizAttempt: QuizAttemptRecord | null;
-  reviewUnlocked: boolean;
   savedWords: SavedWordRecord[];
 };
 
-export function ReviewPanel({
-  article,
-  quizAttempt,
-  reviewUnlocked,
-  savedWords,
-}: ReviewPanelProps) {
+export function ReviewPanel({ article, savedWords }: ReviewPanelProps) {
   return (
     <section
       style={{
@@ -31,27 +23,24 @@ export function ReviewPanel({
         <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
           Review and retain
         </p>
-        <h1 style={{ margin: 0 }}>Article completed on this device.</h1>
+        <h1 style={{ margin: 0 }}>Reading review on this device.</h1>
         <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {article.summary}
+          Use this closing view to check the article summary, revisit the full
+          translation, and keep any useful words moving into your notebook.
         </p>
       </div>
 
       <div style={{ padding: 18, borderRadius: 20, background: '#fff8ee' }}>
-        <strong>Quiz result</strong>
+        <strong>Article summary</strong>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {quizAttempt
-            ? `${quizAttempt.score}/${article.quiz.length} correct.`
-            : 'Submit the quiz to unlock the full review.'}
+          {article.summary}
         </p>
       </div>
 
       <div style={{ padding: 18, borderRadius: 20, background: '#fcf6ee' }}>
         <strong>Full translation</strong>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {reviewUnlocked
-            ? article.translation
-            : 'Translation locked until quiz submission.'}
+          {article.translation}
         </p>
       </div>
 

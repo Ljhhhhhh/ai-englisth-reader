@@ -7,8 +7,6 @@ export type LearningEventType =
   | 'article_resumed'
   | 'word_lookup_opened'
   | 'word_saved'
-  | 'quiz_started'
-  | 'quiz_submitted'
   | 'article_completed';
 
 export type LearningEventRecord = {

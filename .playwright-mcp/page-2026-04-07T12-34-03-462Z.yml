@@ -1,0 +1,57 @@
+- main [ref=e2]:
+  - generic [ref=e4]:
+    - generic [ref=e5]: Reading progress
+    - generic [ref=e6]: Intro
+  - generic [ref=e9]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - navigation "Reader stages" [ref=e12]:
+          - button "Intro" [pressed] [ref=e13] [cursor=pointer]
+          - button "Read" [ref=e14] [cursor=pointer]
+          - button "Quiz" [ref=e15] [cursor=pointer]
+          - button "Review" [ref=e16] [cursor=pointer]
+        - generic [ref=e17]: "Current stage: Intro"
+      - region "Intro panel" [ref=e19]:
+        - generic [ref=e20]:
+          - paragraph [ref=e21]: Warm up before you read
+          - heading "A calmer way to read English" [level=1] [ref=e22]
+          - paragraph [ref=e23]: Deep reading feels easier when vocabulary help stays close to the article instead of pulling the learner away.
+          - paragraph [ref=e24]: B1 · 8 min · Editorial sample
+        - generic [ref=e25]:
+          - generic [ref=e26]:
+            - heading "Key vocabulary" [level=2] [ref=e27]
+            - generic [ref=e28]:
+              - generic [ref=e29]:
+                - strong [ref=e30]: blur
+                - generic [ref=e31]: 变得模糊 · /blɜːr/
+              - generic [ref=e32]:
+                - strong [ref=e33]: confidence
+                - generic [ref=e34]: 信心 · /ˈkɑːnfɪdəns/
+              - generic [ref=e35]:
+                - strong [ref=e36]: explanation
+                - generic [ref=e37]: 解释 · /ˌekspləˈneɪʃn/
+              - generic [ref=e38]:
+                - strong [ref=e39]: absorbed
+                - generic [ref=e40]: 沉浸其中的 · /əbˈzɔːrbd/
+              - generic [ref=e41]:
+                - strong [ref=e42]: sustainable
+                - generic [ref=e43]: 可持续的 · /səˈsteɪnəbl/
+          - generic [ref=e44]:
+            - heading "Grammar points" [level=2] [ref=e45]
+            - generic [ref=e47]:
+              - strong [ref=e48]: when 引导时间从句
+              - paragraph [ref=e49]: 用 when 把发生的时刻和结果连起来，帮助读者理解因果顺序。
+          - generic [ref=e50]:
+            - heading "Difficult sentences" [level=2] [ref=e51]
+            - generic [ref=e53]:
+              - strong [ref=e54]: Sentence note
+              - generic [ref=e55]: s1
+              - paragraph [ref=e56]: 主句说明很多学习者能读懂一部分，but 后面补充他们在意思变模糊时会失去信心。
+        - button "Start reading the article" [ref=e58] [cursor=pointer]
+      - generic [ref=e59]:
+        - button "Back" [disabled] [ref=e60]
+        - button "Next" [ref=e61] [cursor=pointer]
+      - paragraph [ref=e62]: Restoring device progress...
+    - generic [ref=e63]:
+      - strong [ref=e64]: Tap highlighted words
+      - generic [ref=e65]: The explanation panel stays beside the article on desktop so the active sentence remains visible.

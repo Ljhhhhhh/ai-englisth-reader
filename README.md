@@ -1,14 +1,14 @@
 # AI English Read
 
-Phase 1 MVP for interactive English deep reading. The app keeps learners inside one article, supports inline word lookup, saves vocabulary on the same device, runs a short comprehension quiz, and unlocks review after submission.
+Phase 1 MVP for interactive English deep reading. The app helps learners master key words, grammar, and difficult sentences before consolidating understanding in the article itself, while keeping lookup and saved vocabulary on the same device.
 
 ## What ships in the MVP
 
 - Homepage article list and continue-reading block
-- Four-stage reader flow: intro, read, quiz, review
+- Three-stage reader flow: intro, read, review
 - Same-device progress restore via local storage
 - Inline word lookup and saved words page
-- Quiz submission with explanations and review unlock
+- Route navigation across articles, homepage, and saved words
 - Learning event capture for core reading actions
 - Desktop and mobile Playwright coverage for the main loop
 
@@ -54,7 +54,7 @@ Open http://127.0.0.1:3000.
 ## Data model notes
 
 - Reader content currently comes from `content/articles/*.json` and is validated through Zod.
-- Reader progress, saved words, quiz attempts, and learning events are persisted on the same device in local storage for the MVP.
+- Reader progress, saved words, and learning events are persisted on the same device in local storage for the MVP.
 - Prisma schema currently targets a local SQLite file for lightweight development setup, while the Phase 1 UI still runs on local JSON content plus same-device persistence.
 
 ## MVP smoke flow

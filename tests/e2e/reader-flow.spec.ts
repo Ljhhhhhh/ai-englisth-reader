@@ -5,9 +5,9 @@ test('reader restores last stage and paragraph for the same device', async ({
 }) => {
   await page.goto('/reader/welcome-to-deep-reading');
 
-  await expect(page.getByText(/Warm up before you read/i)).toBeVisible();
+  await expect(page.getByText(/Learn the key ideas first/i)).toBeVisible();
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
 
   await expect(page.getByText(/Current stage: Read/i)).toBeVisible();
@@ -27,13 +27,13 @@ test('reader can lookup and save a word without losing reading position', async 
   await page.goto('/reader/welcome-to-deep-reading');
 
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
   await page.getByRole('button', { name: /Jump to paragraph 2/i }).click();
   await expect(page.getByText(/Current paragraph: p2/i)).toBeVisible();
 
   await page.getByRole('button', { name: /^absorbed$/i }).click();
-  const wordPanel = page.getByLabel(/Word details (desktop|mobile)/i);
+  const wordPanel = page.getByLabel(/Word details (desktop|mobile|popover)/i);
 
   await expect(wordPanel).toBeVisible();
   await expect(
@@ -65,7 +65,7 @@ test('reader can recover from a temporary lookup failure', async ({ page }) => {
   await page.goto('/reader/welcome-to-deep-reading?mockLookupError=once');
 
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
   await page.getByRole('button', { name: /^absorbed$/i }).click();
 
@@ -73,7 +73,9 @@ test('reader can recover from a temporary lookup failure', async ({ page }) => {
     page.getByRole('heading', { name: /Inline word lookup missed once/i }),
   ).toBeVisible();
   await page.getByRole('button', { name: /Retry lookup/i }).click();
-  await expect(page.getByLabel(/Word details (desktop|mobile)/i)).toBeVisible();
+  await expect(
+    page.getByLabel(/Word details (desktop|mobile|popover)/i),
+  ).toBeVisible();
 });
 
 test('reader can retry after a temporary save-word failure', async ({
@@ -82,7 +84,7 @@ test('reader can retry after a temporary save-word failure', async ({
   await page.goto('/reader/welcome-to-deep-reading?mockSaveWordError=once');
 
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
   await page.getByRole('button', { name: /^absorbed$/i }).click();
   await page.getByRole('button', { name: /Save word/i }).click();
@@ -105,7 +107,7 @@ test('reader retries progress persistence after a temporary failure', async ({
     page.getByText(/Could not sync reading progress just yet/i),
   ).toBeVisible();
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
   await expect(
     page.getByText(/Could not sync reading progress just yet/i),
@@ -115,33 +117,33 @@ test('reader retries progress persistence after a temporary failure', async ({
   await expect(page.getByText(/Current paragraph: p2/i)).toBeVisible();
 });
 
-test('reader completes the full loop and unlocks the review', async ({
+test('reader completes the three-stage loop without quiz gating', async ({
   page,
 }) => {
   await page.goto('/reader/welcome-to-deep-reading');
 
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
-  await page.getByRole('button', { name: /Continue to quiz stage/i }).click();
-
-  await page
-    .getByRole('button', {
-      name: /Learners lose confidence when meaning becomes unclear/i,
-    })
-    .click();
-  await page
-    .getByRole('button', { name: /To keep the learner inside the story/i })
-    .click();
-  await page
-    .getByRole('button', { name: /Feeling absorbed instead of interrupted/i })
-    .click();
-  await page.getByRole('button', { name: /Submit quiz/i }).click();
+  await page.getByRole('button', { name: /Continue to review/i }).click();
 
   await expect(
-    page.getByText(/Article completed on this device/i),
+    page.getByText(/Reading review on this device/i),
   ).toBeVisible();
   await expect(page.getByText(/当词汇帮助始终贴着文章出现时/i)).toBeVisible();
+});
+
+test('reader offers route navigation to sibling articles and core pages', async ({
+  page,
+}) => {
+  await page.goto('/reader/welcome-to-deep-reading');
+
+  await expect(page.getByRole('link', { name: /Back to homepage/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Open saved words/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /Next article/i })).toBeVisible();
+
+  await page.getByRole('link', { name: /Next article/i }).click();
+  await expect(page).toHaveURL(/\/reader\/deep-reading-beats-scattered-lookup$/);
 });
 
 test('reader shows a fallback when translation payload is missing', async ({
@@ -176,7 +178,7 @@ test('saved words page groups words by article', async ({ page }) => {
   await page.goto('/reader/welcome-to-deep-reading');
 
   await page
-    .getByRole('button', { name: /Start reading the article/i })
+    .getByRole('button', { name: /Start consolidating in the article/i })
     .click();
   await page.getByRole('button', { name: /^absorbed$/i }).click();
   await page.getByRole('button', { name: /Save word/i }).click();

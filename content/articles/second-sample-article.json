@@ -77,43 +77,5 @@
       "sentenceId": "s2",
       "breakdown": "主句是 A guided reading flow gives the learner enough support，without 后面补充说明这种支持不会让文章被工具淹没。"
     }
-  ],
-  "quiz": [
-    {
-      "id": "q1",
-      "question": "What is the weakness of scattered lookup?",
-      "choices": [
-        "It always takes too little time",
-        "It rarely builds full understanding",
-        "It removes all difficult words",
-        "It makes articles shorter"
-      ],
-      "correctIndex": 1,
-      "explanation": "The article directly says scattered lookup rarely builds a full understanding."
-    },
-    {
-      "id": "q2",
-      "question": "What does a guided reading flow provide?",
-      "choices": [
-        "Enough support",
-        "Automatic writing",
-        "Fewer articles",
-        "More distractions"
-      ],
-      "correctIndex": 0,
-      "explanation": "The second sentence says a guided reading flow gives the learner enough support."
-    },
-    {
-      "id": "q3",
-      "question": "What should not happen during reading?",
-      "choices": [
-        "The learner finishes the article",
-        "The article disappears behind too many tools",
-        "The learner checks key words",
-        "The learner sees explanations"
-      ],
-      "correctIndex": 1,
-      "explanation": "The sentence warns against letting the article disappear behind too many tools."
-    }
   ]
 }
