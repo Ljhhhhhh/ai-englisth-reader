@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Article {
+  id               String           @id @default(cuid())
+  slug             String           @unique
+  title            String
+  source           String
+  difficulty       String
+  estimatedMinutes Int
+  summary          String
+  translation      String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  progresses       ReadingProgress[]
+  quizAttempts     QuizAttempt[]
+  savedWords       SavedWord[]
+  learningEvents   LearningEvent[]
+}
+
+model ReadingProgress {
+  id            String   @id @default(cuid())
+  deviceId      String
+  articleId     String
+  currentStage  String   @default("intro")
+  paragraphId   String?
+  quizStarted   Boolean  @default(false)
+  quizSubmitted Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, articleId])
+  @@index([deviceId])
+}
+
+model QuizAttempt {
+  id          String   @id @default(cuid())
+  deviceId    String
+  articleId   String
+  answersJson String
+  score       Int
+  createdAt   DateTime @default(now())
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, articleId])
+}
+
+model SavedWord {
+  id             String   @id @default(cuid())
+  deviceId       String
+  articleId      String
+  lemma          String
+  surface        String
+  meaning        String
+  sourceSentence String
+  createdAt      DateTime @default(now())
+  article        Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, articleId, lemma])
+  @@index([deviceId])
+}
+
+model LearningEvent {
+  id          String   @id @default(cuid())
+  deviceId    String
+  articleId   String?
+  type        String
+  payloadJson String?
+  createdAt   DateTime @default(now())
+  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, type])
+}

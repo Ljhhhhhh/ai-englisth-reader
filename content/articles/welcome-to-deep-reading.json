@@ -1,0 +1,124 @@
+{
+  "slug": "welcome-to-deep-reading",
+  "title": "A calmer way to read English",
+  "source": "Editorial sample",
+  "difficulty": "B1",
+  "estimatedMinutes": 8,
+  "summary": "Deep reading feels easier when vocabulary help stays close to the article instead of pulling the learner away.",
+  "translation": "当词汇帮助始终贴着文章出现时，精读会比不停切换工具轻松得多。",
+  "paragraphs": [
+    {
+      "id": "p1",
+      "sentences": [
+        {
+          "id": "s1",
+          "text": "Many learners can read part of an English article, but they lose confidence when the meaning starts to blur.",
+          "notes": []
+        },
+        {
+          "id": "s2",
+          "text": "A better reading tool keeps the explanation close to the sentence, so the learner stays inside the story.",
+          "notes": []
+        }
+      ]
+    },
+    {
+      "id": "p2",
+      "sentences": [
+        {
+          "id": "s3",
+          "text": "When the reader feels absorbed instead of interrupted, deep reading becomes much more sustainable.",
+          "notes": []
+        }
+      ]
+    }
+  ],
+  "vocabulary": [
+    {
+      "lemma": "blur",
+      "surface": "blur",
+      "meaning": "变得模糊",
+      "phonetic": "/blɜːr/",
+      "exampleSentenceId": "s1"
+    },
+    {
+      "lemma": "confidence",
+      "surface": "confidence",
+      "meaning": "信心",
+      "phonetic": "/ˈkɑːnfɪdəns/",
+      "exampleSentenceId": "s1"
+    },
+    {
+      "lemma": "explanation",
+      "surface": "explanation",
+      "meaning": "解释",
+      "phonetic": "/ˌekspləˈneɪʃn/",
+      "exampleSentenceId": "s2"
+    },
+    {
+      "lemma": "absorbed",
+      "surface": "absorbed",
+      "meaning": "沉浸其中的",
+      "phonetic": "/əbˈzɔːrbd/",
+      "exampleSentenceId": "s3"
+    },
+    {
+      "lemma": "sustainable",
+      "surface": "sustainable",
+      "meaning": "可持续的",
+      "phonetic": "/səˈsteɪnəbl/",
+      "exampleSentenceId": "s3"
+    }
+  ],
+  "grammarPoints": [
+    {
+      "title": "when 引导时间从句",
+      "explanation": "用 when 把发生的时刻和结果连起来，帮助读者理解因果顺序。",
+      "sourceSentenceId": "s3"
+    }
+  ],
+  "difficultSentences": [
+    {
+      "sentenceId": "s1",
+      "breakdown": "主句说明很多学习者能读懂一部分，but 后面补充他们在意思变模糊时会失去信心。"
+    }
+  ],
+  "quiz": [
+    {
+      "id": "q1",
+      "question": "What problem does the article describe first?",
+      "choices": [
+        "Learners dislike long articles",
+        "Learners lose confidence when meaning becomes unclear",
+        "Teachers explain grammar too slowly",
+        "Mobile screens are too small"
+      ],
+      "correctIndex": 1,
+      "explanation": "The first sentence says learners lose confidence when meaning starts to blur."
+    },
+    {
+      "id": "q2",
+      "question": "Why should explanations stay close to the sentence?",
+      "choices": [
+        "To keep the learner inside the story",
+        "To shorten the article",
+        "To remove vocabulary completely",
+        "To replace comprehension questions"
+      ],
+      "correctIndex": 0,
+      "explanation": "The article says nearby explanations help the learner stay inside the story."
+    },
+    {
+      "id": "q3",
+      "question": "What makes deep reading more sustainable?",
+      "choices": [
+        "Reading faster than before",
+        "Switching to many lookup tools",
+        "Feeling absorbed instead of interrupted",
+        "Skipping difficult sentences"
+      ],
+      "correctIndex": 2,
+      "explanation": "The last sentence states that feeling absorbed instead of interrupted makes deep reading sustainable."
+    }
+  ]
+}
