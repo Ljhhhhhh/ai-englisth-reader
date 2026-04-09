@@ -91,6 +91,34 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
             {uiCopy.home.hero.description}
           </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+            <Link
+              href="/generate"
+              style={{
+                width: 'fit-content',
+                padding: '12px 18px',
+                borderRadius: 999,
+                background: 'var(--accent)',
+                color: '#fff',
+                fontWeight: 700,
+              }}
+            >
+              生成文章
+            </Link>
+            <Link
+              href="/words"
+              style={{
+                width: 'fit-content',
+                padding: '12px 18px',
+                borderRadius: 999,
+                border: '1px solid var(--border)',
+                color: 'var(--foreground)',
+                fontWeight: 700,
+              }}
+            >
+              打开生词本
+            </Link>
+          </div>
         </div>
 
         <ContinueReading
@@ -103,7 +131,14 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         {articles.length ? (
           <section style={{ display: 'grid', gap: 20 }}>
             {articles.map((article) => (
-              <ArticleCard key={article.slug} {...article} />
+              <ArticleCard
+                key={article.slug}
+                difficulty={article.difficulty}
+                estimatedMinutes={article.estimatedMinutes}
+                previewText={article.feynman_summary}
+                slug={article.slug}
+                title={article.title}
+              />
             ))}
           </section>
         ) : (

@@ -28,30 +28,25 @@ function buildLookupResult(
     throw new Error(`Sentence not found: ${sentenceId}`);
   }
 
-  const vocabularyItem = article.vocabulary.find((item) => {
-    const normalizedItemSurface = normalizeToken(item.surface);
-    const normalizedLemma = normalizeToken(item.lemma);
-
-    return (
-      normalizedItemSurface === normalizedSurface ||
-      normalizedLemma === normalizedSurface
-    );
-  });
+  const vocabularyItem = article.growth_vocabulary.find(
+    (item) => normalizeToken(item.word) === normalizedSurface,
+  );
 
   if (!vocabularyItem) {
-    throw new Error(`Word not found in article vocabulary: ${surface}`);
+    throw new Error(`Word not found in article growth vocabulary: ${surface}`);
   }
 
   return {
     articleSlug: article.slug,
     articleTitle: article.title,
-    lemma: vocabularyItem.lemma,
-    meaning: vocabularyItem.meaning,
-    partOfSpeech: undefined,
-    phonetic: vocabularyItem.phonetic,
+    chineseMeaning: vocabularyItem.chinese_meaning,
+    contextMeaning: vocabularyItem.context_meaning,
+    lemma: vocabularyItem.word,
+    memoryHook: vocabularyItem.memory_hook,
+    memoryType: vocabularyItem.memory_type,
     sentenceId,
     sourceSentence: sentence.text,
-    surface: vocabularyItem.surface,
+    surface: vocabularyItem.word,
   };
 }
 
@@ -60,9 +55,8 @@ export type WordLookupResult = ReturnType<typeof buildLookupResult>;
 export function getLookupableWords(article: Article) {
   const lookupableWords = new Set<string>();
 
-  for (const item of article.vocabulary) {
-    lookupableWords.add(normalizeToken(item.surface));
-    lookupableWords.add(normalizeToken(item.lemma));
+  for (const item of article.growth_vocabulary) {
+    lookupableWords.add(normalizeToken(item.word));
   }
 
   return lookupableWords;

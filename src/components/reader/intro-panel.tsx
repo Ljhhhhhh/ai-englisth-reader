@@ -1,6 +1,5 @@
 import type { Article } from '@/lib/content/article-schema';
 import { formatEstimatedMinutes, uiCopy } from '@/lib/ui-copy';
-import { SentenceNote } from '@/components/reader/sentence-note';
 
 type IntroPanelProps = {
   article: Article;
@@ -8,14 +7,6 @@ type IntroPanelProps = {
 };
 
 export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
-  const sentenceMap = new Map(
-    article.paragraphs.flatMap((paragraph) =>
-      paragraph.sentences.map(
-        (sentence) => [sentence.id, sentence.text] as const,
-      ),
-    ),
-  );
-
   return (
     <section
       aria-label={uiCopy.reader.intro.ariaLabel}
@@ -44,9 +35,9 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
             {uiCopy.reader.intro.vocabularyTitle}
           </h2>
           <div style={{ display: 'grid', gap: 12 }}>
-            {article.vocabulary.map((word) => (
+            {article.growth_vocabulary.map((word) => (
               <div
-                key={word.lemma}
+                key={word.word}
                 style={{
                   padding: 18,
                   borderRadius: 18,
@@ -54,19 +45,29 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
                   border: '1px solid rgba(197,106,45,0.12)',
                 }}
               >
-                <strong style={{ fontSize: 20 }}>{word.surface}</strong>
+                <strong style={{ fontSize: 20 }}>{word.word}</strong>
                 <div style={{ color: 'var(--muted)', marginTop: 6 }}>
-                  {word.meaning}
-                  {word.phonetic ? ` · ${word.phonetic}` : ''}
+                  {word.chinese_meaning}
                 </div>
+                <p
+                  style={{
+                    marginTop: 10,
+                    marginBottom: 10,
+                    color: 'var(--foreground)',
+                    lineHeight: 1.7,
+                  }}
+                >
+                  {word.context_meaning}
+                </p>
                 <p
                   style={{
                     marginBottom: 0,
                     color: 'var(--muted)',
                     lineHeight: 1.7,
+                    fontSize: 14,
                   }}
                 >
-                  {sentenceMap.get(word.exampleSentenceId)}
+                  {word.memory_type} · {word.memory_hook}
                 </p>
               </div>
             ))}
@@ -74,11 +75,11 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
         </section>
 
         <section>
-          <h2>{uiCopy.reader.intro.grammarTitle}</h2>
+          <h2>{uiCopy.reader.intro.highFrequencyPhrasesTitle}</h2>
           <div style={{ display: 'grid', gap: 12 }}>
-            {article.grammarPoints.map((point) => (
+            {article.high_frequency_phrases.map((phrase) => (
               <div
-                key={point.title}
+                key={phrase.phrase}
                 style={{
                   padding: 18,
                   borderRadius: 18,
@@ -86,7 +87,7 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
                   border: '1px solid rgba(214,183,154,0.6)',
                 }}
               >
-                <strong>{point.title}</strong>
+                <strong>{phrase.phrase}</strong>
                 <p
                   style={{
                     marginTop: 8,
@@ -95,7 +96,7 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
                     lineHeight: 1.7,
                   }}
                 >
-                  {sentenceMap.get(point.sourceSentenceId)}
+                  {phrase.chinese_meaning}
                 </p>
                 <p
                   style={{
@@ -104,7 +105,7 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
                     lineHeight: 1.6,
                   }}
                 >
-                  {point.explanation}
+                  {phrase.usage_note}
                 </p>
               </div>
             ))}
@@ -112,18 +113,45 @@ export function IntroPanel({ article, onStartReading }: IntroPanelProps) {
         </section>
 
         <section>
-          <h2>{uiCopy.reader.intro.difficultTitle}</h2>
-          <div style={{ display: 'grid', gap: 12 }}>
-            {article.difficultSentences.map((sentence) => (
-              <SentenceNote
-                key={sentence.sentenceId}
-                body={sentence.breakdown}
-                label={
-                  sentenceMap.get(sentence.sentenceId) ?? sentence.sentenceId
-                }
-                title={uiCopy.reader.intro.sentenceBreakdown}
-              />
-            ))}
+          <h2>{uiCopy.reader.intro.grammarTitle}</h2>
+          <div
+            style={{
+              display: 'grid',
+              gap: 12,
+              padding: 18,
+              borderRadius: 18,
+              background: '#fff8ee',
+              border: '1px solid rgba(214,183,154,0.6)',
+            }}
+          >
+            <strong>{article.language_evolution.target_structure}</strong>
+            <p
+              style={{
+                margin: 0,
+                color: 'var(--foreground)',
+                lineHeight: 1.7,
+              }}
+            >
+              {article.language_evolution.rewritten_sentence}
+            </p>
+            <p
+              style={{
+                margin: 0,
+                color: 'var(--muted)',
+                lineHeight: 1.6,
+              }}
+            >
+              {article.language_evolution.explanation}
+            </p>
+            <p
+              style={{
+                margin: 0,
+                color: 'var(--muted)',
+                lineHeight: 1.6,
+              }}
+            >
+              {article.language_evolution.imitation_example}
+            </p>
           </div>
         </section>
       </div>

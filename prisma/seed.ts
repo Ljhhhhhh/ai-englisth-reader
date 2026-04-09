@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import { loadAllArticles } from "../src/lib/content/load-article";
+import { PrismaClient } from '@prisma/client';
+import { loadAllArticles } from '../src/lib/content/load-article';
 
 const prisma = new PrismaClient();
 
@@ -14,8 +14,8 @@ async function main() {
         source: article.source,
         difficulty: article.difficulty,
         estimatedMinutes: article.estimatedMinutes,
-        summary: article.summary,
-        translation: article.translation,
+        feynmanSummary: article.feynman_summary,
+        chineseTranslation: article.chinese_translation,
       },
       create: {
         slug: article.slug,
@@ -23,8 +23,8 @@ async function main() {
         source: article.source,
         difficulty: article.difficulty,
         estimatedMinutes: article.estimatedMinutes,
-        summary: article.summary,
-        translation: article.translation,
+        feynmanSummary: article.feynman_summary,
+        chineseTranslation: article.chinese_translation,
       },
     });
   }

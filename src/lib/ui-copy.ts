@@ -85,14 +85,11 @@ export const uiCopy = {
       button: '进入正文开始精读',
       description:
         '先在这一页把核心词汇、语法点和难句预热一遍，再进入正文，会更容易保持理解和节奏。',
-      difficultDescription:
-        '先在这里拆开最难的句型，等你在正文里再次遇到时，会明显更容易读懂。',
-      difficultTitle: '难句拆解',
       eyebrow: '先抓住关键点',
+      highFrequencyPhrasesTitle: '高频词组',
       grammarDescription:
-        '每条语法提示都对应文章里的真实句子，进入正文后你能立刻定位并验证理解。',
-      grammarTitle: '语法提示',
-      sentenceBreakdown: '句子拆解',
+        '先看一处最值得模仿的句法升级点，进入正文后更容易识别并复用。',
+      grammarTitle: '语法升级',
       vocabularyDescription:
         '先熟悉这篇文章里最关键的词，再进入正文时更容易保持阅读流畅感。',
       vocabularyTitle: '重点词汇',
@@ -109,7 +106,7 @@ export const uiCopy = {
       },
       issues: {
         brokenReferences:
-          '这篇文章存在失效的句子引用，行内辅助信息将不可靠。请先修正内容映射，再重新打开。',
+          '这篇文章的学习字段与正文不一致，导读中的语法升级无法可靠展示。请先修正内容后再打开。',
         missingTranslation:
           '这篇文章缺少复盘阶段需要的全文译文，请先补齐译文内容后再打开阅读器。',
         unknownLoadError: '阅读器暂时无法加载这篇文章。',
@@ -127,16 +124,15 @@ export const uiCopy = {
       completionTitle: '这一篇你已经读完了',
       completionDescription: '快速确认一下你刚刚读懂了什么。',
       description:
-        '在结束这一轮精读前，快速回顾文章摘要、对照全文译文，并把值得留下的词收进生词本。',
+        '在结束这一轮精读前，对照全文译文，并把值得留下的词收进生词本。',
       emptySavedWords: '这一篇暂时还没有留下要记住的词。',
-      emptySavedWordsHint: '如果你想补存几个词，可以回正文点词；不补也不影响这次完成阅读。',
+      emptySavedWordsHint:
+        '如果你想补存几个词，可以回正文点词；不补也不影响这次完成阅读。',
       savedWordsHint: '这一篇里你决定留下来的词，都在这里。',
       nextArticle: '开始下一篇',
       savedWordsCta: '查看全部生词',
-      summaryDescription: '这篇文章的核心意思',
       eyebrow: '复盘与留存',
       savedWordsTitle: '这篇文章里保存的词',
-      summaryTitle: '文章摘要',
       title: '本机阅读复盘',
       translationDescription: '如果你想逐句对照，再看全文译文。',
       translationTitle: '全文译文',
@@ -154,6 +150,8 @@ export const uiCopy = {
     wordPanel: {
       ariaLabelDesktop: '单词详情弹窗',
       ariaLabelMobile: '移动端单词详情',
+      contextMeaning: '本文语境含义',
+      memoryHook: '记忆提示',
       meaning: '释义',
       save: '保存这个词',
       saved: '已保存到本机',
@@ -195,7 +193,9 @@ export const uiCopy = {
     emptyTitle: '开始阅读后，你的下一次续读会显示在这里。',
     eyebrow: '继续阅读',
     resumeFrom: (_stageLabel: string, paragraphId?: string) =>
-      paragraphId ? `上次读到${formatParagraphLabel(paragraphId)}` : '上次读到这里',
+      paragraphId
+        ? `上次读到${formatParagraphLabel(paragraphId)}`
+        : '上次读到这里',
   },
   articleCard: {
     startReading: '开始精读',

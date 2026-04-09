@@ -62,16 +62,27 @@ export function WordPanelDesktop({
 
       <div style={{ display: 'grid', gap: 6 }}>
         <h2 style={{ margin: 0, fontSize: 28 }}>{word.surface}</h2>
-        <div style={{ color: 'var(--muted)' }}>
-          {word.lemma}
-          {word.phonetic ? ` · ${word.phonetic}` : ''}
-        </div>
+        <div style={{ color: 'var(--muted)' }}>{word.lemma}</div>
       </div>
 
       <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
         <strong>{uiCopy.reader.wordPanel.meaning}</strong>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {word.meaning}
+          {word.chineseMeaning}
+        </p>
+      </div>
+
+      <div style={{ padding: 16, borderRadius: 18, background: '#fffaf2' }}>
+        <strong>{uiCopy.reader.wordPanel.contextMeaning}</strong>
+        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
+          {word.contextMeaning}
+        </p>
+      </div>
+
+      <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
+        <strong>{uiCopy.reader.wordPanel.memoryHook}</strong>
+        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
+          {word.memoryType} · {word.memoryHook}
         </p>
       </div>
 

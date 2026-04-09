@@ -39,25 +39,6 @@ export function ReviewPanel({
         style={{
           display: 'grid',
           gap: 10,
-          padding: 20,
-          borderRadius: 20,
-          background: '#fff8ee',
-          border: '1px solid rgba(197,106,45,0.12)',
-        }}
-      >
-        <strong>{uiCopy.reader.review.summaryTitle}</strong>
-        <div style={{ color: 'var(--muted)', fontSize: 14 }}>
-          {uiCopy.reader.review.summaryDescription}
-        </div>
-        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {article.summary}
-        </p>
-      </div>
-
-      <div
-        style={{
-          display: 'grid',
-          gap: 10,
           padding: 18,
           borderRadius: 20,
           background: '#fcf6ee',
@@ -68,7 +49,7 @@ export function ReviewPanel({
           {uiCopy.reader.review.translationDescription}
         </div>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {article.translation}
+          {article.chinese_translation}
         </p>
       </div>
 

@@ -12,7 +12,7 @@ test('mobile reader opens a bottom word drawer and keeps reading position stable
   await page.getByRole('button', { name: /下一段/i }).click();
   await expect(page.getByText(/第 2 段 \/ 共 2 段/i)).toBeVisible();
 
-  await page.getByRole('button', { name: /^absorbed$/i }).click();
+  await page.getByRole('button', { name: /^guided$/i }).click();
   await expect(page.getByLabel(/移动端单词详情/i)).toBeVisible();
   await page.getByRole('button', { name: /关闭/i }).click();
 
@@ -47,7 +47,9 @@ test('mobile reader reaches review without quiz UI', async ({
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /下一段/i }).click();
   await expect(page.getByText(/第 2 段 \/ 共 2 段/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /读完，进入复盘/i })).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /读完，进入复盘/i }),
+  ).toBeVisible();
   await page.getByRole('button', { name: /读完，进入复盘/i }).click();
 
   await expect(page.getByText(/本机阅读复盘/i)).toBeVisible();

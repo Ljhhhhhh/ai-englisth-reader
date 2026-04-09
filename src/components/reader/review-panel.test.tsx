@@ -14,9 +14,11 @@ describe('ReviewPanel', () => {
     expect(
       screen.getByText(/快速确认一下你刚刚读懂了什么/i),
     ).toBeInTheDocument();
-    expect(screen.getByText(/这篇文章的核心意思/i)).toBeInTheDocument();
     expect(
       screen.getByText(/如果你想逐句对照，再看全文译文/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/许多学习者能读懂英文文章的一部分/i),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/这一篇暂时还没有留下要记住的词/i),

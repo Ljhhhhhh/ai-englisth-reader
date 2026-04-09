@@ -95,7 +95,6 @@ export function WordList() {
                   <strong>{word.surface}</strong>
                   <div style={{ color: 'var(--muted)', marginTop: 6 }}>
                     {word.lemma} · {word.meaning}
-                    {word.phonetic ? ` · ${word.phonetic}` : ''}
                   </div>
                   <p
                     style={{

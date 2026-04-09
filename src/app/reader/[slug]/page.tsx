@@ -20,18 +20,17 @@ function applyReaderMocks(
   if (searchParams?.mockMissingTranslation === '1') {
     nextArticle = {
       ...nextArticle,
-      translation: '',
+      chinese_translation: '',
     };
   }
 
   if (searchParams?.mockBrokenReferences === '1') {
     nextArticle = {
       ...nextArticle,
-      vocabulary: nextArticle.vocabulary.map((item, index) =>
-        index === 0
-          ? { ...item, exampleSentenceId: 'missing-sentence-id' }
-          : item,
-      ),
+      language_evolution: {
+        ...nextArticle.language_evolution,
+        rewritten_sentence: 'This sentence does not exist in the summary.',
+      },
     };
   }
 
@@ -39,30 +38,14 @@ function applyReaderMocks(
 }
 
 function validateReaderArticle(article: Article) {
-  if (!article.translation.trim()) {
+  if (!article.chinese_translation.trim()) {
     return uiCopy.reader.page.issues.missingTranslation;
   }
 
-  const sentenceIds = new Set(
-    article.paragraphs.flatMap((paragraph) =>
-      paragraph.sentences.map((sentence) => sentence.id),
-    ),
-  );
-
-  const hasBrokenVocabularyRef = article.vocabulary.some(
-    (item) => !sentenceIds.has(item.exampleSentenceId),
-  );
-  const hasBrokenGrammarRef = article.grammarPoints.some(
-    (item) => !sentenceIds.has(item.sourceSentenceId),
-  );
-  const hasBrokenSentenceNoteRef = article.difficultSentences.some(
-    (item) => !sentenceIds.has(item.sentenceId),
-  );
-
   if (
-    hasBrokenVocabularyRef ||
-    hasBrokenGrammarRef ||
-    hasBrokenSentenceNoteRef
+    !article.feynman_summary.includes(
+      article.language_evolution.rewritten_sentence,
+    )
   ) {
     return uiCopy.reader.page.issues.brokenReferences;
   }

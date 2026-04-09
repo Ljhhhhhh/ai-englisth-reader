@@ -6,7 +6,7 @@ type ArticleCardProps = {
   title: string;
   difficulty: string;
   estimatedMinutes: number;
-  summary: string;
+  previewText: string;
 };
 
 export function ArticleCard({
@@ -14,7 +14,7 @@ export function ArticleCard({
   title,
   difficulty,
   estimatedMinutes,
-  summary,
+  previewText,
 }: ArticleCardProps) {
   return (
     <article
@@ -30,7 +30,7 @@ export function ArticleCard({
         {difficulty} · {formatEstimatedMinutes(estimatedMinutes)}
       </p>
       <h2 style={{ fontSize: 28, marginBottom: 12 }}>{title}</h2>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>{summary}</p>
+      <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>{previewText}</p>
       <Link
         href={`/reader/${slug}`}
         style={{

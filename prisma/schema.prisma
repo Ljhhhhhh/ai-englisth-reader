@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  engineType = "binary"
 }
 
 datasource db {
@@ -13,14 +14,29 @@ model Article {
   source           String
   difficulty       String
   estimatedMinutes Int
-  summary          String
-  translation      String
+  feynmanSummary   String
+  chineseTranslation String
   createdAt        DateTime         @default(now())
   updatedAt        DateTime         @updatedAt
   progresses       ReadingProgress[]
   quizAttempts     QuizAttempt[]
   savedWords       SavedWord[]
   learningEvents   LearningEvent[]
+}
+
+model GenerationJob {
+  id         String   @id @default(cuid())
+  deviceId   String
+  status     String   @default("pending")
+  sourceType String
+  sourceRef  String
+  articleSlug String?
+  errorMsg   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([deviceId, createdAt])
+  @@index([status])
 }
 
 model ReadingProgress {

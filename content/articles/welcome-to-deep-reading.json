@@ -4,20 +4,20 @@
   "source": "编辑部示例",
   "difficulty": "B1",
   "estimatedMinutes": 8,
-  "summary": "当词汇帮助始终贴着文章出现，而不是把学习者拉离当前语境时，精读会轻松得多。",
-  "translation": "当词汇帮助始终贴着文章出现时，精读会比不停切换工具轻松得多。",
+  "feynman_summary": "Many learners can read part of an English article but lose confidence when the meaning starts to blur. A better reading tool keeps help close to the sentence, allowing the learner to stay inside the story instead of jumping between different tools. Guided by clear support, the reader can follow the main idea with less panic and more focus. When the reading flow feels steady rather than broken, deep reading becomes easier to continue and more likely to build real understanding.",
+  "chinese_translation": "许多学习者能读懂英文文章的一部分，但当意思开始变得模糊时就会失去信心。更好的阅读工具会把帮助放在句子附近，让学习者留在文章情境中，而不是在不同工具之间来回切换。在清晰支持的引导下，读者可以更少慌乱、更加专注地跟住文章主线。当阅读流程感觉稳定而不是被打断时，精读就更容易坚持，也更可能建立真正的理解。",
   "paragraphs": [
     {
       "id": "p1",
       "sentences": [
         {
           "id": "s1",
-          "text": "Many learners can read part of an English article, but they lose confidence when the meaning starts to blur.",
+          "text": "Many learners can read part of an English article but lose confidence when the meaning starts to blur.",
           "notes": []
         },
         {
           "id": "s2",
-          "text": "A better reading tool keeps the explanation close to the sentence, so the learner stays inside the story.",
+          "text": "A better reading tool keeps help close to the sentence, allowing the learner to stay inside the story instead of jumping between different tools.",
           "notes": []
         }
       ]
@@ -27,60 +27,75 @@
       "sentences": [
         {
           "id": "s3",
-          "text": "When the reader feels absorbed instead of interrupted, deep reading becomes much more sustainable.",
+          "text": "Guided by clear support, the reader can follow the main idea with less panic and more focus.",
+          "notes": []
+        },
+        {
+          "id": "s4",
+          "text": "When the reading flow feels steady rather than broken, deep reading becomes easier to continue and more likely to build real understanding.",
           "notes": []
         }
       ]
     }
   ],
-  "vocabulary": [
+  "growth_vocabulary": [
     {
-      "lemma": "blur",
-      "surface": "blur",
-      "meaning": "变得模糊",
-      "phonetic": "/blɜːr/",
-      "exampleSentenceId": "s1"
+      "word": "blur",
+      "chinese_meaning": "变得模糊",
+      "context_meaning": "指文章意思开始不清楚、难以把握。",
+      "memory_type": "核心意象助记",
+      "memory_hook": "像照片失焦一样，意思一 blur，读者就抓不住内容了。"
     },
     {
-      "lemma": "confidence",
-      "surface": "confidence",
-      "meaning": "信心",
-      "phonetic": "/ˈkɑːnfɪdəns/",
-      "exampleSentenceId": "s1"
+      "word": "guided",
+      "chinese_meaning": "被引导的",
+      "context_meaning": "指读者在清晰支持下被带着往前读。",
+      "memory_type": "场景助记",
+      "memory_hook": "想象有人在旁边给你打手电，guided reading 就是不再摸黑读。"
     },
     {
-      "lemma": "explanation",
-      "surface": "explanation",
-      "meaning": "解释",
-      "phonetic": "/ˌekspləˈneɪʃn/",
-      "exampleSentenceId": "s2"
+      "word": "steady",
+      "chinese_meaning": "稳定的",
+      "context_meaning": "指阅读节奏平稳，没有频繁中断。",
+      "memory_type": "近义辨析助记",
+      "memory_hook": "steady 比 simply slow 更强调稳，不是慢，而是不乱。"
     },
     {
-      "lemma": "absorbed",
-      "surface": "absorbed",
-      "meaning": "沉浸其中的",
-      "phonetic": "/əbˈzɔːrbd/",
-      "exampleSentenceId": "s3"
+      "word": "panic",
+      "chinese_meaning": "慌乱",
+      "context_meaning": "指读者因为读不懂而产生的紧张感。",
+      "memory_type": "场景助记",
+      "memory_hook": "看到陌生句子先别 panic，文中说的是支持能把这种慌乱降下来。"
     },
     {
-      "lemma": "sustainable",
-      "surface": "sustainable",
-      "meaning": "可持续的",
-      "phonetic": "/səˈsteɪnəbl/",
-      "exampleSentenceId": "s3"
+      "word": "understanding",
+      "chinese_meaning": "理解",
+      "context_meaning": "指对整篇文章主线和意思的真正把握。",
+      "memory_type": "搭配助记",
+      "memory_hook": "build real understanding 是高频搭配，强调理解是逐步建立起来的。"
     }
   ],
-  "grammarPoints": [
+  "high_frequency_phrases": [
     {
-      "title": "when 引导时间从句",
-      "explanation": "用 when 把发生的时刻和结果连起来，帮助读者理解因果顺序。",
-      "sourceSentenceId": "s3"
+      "phrase": "stay inside the story",
+      "chinese_meaning": "留在文章情境中",
+      "usage_note": "可复用于表达保持在当前内容或语境里，不被外部因素打断。"
+    },
+    {
+      "phrase": "main idea",
+      "chinese_meaning": "主旨，要点",
+      "usage_note": "阅读、听力和写作中都高频，可直接表达一段或一篇内容的核心意思。"
+    },
+    {
+      "phrase": "more likely to",
+      "chinese_meaning": "更有可能",
+      "usage_note": "是非常高复用的概率表达，适合写作中说明结果倾向。"
     }
   ],
-  "difficultSentences": [
-    {
-      "sentenceId": "s1",
-      "breakdown": "主句说明很多学习者能读懂一部分，but 后面补充他们在意思变模糊时会失去信心。"
-    }
-  ]
+  "language_evolution": {
+    "target_structure": "分词短语作状语",
+    "rewritten_sentence": "Guided by clear support, the reader can follow the main idea with less panic and more focus.",
+    "explanation": "Guided by clear support 放在句首，说明主句动作发生时的条件或状态，相当于 Because the reader is guided by clear support。",
+    "imitation_example": "Encouraged by her teacher, she kept reading even when the text became difficult."
+  }
 }

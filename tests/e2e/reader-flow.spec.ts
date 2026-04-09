@@ -33,13 +33,13 @@ test('reader can lookup and save a word without losing reading position', async 
   await page.getByRole('button', { name: /下一段/i }).click();
   await expect(page.getByText(/第 2 段 \/ 共 2 段/i)).toBeVisible();
 
-  await page.getByRole('button', { name: /^absorbed$/i }).click();
+  await page.getByRole('button', { name: /^guided$/i }).click();
   const wordPanel = page.getByLabel(/单词详情弹窗|移动端单词详情/i);
 
   await expect(wordPanel).toBeVisible();
   await expect(
     wordPanel.getByText(
-      /When the reader feels absorbed instead of interrupted/i,
+      /Guided by clear support, the reader can follow the main idea/i,
     ),
   ).toBeVisible();
 
@@ -67,7 +67,7 @@ test('reader can recover from a temporary lookup failure', async ({ page }) => {
 
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /下一段/i }).click();
-  await page.getByRole('button', { name: /^absorbed$/i }).click();
+  await page.getByRole('button', { name: /^guided$/i }).click();
 
   await expect(
     page.getByRole('heading', { name: /行内查词刚才失败了一次/i }),
@@ -83,7 +83,7 @@ test('reader can retry after a temporary save-word failure', async ({
 
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /下一段/i }).click();
-  await page.getByRole('button', { name: /^absorbed$/i }).click();
+  await page.getByRole('button', { name: /^guided$/i }).click();
   await page.getByRole('button', { name: /保存这个词/i }).click();
 
   await expect(page.getByText(/这个词暂时无法保存/i)).toBeVisible();
@@ -123,7 +123,9 @@ test('reader completes the three-stage loop without quiz gating', async ({
     page.getByRole('heading', { name: /这一篇你已经读完了/i }),
   ).toBeVisible();
   await expect(page.getByText(/快速确认一下你刚刚读懂了什么/i)).toBeVisible();
-  await expect(page.getByText(/当词汇帮助始终贴着文章出现时/i)).toBeVisible();
+  await expect(
+    page.getByText(/许多学习者能读懂英文文章的一部分/i),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: /开始下一篇/i })).toBeVisible();
 });
 
@@ -165,7 +167,7 @@ test('reader shows a fallback when article references are malformed', async ({
       name: /这篇文章当前无法安全打开/i,
     }),
   ).toBeVisible();
-  await expect(page.getByText(/存在失效的句子引用/i)).toBeVisible();
+  await expect(page.getByText(/学习字段与正文不一致/i)).toBeVisible();
 });
 
 test('saved words page groups words by article', async ({ page }) => {
@@ -173,7 +175,7 @@ test('saved words page groups words by article', async ({ page }) => {
 
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /下一段/i }).click();
-  await page.getByRole('button', { name: /^absorbed$/i }).click();
+  await page.getByRole('button', { name: /^guided$/i }).click();
   await page.getByRole('button', { name: /保存这个词/i }).click();
 
   await page.goto('/words');
@@ -182,6 +184,8 @@ test('saved words page groups words by article', async ({ page }) => {
     page.getByRole('heading', { name: /更从容地读英文/i }),
   ).toBeVisible();
   await expect(
-    page.getByText(/When the reader feels absorbed instead of interrupted/i),
+    page.getByText(
+      /Guided by clear support, the reader can follow the main idea/i,
+    ),
   ).toBeVisible();
 });

@@ -8,7 +8,6 @@ export type SavedWordRecord = {
   deviceId: string;
   lemma: string;
   meaning: string;
-  phonetic?: string;
   savedAt: number;
   sentenceId: string;
   sourceSentence: string;
