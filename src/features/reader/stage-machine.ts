@@ -32,11 +32,11 @@ export function getPreviousStage(stage: ReaderStage): ReaderStage {
 export function getStageLabel(stage: ReaderStage) {
   switch (stage) {
     case 'intro':
-      return 'Intro';
+      return '导读';
     case 'read':
-      return 'Read';
+      return '正文';
     case 'review':
-      return 'Review';
+      return '复盘';
   }
 }
 

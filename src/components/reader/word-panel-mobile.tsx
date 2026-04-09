@@ -1,4 +1,5 @@
 import type { WordLookupResult } from '@/features/reader/word-lookup-service';
+import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelMobileProps = {
   errorMessage?: string | null;
@@ -17,7 +18,7 @@ export function WordPanelMobile({
 }: WordPanelMobileProps) {
   return (
     <div
-      aria-label="Word details mobile"
+      aria-label={uiCopy.reader.wordPanel.ariaLabelMobile}
       style={{
         position: 'fixed',
         inset: 'auto 0 0 0',
@@ -47,7 +48,7 @@ export function WordPanelMobile({
         >
           <div style={{ display: 'grid', gap: 4 }}>
             <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-              Word details
+              {uiCopy.reader.wordPanel.title}
             </p>
             <strong style={{ fontSize: 24 }}>{word.surface}</strong>
           </div>
@@ -62,7 +63,7 @@ export function WordPanelMobile({
               cursor: 'pointer',
             }}
           >
-            Close
+            {uiCopy.common.close}
           </button>
         </div>
 
@@ -72,7 +73,7 @@ export function WordPanelMobile({
         </p>
 
         <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
-          <strong>Meaning</strong>
+          <strong>{uiCopy.reader.wordPanel.meaning}</strong>
           <p
             style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
           >
@@ -81,7 +82,7 @@ export function WordPanelMobile({
         </div>
 
         <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-          <strong>Source sentence</strong>
+          <strong>{uiCopy.reader.wordPanel.sourceSentence}</strong>
           <p
             style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
           >
@@ -103,10 +104,10 @@ export function WordPanelMobile({
           }}
         >
           {saved
-            ? 'Saved to this device'
+            ? uiCopy.reader.wordPanel.saved
             : errorMessage
-              ? 'Retry save'
-              : 'Save word'}
+              ? uiCopy.reader.wordPanel.retrySave
+              : uiCopy.reader.wordPanel.save}
         </button>
 
         {errorMessage ? (

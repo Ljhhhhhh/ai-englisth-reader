@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/system/empty-state';
 import { getOrCreateDeviceId } from '@/lib/device-id';
+import { uiCopy } from '@/lib/ui-copy';
 import {
   listSavedWordsByArticle,
   type SavedWordsByArticleGroup,
@@ -47,7 +48,7 @@ export function WordList() {
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by lemma or meaning"
+          placeholder={uiCopy.words.actions.searchPlaceholder}
           style={{
             minWidth: 240,
             padding: '12px 14px',
@@ -67,7 +68,7 @@ export function WordList() {
             background: '#fff',
           }}
         >
-          <option value="all">All articles</option>
+          <option value="all">{uiCopy.words.actions.filterAll}</option>
           {groups.map((group) => (
             <option key={group.articleSlug} value={group.articleSlug}>
               {group.articleTitle}
@@ -112,9 +113,9 @@ export function WordList() {
         ))
       ) : (
         <EmptyState
-          eyebrow="No saved words yet"
-          title="Your word notebook starts after the first lookup you keep."
-          description="Read one article, save a few words, and they will appear here grouped by article with the source sentence attached."
+          eyebrow={uiCopy.words.empty.eyebrow}
+          title={uiCopy.words.empty.title}
+          description={uiCopy.words.empty.description}
         >
           <Link
             href="/"
@@ -127,7 +128,7 @@ export function WordList() {
               fontWeight: 700,
             }}
           >
-            Browse articles
+            {uiCopy.words.actions.browseArticles}
           </Link>
         </EmptyState>
       )}

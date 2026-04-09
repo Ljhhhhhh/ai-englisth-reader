@@ -4,16 +4,12 @@ import HomePage from '@/app/page';
 describe('HomePage', () => {
   it('shows the product promise on the homepage', async () => {
     render(await HomePage({}));
-    expect(screen.getByText(/read one article deeply/i)).toBeInTheDocument();
+    expect(screen.getByText(/一次真正读懂一篇英文文章/i)).toBeInTheDocument();
   });
 
   it('shows sample articles on the homepage', async () => {
     render(await HomePage({}));
-    expect(
-      screen.getByText(/A calmer way to read English/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Why deep reading beats scattered lookup/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/更从容地读英文/i)).toBeInTheDocument();
+    expect(screen.getByText(/为什么精读胜过零散查词/i)).toBeInTheDocument();
   });
 });

@@ -26,7 +26,7 @@ describe('saved-word-service', () => {
     saveWord(
       {
         articleSlug: 'welcome-to-deep-reading',
-        articleTitle: 'A calmer way to read English',
+        articleTitle: '更从容地读英文',
         deviceId: 'dev-1',
         lemma: 'absorb',
         meaning: '吸收',
@@ -40,7 +40,7 @@ describe('saved-word-service', () => {
     saveWord(
       {
         articleSlug: 'welcome-to-deep-reading',
-        articleTitle: 'A calmer way to read English',
+        articleTitle: '更从容地读英文',
         deviceId: 'dev-1',
         lemma: 'absorb',
         meaning: '吸收',
@@ -71,7 +71,7 @@ describe('saved-word-service', () => {
     saveWord(
       {
         articleSlug: 'welcome-to-deep-reading',
-        articleTitle: 'A calmer way to read English',
+        articleTitle: '更从容地读英文',
         deviceId: 'dev-1',
         lemma: 'absorb',
         meaning: '吸收',
@@ -102,7 +102,7 @@ describe('saved-word-service', () => {
     saveWord(
       {
         articleSlug: 'welcome-to-deep-reading',
-        articleTitle: 'A calmer way to read English',
+        articleTitle: '更从容地读英文',
         deviceId: 'dev-1',
         lemma: 'absorb',
         meaning: '吸收',

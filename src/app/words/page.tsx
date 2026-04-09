@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
 import { WordList } from '@/components/words/word-list';
+import { uiCopy } from '@/lib/ui-copy';
 
 type WordsPageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -20,9 +21,9 @@ export default async function WordsPage({ searchParams }: WordsPageProps) {
         }}
       >
         <ErrorState
-          eyebrow="Saved words unavailable"
-          title="The saved-word notebook could not be opened."
-          description="Refresh the page once. If the problem persists, go back to the reader and try again from the same device."
+          eyebrow={uiCopy.words.pageError.eyebrow}
+          title={uiCopy.words.pageError.title}
+          description={uiCopy.words.pageError.description}
         >
           <Link
             href="/words"
@@ -35,7 +36,7 @@ export default async function WordsPage({ searchParams }: WordsPageProps) {
               fontWeight: 700,
             }}
           >
-            Retry words page
+            {uiCopy.words.actions.retry}
           </Link>
         </ErrorState>
       </main>
@@ -53,14 +54,13 @@ export default async function WordsPage({ searchParams }: WordsPageProps) {
     >
       <section style={{ display: 'grid', gap: 8 }}>
         <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          Saved words
+          {uiCopy.words.page.eyebrow}
         </p>
         <h1 style={{ margin: 0, fontSize: 'clamp(2rem, 5vw, 3.5rem)' }}>
-          Words you kept from real reading
+          {uiCopy.words.page.title}
         </h1>
         <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          Review saved vocabulary by article, search by meaning or lemma, and
-          jump back into the reading loop.
+          {uiCopy.words.page.description}
         </p>
       </section>
 

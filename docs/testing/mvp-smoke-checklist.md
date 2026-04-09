@@ -1,41 +1,48 @@
-# MVP Smoke Checklist
+# MVP 冒烟检查清单
 
-Run the app locally with `pnpm dev`, then verify the following on both desktop and mobile-width viewports.
+本地运行 `pnpm dev` 后，请在桌面视口和移动端宽度下分别验证以下流程。
 
-## Setup
+## 启动准备
 
-- Install dependencies with `pnpm install`
-- Create `.env` from `.env.example`
-- Optional Prisma alignment: `pnpm db:push && pnpm db:seed`
-- Start the app with `pnpm dev`
+- 使用 `pnpm install` 安装依赖
+- 从 `.env.example` 复制生成 `.env`
+- 可选：执行 `pnpm db:push && pnpm db:seed`，让 Prisma 结构与种子数据对齐
+- 使用 `pnpm dev` 启动应用
 
-## Desktop smoke flow
+## 桌面端检查流程
 
-1. Open `/` and confirm article cards render.
-2. Open one article and confirm the intro stage appears.
-3. Start reading, jump paragraphs, refresh, and confirm reading position restores.
-4. Tap a highlighted word and confirm the desktop side panel stays visible without losing the paragraph position.
-5. Save a word and confirm the button switches to the saved state.
-6. Continue to the review stage and confirm the full translation appears without any quiz gate.
-7. Use the reader navigation to jump to the next article, then return to the homepage or saved words page.
-8. Open `/words` and confirm the saved word appears under the correct article.
+1. 打开 `/`，确认首页能正常展示文章卡片。
+2. 打开任意一篇文章，确认首先进入“导读”阶段。
+3. 点击进入正文，确认显示"第 1 段 / 共 N 段"进度文本。
+4. 点击"下一段"，确认推进到下一段并显示正确进度。
+5. 点击"上一段"，确认能够返回上一段。
+6. 推进到最后一段，确认出现"读完，进入复盘"按钮而非"下一段"。
+7. 刷新页面，确认阅读位置（段落）能正确恢复，并显示恢复提示。
+8. 点击高亮单词，确认桌面端侧边单词面板出现，且当前段落不丢失。
+9. 保存一个单词，确认按钮状态切换为已保存。
+10. 点击"读完，进入复盘"进入复盘阶段，确认全文译文出现，且没有任何测验拦截。
+11. 返回首页，确认"继续阅读"卡片显示"上次读到第 N 段"。
+12. 点击"继续阅读"，确认进入对应文章并恢复到对应段落。
+13. 使用阅读器中的导航跳到下一篇，再返回首页或生词页。
+14. 打开 `/words`，确认刚才保存的单词出现在正确的文章分组下。
 
-## Mobile smoke flow
+## 移动端检查流程
 
-1. Open `/` in a mobile viewport and confirm the homepage remains usable.
-2. Open an article and start reading.
-3. Tap a highlighted word and confirm the bottom drawer opens.
-4. Close the drawer and confirm the current paragraph is unchanged.
-5. Rotate or resize the viewport and confirm the current stage and paragraph remain intact.
-6. Continue to the review stage and confirm it remains readable on mobile without any quiz UI.
+1. 在移动端视口打开 `/`，确认首页仍可正常使用。
+2. 打开任意文章并进入正文，确认显示"第 1 段 / 共 N 段"。
+3. 点击"下一段"，确认推进到下一段并更新进度文本。
+4. 点击高亮单词，确认底部抽屉成功弹出。
+5. 关闭抽屉，确认当前段落位置没有变化。
+6. 旋转屏幕或调整视口尺寸，确认"当前阶段：正文"和段落进度文本都保持一致。
+7. 最后一段点击"读完，进入复盘"，确认移动端可进入复盘阶段，且页面中不存在测验 UI。
 
-## Edge-state checks
+## 边界状态检查
 
-1. Visit `/?mockEmptyArticles=1` and confirm the empty article state explains how to recover.
-2. Visit `/reader/unknown-slug` and confirm a clear not-found state appears.
-3. Visit `/reader/welcome-to-deep-reading?mockLookupError=once` and confirm the retry flow for lookup works.
-4. Visit `/reader/welcome-to-deep-reading?mockSaveWordError=once` and confirm saved-word retry feedback works.
-5. Visit `/reader/welcome-to-deep-reading?mockProgressSaveError=once` and confirm reading stays on screen and the warning disappears after the next interaction.
-6. Visit `/reader/welcome-to-deep-reading?mockMissingTranslation=1` and confirm a content fallback appears.
-7. Visit `/reader/welcome-to-deep-reading?mockBrokenReferences=1` and confirm a content fallback appears.
-8. Visit `/words` with no saved words and confirm the page encourages reading first.
+1. 访问 `/?mockEmptyArticles=1`，确认空文章状态会明确告诉用户如何恢复。
+2. 访问 `/reader/unknown-slug`，确认页面展示清晰的未找到状态。
+3. 访问 `/reader/welcome-to-deep-reading?mockLookupError=once`，确认查词失败后的重试流程可用。
+4. 访问 `/reader/welcome-to-deep-reading?mockSaveWordError=once`，确认保存单词失败后的反馈和重试流程可用。
+5. 访问 `/reader/welcome-to-deep-reading?mockProgressSaveError=once`，确认阅读内容仍留在屏幕上，且下一次交互后警告会消失。
+6. 访问 `/reader/welcome-to-deep-reading?mockMissingTranslation=1`，确认页面会展示内容缺失兜底。
+7. 访问 `/reader/welcome-to-deep-reading?mockBrokenReferences=1`，确认页面会展示内容映射错误兜底。
+8. 在没有保存任何单词时访问 `/words`，确认页面会引导用户先去阅读再保存单词。

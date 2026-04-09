@@ -4,6 +4,7 @@ import { ErrorState } from '@/components/system/error-state';
 import { ArticleCard } from '@/components/home/article-card';
 import { ContinueReading } from '@/components/home/continue-reading';
 import { listArticles } from '@/features/articles/article-service';
+import { uiCopy } from '@/lib/ui-copy';
 
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -28,9 +29,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         }}
       >
         <ErrorState
-          eyebrow="Articles unavailable"
-          title="The homepage could not load article content."
-          description="Refresh the page or verify that the sample article JSON files are present and valid under content/articles."
+          eyebrow={uiCopy.home.error.eyebrow}
+          title={uiCopy.home.error.title}
+          description={uiCopy.home.error.description}
         >
           <Link
             href="/"
@@ -43,7 +44,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               fontWeight: 700,
             }}
           >
-            Retry homepage
+            {uiCopy.common.retryHome}
           </Link>
         </ErrorState>
       </main>
@@ -76,7 +77,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           }}
         >
           <p style={{ margin: 0, color: 'var(--accent)', fontSize: 14 }}>
-            Interactive English reading MVP
+            {uiCopy.home.hero.eyebrow}
           </p>
           <h1
             style={{
@@ -85,12 +86,10 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               lineHeight: 1,
             }}
           >
-            Read one article deeply.
+            {uiCopy.home.hero.title}
           </h1>
           <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-            Stay inside one article, understand the hard parts in context, and
-            carry the key words forward instead of breaking your focus across
-            scattered tools.
+            {uiCopy.home.hero.description}
           </p>
         </div>
 
@@ -109,9 +108,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           </section>
         ) : (
           <EmptyState
-            eyebrow="No sample articles yet"
-            title="The reading shelf is empty on this machine."
-            description="Seed or restore article JSON content under content/articles, then refresh the homepage. Once at least one article is available, the deep-reading loop will appear here."
+            eyebrow={uiCopy.home.empty.eyebrow}
+            title={uiCopy.home.empty.title}
+            description={uiCopy.home.empty.description}
           >
             <Link
               href="/"
@@ -124,7 +123,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 fontWeight: 700,
               }}
             >
-              Retry homepage
+              {uiCopy.common.retryHome}
             </Link>
           </EmptyState>
         )}

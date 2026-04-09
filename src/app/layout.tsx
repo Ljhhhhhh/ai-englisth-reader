@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
-import "./globals.css";
+import type { Metadata } from 'next';
+import { uiCopy } from '@/lib/ui-copy';
+import './globals.css';
 
 export const metadata: Metadata = {
-  title: "AI English Read",
-  description: "Interactive English deep reading reader",
+  title: uiCopy.app.title,
+  description: uiCopy.app.description,
 };
 
 export default function RootLayout({
@@ -12,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={uiCopy.app.htmlLang} suppressHydrationWarning>
       <body>{children}</body>
     </html>
   );

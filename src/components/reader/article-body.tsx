@@ -1,7 +1,8 @@
-import type { Article } from '@/lib/content/article-schema';
+import type { Article } from "@/lib/content/article-schema";
+import { uiCopy } from "@/lib/ui-copy";
 
 function normalizeToken(value: string) {
-  return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '').toLowerCase();
+  return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "").toLowerCase();
 }
 
 function tokenizeSentence(text: string) {
@@ -10,41 +11,45 @@ function tokenizeSentence(text: string) {
 
 type ArticleBodyProps = {
   activeParagraphId?: string;
+  activeParagraphIndex: number;
+  totalParagraphCount: number;
   article: Article;
   lookupableWords: Set<string>;
+  canGoPrevious: boolean;
+  canGoNext: boolean;
   onContinueToReview: () => void;
-  onFocusParagraph: (paragraphId: string) => void;
+  onPreviousParagraph: () => void;
+  onNextParagraph: () => void;
   onLookupWord: (input: { sentenceId: string; surface: string }) => void;
 };
 
 export function ArticleBody({
   activeParagraphId,
+  totalParagraphCount,
   article,
   lookupableWords,
+  canGoPrevious,
+  canGoNext,
   onContinueToReview,
-  onFocusParagraph,
+  onPreviousParagraph,
+  onNextParagraph,
   onLookupWord,
 }: ArticleBodyProps) {
   return (
-    <section style={{ display: 'grid', gap: 20 }}>
-      <header style={{ display: 'grid', gap: 8 }}>
-        <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          Consolidate in context
-        </p>
+    <section style={{ display: "grid", gap: 20 }}>
+      <header style={{ display: "grid", gap: 8 }}>
         <h1 style={{ margin: 0 }}>{article.title}</h1>
-        <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          Re-read the article with the key words, grammar, and sentence
-          patterns already in mind. Tap highlighted words whenever you need a
-          quick reminder.
-        </p>
-        <p style={{ margin: 0, color: 'var(--muted)' }}>
-          Current paragraph: {activeParagraphId ?? article.paragraphs[0]?.id}
+        <p style={{ margin: 0, color: "var(--muted)" }}>
+          {uiCopy.reader.articleBody.currentParagraph(
+            activeParagraphId ?? article.paragraphs[0]?.id,
+            totalParagraphCount,
+          )}
         </p>
       </header>
 
-      <div style={{ display: 'grid', gap: 16 }}>
+      <div style={{ display: "grid", gap: 16 }}>
         {article.paragraphs.map((paragraph, index) => {
-          const selected = activeParagraphId === paragraph.id;
+          const isActive = activeParagraphId === paragraph.id;
 
           return (
             <article
@@ -52,41 +57,19 @@ export function ArticleBody({
               style={{
                 padding: 20,
                 borderRadius: 22,
-                border: selected
-                  ? '1px solid var(--accent)'
-                  : '1px solid var(--border)',
-                background: selected ? '#fff8ee' : 'var(--surface)',
+                border: isActive
+                  ? "1px solid var(--accent)"
+                  : "1px solid var(--border)",
+                background: isActive ? "#fff8ee" : "var(--surface)",
+                opacity: isActive ? 1 : 0.45,
+                transition: "opacity 0.15s ease",
               }}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  gap: 12,
-                  alignItems: 'center',
-                }}
-              >
-                <strong>Paragraph {index + 1}</strong>
-                <button
-                  type="button"
-                  aria-pressed={selected}
-                  onClick={() => onFocusParagraph(paragraph.id)}
-                  style={{
-                    borderRadius: 999,
-                    border: selected
-                      ? '1px solid var(--accent)'
-                      : '1px solid var(--border)',
-                    background: selected ? 'var(--accent)' : 'transparent',
-                    color: selected ? '#fff' : 'var(--foreground)',
-                    padding: '8px 12px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Jump to paragraph {index + 1}
-                </button>
-              </div>
+              <strong style={{ display: "block", marginBottom: 12 }}>
+                {uiCopy.reader.articleBody.paragraphTitle(index + 1)}
+              </strong>
 
-              <div style={{ display: 'grid', gap: 12, marginTop: 16 }}>
+              <div style={{ display: "grid", gap: 12 }}>
                 {paragraph.sentences.map((sentence) => (
                   <p
                     key={sentence.id}
@@ -95,7 +78,8 @@ export function ArticleBody({
                     {tokenizeSentence(sentence.text).map(
                       (token, tokenIndex) => {
                         const normalizedToken = normalizeToken(token);
-                        const canLookup = lookupableWords.has(normalizedToken);
+                        const canLookup =
+                          isActive && lookupableWords.has(normalizedToken);
 
                         if (!canLookup) {
                           return (
@@ -116,13 +100,13 @@ export function ArticleBody({
                               })
                             }
                             style={{
-                              border: 'none',
+                              border: "none",
                               padding: 0,
-                              background: 'transparent',
-                              color: 'var(--accent)',
-                              cursor: 'pointer',
-                              font: 'inherit',
-                              textDecoration: 'underline',
+                              background: "transparent",
+                              color: "var(--accent)",
+                              cursor: "pointer",
+                              font: "inherit",
+                              textDecoration: "underline",
                               textUnderlineOffset: 3,
                             }}
                           >
@@ -141,30 +125,70 @@ export function ArticleBody({
 
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: "flex",
+          justifyContent: "space-between",
           gap: 12,
-          flexWrap: 'wrap',
+          flexWrap: "wrap",
+          alignItems: "center",
         }}
       >
-        <p style={{ margin: 0, color: 'var(--muted)' }}>
-          Reading position is saved automatically on this device.
+        <p style={{ margin: 0, color: "var(--muted)" }}>
+          {uiCopy.reader.articleBody.positionSaved}
         </p>
-        <button
-          type="button"
-          onClick={onContinueToReview}
-          style={{
-            borderRadius: 999,
-            border: 'none',
-            background: 'var(--accent)',
-            color: '#fff',
-            padding: '14px 20px',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          Continue to review
-        </button>
+
+        <div style={{ display: "flex", gap: 12 }}>
+          {canGoPrevious ? (
+            <button
+              type="button"
+              onClick={onPreviousParagraph}
+              style={{
+                borderRadius: 999,
+                border: "1px solid var(--border)",
+                background: "var(--surface)",
+                color: "var(--foreground)",
+                padding: "14px 20px",
+                fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              {uiCopy.reader.articleBody.previousParagraph}
+            </button>
+          ) : null}
+
+          {canGoNext ? (
+            <button
+              type="button"
+              onClick={onNextParagraph}
+              style={{
+                borderRadius: 999,
+                border: "none",
+                background: "var(--accent)",
+                color: "#fff",
+                padding: "14px 20px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {uiCopy.reader.articleBody.nextParagraph}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onContinueToReview}
+              style={{
+                borderRadius: 999,
+                border: "none",
+                background: "var(--accent)",
+                color: "#fff",
+                padding: "14px 20px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {uiCopy.reader.articleBody.continueToReview}
+            </button>
+          )}
+        </div>
       </div>
     </section>
   );

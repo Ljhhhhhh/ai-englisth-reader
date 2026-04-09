@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { formatEstimatedMinutes, uiCopy } from '@/lib/ui-copy';
 
 type ArticleCardProps = {
   slug: string;
@@ -26,7 +27,7 @@ export function ArticleCard({
       }}
     >
       <p style={{ color: 'var(--accent)', margin: 0, fontSize: 14 }}>
-        {difficulty} · {estimatedMinutes} min
+        {difficulty} · {formatEstimatedMinutes(estimatedMinutes)}
       </p>
       <h2 style={{ fontSize: 28, marginBottom: 12 }}>{title}</h2>
       <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>{summary}</p>
@@ -42,7 +43,7 @@ export function ArticleCard({
           fontWeight: 600,
         }}
       >
-        Start reading
+        {uiCopy.articleCard.startReading}
       </Link>
     </article>
   );

@@ -2,11 +2,9 @@ import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
 import { notFound } from 'next/navigation';
 import { ReaderShell } from '@/components/reader/reader-shell';
-import {
-  listArticles,
-  loadArticle,
-} from '@/features/articles/article-service';
+import { listArticles, loadArticle } from '@/features/articles/article-service';
 import type { Article } from '@/lib/content/article-schema';
+import { uiCopy } from '@/lib/ui-copy';
 
 type ReaderPageProps = {
   params: Promise<{ slug: string }>;
@@ -42,7 +40,7 @@ function applyReaderMocks(
 
 function validateReaderArticle(article: Article) {
   if (!article.translation.trim()) {
-    return 'This article is missing its review translation payload. Restore the translation content before opening the reader again.';
+    return uiCopy.reader.page.issues.missingTranslation;
   }
 
   const sentenceIds = new Set(
@@ -66,7 +64,7 @@ function validateReaderArticle(article: Article) {
     hasBrokenGrammarRef ||
     hasBrokenSentenceNoteRef
   ) {
-    return 'This article contains broken sentence references, so inline support would be unreliable. Fix the content mapping before reopening it.';
+    return uiCopy.reader.page.issues.brokenReferences;
   }
 
   return null;
@@ -125,7 +123,7 @@ async function getReaderArticle(
       issue:
         error instanceof Error
           ? error.message
-          : 'The reader could not load this article.',
+          : uiCopy.reader.page.issues.unknownLoadError,
       kind: 'error' as const,
     };
   }
@@ -154,8 +152,8 @@ export default async function ReaderPage({
         }}
       >
         <ErrorState
-          eyebrow="Reader unavailable"
-          title="This article cannot be opened safely right now."
+          eyebrow={uiCopy.reader.page.error.eyebrow}
+          title={uiCopy.reader.page.error.title}
           description={result.issue}
         >
           <Link
@@ -169,12 +167,14 @@ export default async function ReaderPage({
               fontWeight: 700,
             }}
           >
-            Back to homepage
+            {uiCopy.common.backHome}
           </Link>
         </ErrorState>
       </main>
     );
   }
 
-  return <ReaderShell article={result.article} navigation={result.navigation} />;
+  return (
+    <ReaderShell article={result.article} navigation={result.navigation} />
+  );
 }

@@ -3,6 +3,7 @@ import {
   getStageProgress,
   type ReaderStage,
 } from '@/features/reader/stage-machine';
+import { uiCopy } from '@/lib/ui-copy';
 
 type ProgressBarProps = {
   currentStage: ReaderStage;
@@ -34,7 +35,7 @@ export function ProgressBar({ currentStage }: ProgressBarProps) {
         }}
       >
         <span style={{ color: 'var(--accent)', fontWeight: 600 }}>
-          Reading progress
+          {uiCopy.reader.progress.title}
         </span>
         <span style={{ color: 'var(--muted)' }}>
           {getStageLabel(currentStage)}

@@ -1,62 +1,64 @@
-# AI English Read
+# AI 英语精读
 
-Phase 1 MVP for interactive English deep reading. The app helps learners master key words, grammar, and difficult sentences before consolidating understanding in the article itself, while keeping lookup and saved vocabulary on the same device.
+这是一个面向中文母语者的交互式英语精读 Phase 1 MVP。产品目标不是“查很多词”，而是帮助用户围绕同一篇文章完成导读、正文精读和复盘，把关键词汇、语法点、难句和保存的生词都留在同一条阅读链路里。
 
-## What ships in the MVP
+## 当前 MVP 能做什么
 
-- Homepage article list and continue-reading block
-- Three-stage reader flow: intro, read, review
-- Same-device progress restore via local storage
-- Inline word lookup and saved words page
-- Route navigation across articles, homepage, and saved words
-- Learning event capture for core reading actions
-- Desktop and mobile Playwright coverage for the main loop
+- 首页展示文章列表与“继续阅读”入口
+- 阅读器提供三阶段流程：导读、正文、复盘
+- 基于 localStorage 恢复同一设备上的阅读进度
+- 支持正文内行内查词与生词保存
+- 提供生词本页面，按文章分组查看已保存词汇
+- 支持在文章、首页和生词页之间快速跳转
+- 记录核心阅读行为事件
+- 覆盖桌面端和移动端的 Playwright 主流程测试
 
-## Local setup
+## 本地启动
 
-1. Install dependencies.
+1. 安装依赖
 
 ```bash
 pnpm install
 ```
 
-2. Create the local environment file.
+2. 创建本地环境文件
 
 ```bash
 cp .env.example .env
 ```
 
-3. Optional: prepare Prisma locally if you want the SQLite schema and seed to stay aligned with the project plan.
+3. 可选：如果你希望本地 SQLite 结构和种子数据与项目计划保持一致，可执行 Prisma 初始化
 
 ```bash
 pnpm db:push
 pnpm db:seed
 ```
 
-4. Start the app.
+4. 启动开发环境
 
 ```bash
 pnpm dev
 ```
 
-Open http://127.0.0.1:3000.
+打开 http://127.0.0.1:3000。
 
-## Commands
+## 常用命令
 
-- Dev server: `pnpm dev`
-- Production build: `pnpm build`
-- Lint: `pnpm lint`
-- Unit tests: `pnpm test`
-- E2E tests: `pnpm test:e2e`
-- Prisma push: `pnpm db:push`
-- Prisma seed: `pnpm db:seed`
+- 开发环境：`pnpm dev`
+- 生产构建：`pnpm build`
+- Lint：`pnpm lint`
+- 单元测试：`pnpm test`
+- E2E 测试：`pnpm test:e2e`
+- Prisma 推送：`pnpm db:push`
+- Prisma 种子数据：`pnpm db:seed`
 
-## Data model notes
+## 数据与实现说明
 
-- Reader content currently comes from `content/articles/*.json` and is validated through Zod.
-- Reader progress, saved words, and learning events are persisted on the same device in local storage for the MVP.
-- Prisma schema currently targets a local SQLite file for lightweight development setup, while the Phase 1 UI still runs on local JSON content plus same-device persistence.
+- 当前文章内容来自 `content/articles/*.json`，并通过 Zod 做结构校验。
+- MVP 阶段的阅读进度、生词和学习事件都保存在同一设备的 localStorage 中。
+- Prisma 当前使用本地 SQLite 文件，便于轻量开发；但 Phase 1 UI 仍以本地 JSON 内容和同设备持久化为主。
+- 用户可见界面文案已统一集中在 [src/lib/ui-copy.ts](src/lib/ui-copy.ts)，后续修改措辞优先从这里调整。
 
-## MVP smoke flow
+## 验证建议
 
-Use the manual checklist in [docs/testing/mvp-smoke-checklist.md](docs/testing/mvp-smoke-checklist.md) before calling the MVP ready for trial.
+在宣布 MVP 可以试用之前，先按 [docs/testing/mvp-smoke-checklist.md](docs/testing/mvp-smoke-checklist.md) 完整走一遍人工 smoke 流程。

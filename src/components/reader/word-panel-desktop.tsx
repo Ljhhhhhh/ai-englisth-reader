@@ -1,4 +1,5 @@
 import type { WordLookupResult } from '@/features/reader/word-lookup-service';
+import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelDesktopProps = {
   errorMessage?: string | null;
@@ -17,7 +18,7 @@ export function WordPanelDesktop({
 }: WordPanelDesktopProps) {
   return (
     <aside
-      aria-label="Word details popover"
+      aria-label={uiCopy.reader.wordPanel.ariaLabelDesktop}
       style={{
         position: 'fixed',
         right: 20,
@@ -42,7 +43,7 @@ export function WordPanelDesktop({
         }}
       >
         <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          Word details
+          {uiCopy.reader.wordPanel.title}
         </p>
         <button
           type="button"
@@ -55,7 +56,7 @@ export function WordPanelDesktop({
             cursor: 'pointer',
           }}
         >
-          Close
+          {uiCopy.common.close}
         </button>
       </div>
 
@@ -68,14 +69,14 @@ export function WordPanelDesktop({
       </div>
 
       <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
-        <strong>Meaning</strong>
+        <strong>{uiCopy.reader.wordPanel.meaning}</strong>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
           {word.meaning}
         </p>
       </div>
 
       <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-        <strong>Source sentence</strong>
+        <strong>{uiCopy.reader.wordPanel.sourceSentence}</strong>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
           {word.sourceSentence}
         </p>
@@ -95,10 +96,10 @@ export function WordPanelDesktop({
         }}
       >
         {saved
-          ? 'Saved to this device'
+          ? uiCopy.reader.wordPanel.saved
           : errorMessage
-            ? 'Retry save'
-            : 'Save word'}
+            ? uiCopy.reader.wordPanel.retrySave
+            : uiCopy.reader.wordPanel.save}
       </button>
 
       {errorMessage ? (

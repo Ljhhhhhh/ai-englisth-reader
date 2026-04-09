@@ -3,6 +3,7 @@ import {
   readerStages,
   type ReaderStage,
 } from '@/features/reader/stage-machine';
+import { uiCopy } from '@/lib/ui-copy';
 
 type StageNavProps = {
   currentStage: ReaderStage;
@@ -12,7 +13,7 @@ type StageNavProps = {
 export function StageNav({ currentStage, onSelectStage }: StageNavProps) {
   return (
     <nav
-      aria-label="Reader stages"
+      aria-label={uiCopy.reader.stageNav.ariaLabel}
       style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}
     >
       {readerStages.map((stage) => {

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { listRecentProgress } from '@/features/reader/progress-service';
 import { getStageLabel } from '@/features/reader/stage-machine';
 import { getOrCreateDeviceId } from '@/lib/device-id';
+import { uiCopy } from '@/lib/ui-copy';
 
 type ContinueReadingProps = {
   articles: Array<{
@@ -50,6 +51,8 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
   return (
     <section
       style={{
+        display: 'grid',
+        gap: 16,
         padding: 24,
         borderRadius: 24,
         background: 'linear-gradient(135deg, #f9ead9 0%, #fffaf2 100%)',
@@ -57,23 +60,23 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
       }}
     >
       <p style={{ margin: 0, color: 'var(--accent)', fontSize: 14 }}>
-        Continue reading
+        {uiCopy.continueReading.eyebrow}
       </p>
 
       {currentArticle ? (
         <>
-          <h2 style={{ marginBottom: 8 }}>{currentArticle.title}</h2>
+          <h2 style={{ margin: 0 }}>{currentArticle.title}</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>
-            Resume from {currentArticle.stageLabel}
-            {currentArticle.paragraphId
-              ? ` · ${currentArticle.paragraphId}`
-              : ''}
+            {uiCopy.continueReading.resumeFrom(
+              currentArticle.stageLabel,
+              currentArticle.paragraphId,
+            )}
           </p>
           <Link
             href={`/reader/${currentArticle.slug}`}
             style={{
               width: 'fit-content',
-              marginTop: 16,
+              display: 'inline-flex',
               padding: '12px 18px',
               borderRadius: 999,
               background: 'var(--accent)',
@@ -81,17 +84,16 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
               fontWeight: 700,
             }}
           >
-            Resume reading
+            {uiCopy.continueReading.button}
           </Link>
         </>
       ) : (
         <>
-          <h2 style={{ marginBottom: 8 }}>
-            Your next article will appear here after you start reading.
+          <h2 style={{ margin: 0 }}>
+            {uiCopy.continueReading.emptyTitle}
           </h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>
-            Once you enter an article, this block will surface the latest
-            in-progress reading session on this device.
+            {uiCopy.continueReading.description}
           </p>
         </>
       )}

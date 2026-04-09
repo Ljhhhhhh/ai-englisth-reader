@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
+import { uiCopy } from '@/lib/ui-copy';
 
 export default function NotFound() {
   return (
@@ -12,9 +13,9 @@ export default function NotFound() {
       }}
     >
       <ErrorState
-        eyebrow="Not found"
-        title="That article route does not exist."
-        description="The requested article could not be found. Return to the homepage and start from an available reading card."
+        eyebrow={uiCopy.notFound.eyebrow}
+        title={uiCopy.notFound.title}
+        description={uiCopy.notFound.description}
       >
         <Link
           href="/"
@@ -27,7 +28,7 @@ export default function NotFound() {
             fontWeight: 700,
           }}
         >
-          Back to homepage
+          {uiCopy.common.backHome}
         </Link>
       </ErrorState>
     </main>

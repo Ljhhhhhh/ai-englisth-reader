@@ -35,6 +35,7 @@ import {
 } from '@/features/words/saved-word-service';
 import type { Article } from '@/lib/content/article-schema';
 import { getOrCreateDeviceId } from '@/lib/device-id';
+import { uiCopy } from '@/lib/ui-copy';
 
 type ReaderShellProps = {
   article: Article;
@@ -57,6 +58,19 @@ type LookupRequest = {
 
 function getDefaultParagraphId(article: Article) {
   return article.paragraphs[0]?.id;
+}
+
+function getParagraphIndex(article: Article, paragraphId?: string): number {
+  if (!paragraphId) return 0;
+  const index = article.paragraphs.findIndex((p) => p.id === paragraphId);
+  return index === -1 ? 0 : index;
+}
+
+function getParagraphIdByIndex(
+  article: Article,
+  index: number,
+): string | undefined {
+  return article.paragraphs[index]?.id;
 }
 
 function shouldFailOnce(consumedFlags: Record<string, boolean>, key: string) {
@@ -163,9 +177,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       );
       setProgressSaveNotice(null);
     } catch {
-      setProgressSaveNotice(
-        'Could not sync reading progress just yet. Your current place stays on screen and we will retry automatically.',
-      );
+      setProgressSaveNotice(uiCopy.reader.progress.saveNotice);
     }
   }, [article.slug, currentParagraphId, currentStage, deviceId, hydrated]);
 
@@ -242,9 +254,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       }
     } catch {
       setSelectedWord(null);
-      setLookupError(
-        'Word lookup is temporarily unavailable. Retry once to keep reading without losing your place.',
-      );
+      setLookupError(uiCopy.reader.shell.lookupError);
     }
   }
 
@@ -322,9 +332,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         window.localStorage,
       );
     } catch {
-      setSaveWordError(
-        'Could not save this word right now. Retry once and your reading position will stay where it is.',
-      );
+      setSaveWordError(uiCopy.reader.shell.saveWordError);
     }
   }
 
@@ -343,6 +351,27 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     selectStage('read');
   }
 
+  const totalParagraphCount = article.paragraphs.length;
+  const currentParagraphIndex = getParagraphIndex(article, currentParagraphId);
+  const isFirstParagraph = currentParagraphIndex === 0;
+  const isLastParagraph = currentParagraphIndex === totalParagraphCount - 1;
+
+  function goToPreviousParagraph() {
+    if (isFirstParagraph) return;
+    const prevId = getParagraphIdByIndex(article, currentParagraphIndex - 1);
+    if (prevId) setCurrentParagraphId(prevId);
+  }
+
+  function goToNextParagraph() {
+    if (isLastParagraph) return;
+    const nextId = getParagraphIdByIndex(article, currentParagraphIndex + 1);
+    if (nextId) setCurrentParagraphId(nextId);
+  }
+
+  function goToReviewFromReading() {
+    selectStage('review');
+  }
+
   const selectedWordSaved = selectedWord
     ? savedLemmas.includes(selectedWord.lemma.toLowerCase())
     : false;
@@ -359,16 +388,27 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       return (
         <ArticleBody
           activeParagraphId={currentParagraphId}
+          activeParagraphIndex={currentParagraphIndex}
+          totalParagraphCount={totalParagraphCount}
+          canGoPrevious={!isFirstParagraph}
+          canGoNext={!isLastParagraph}
           article={article}
           lookupableWords={lookupableWords}
-          onContinueToReview={() => selectStage('review')}
-          onFocusParagraph={setCurrentParagraphId}
+          onContinueToReview={goToReviewFromReading}
+          onPreviousParagraph={goToPreviousParagraph}
+          onNextParagraph={goToNextParagraph}
           onLookupWord={handleLookupWord}
         />
       );
     }
 
-    return <ReviewPanel article={article} savedWords={savedWords} />;
+    return (
+      <ReviewPanel
+        article={article}
+        nextArticleSlug={navigation.nextArticle?.slug}
+        savedWords={savedWords}
+      />
+    );
   }
 
   return (
@@ -404,10 +444,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         >
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             <Link href="/" style={navLinkStyle}>
-              Back to homepage
+              {uiCopy.common.backHome}
             </Link>
             <Link href="/words" style={navLinkStyle}>
-              Open saved words
+              {uiCopy.common.openWords}
             </Link>
           </div>
           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -416,7 +456,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
                 href={`/reader/${navigation.previousArticle.slug}`}
                 style={navLinkStyle}
               >
-                Previous article
+                {uiCopy.reader.navigation.previousArticle}
               </Link>
             ) : null}
             {navigation.nextArticle ? (
@@ -424,7 +464,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
                 href={`/reader/${navigation.nextArticle.slug}`}
                 style={navLinkStyle}
               >
-                Next article
+                {uiCopy.reader.navigation.nextArticle}
               </Link>
             ) : null}
           </div>
@@ -433,16 +473,16 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'flex-start',
             gap: 12,
             flexWrap: 'wrap',
             alignItems: 'center',
           }}
         >
           <StageNav currentStage={currentStage} onSelectStage={selectStage} />
-          <div style={{ color: 'var(--muted)', fontSize: 14 }}>
-            Current stage: {getStageLabel(currentStage)}
-          </div>
+          <span style={{ color: 'var(--muted)', fontSize: 14 }}>
+            {uiCopy.reader.navigation.currentStage(getStageLabel(currentStage))}
+          </span>
         </div>
       </section>
 
@@ -470,17 +510,17 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
             color: 'var(--muted)',
           }}
         >
-          Resume ready: {restoredProgress.currentStage}
-          {restoredProgress.paragraphId
-            ? ` · ${restoredProgress.paragraphId}`
-            : ''}
+          {uiCopy.reader.progress.restoreReady(
+            getStageLabel(restoredProgress.currentStage),
+            restoredProgress.paragraphId,
+          )}
         </div>
       ) : null}
 
       {lookupError ? (
         <ErrorState
-          eyebrow="Lookup retry"
-          title="Inline word lookup missed once."
+          eyebrow={uiCopy.reader.shell.retryLookupCardEyebrow}
+          title={uiCopy.reader.shell.retryLookupCardTitle}
           description={lookupError}
         >
           <button
@@ -500,7 +540,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
               cursor: 'pointer',
             }}
           >
-            Retry lookup
+            {uiCopy.reader.shell.retryLookup}
           </button>
         </ErrorState>
       ) : null}
@@ -522,7 +562,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
             cursor: currentStage === 'intro' ? 'not-allowed' : 'pointer',
           }}
         >
-          Back
+          {uiCopy.common.previous}
         </button>
         <button
           type="button"
@@ -538,13 +578,13 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
             cursor: currentStage === 'review' ? 'not-allowed' : 'pointer',
           }}
         >
-          Next
+          {uiCopy.common.next}
         </button>
       </div>
 
       {!hydrated ? (
         <p style={{ margin: 0, color: 'var(--muted)' }}>
-          Restoring device progress...
+          {uiCopy.reader.progress.loading}
         </p>
       ) : null}
 

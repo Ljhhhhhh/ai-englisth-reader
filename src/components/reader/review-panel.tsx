@@ -1,13 +1,19 @@
 import Link from 'next/link';
 import type { SavedWordRecord } from '@/features/words/saved-word-service';
 import type { Article } from '@/lib/content/article-schema';
+import { uiCopy } from '@/lib/ui-copy';
 
 type ReviewPanelProps = {
   article: Article;
+  nextArticleSlug?: string;
   savedWords: SavedWordRecord[];
 };
 
-export function ReviewPanel({ article, savedWords }: ReviewPanelProps) {
+export function ReviewPanel({
+  article,
+  nextArticleSlug,
+  savedWords,
+}: ReviewPanelProps) {
   return (
     <section
       style={{
@@ -19,26 +25,48 @@ export function ReviewPanel({ article, savedWords }: ReviewPanelProps) {
         background: 'var(--surface)',
       }}
     >
+      <p style={{ margin: 0, color: 'var(--accent)', fontSize: 14 }}>
+        {uiCopy.reader.review.title}
+      </p>
       <div style={{ display: 'grid', gap: 8 }}>
-        <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          Review and retain
-        </p>
-        <h1 style={{ margin: 0 }}>Reading review on this device.</h1>
+        <h1 style={{ margin: 0 }}>{uiCopy.reader.review.completionTitle}</h1>
         <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          Use this closing view to check the article summary, revisit the full
-          translation, and keep any useful words moving into your notebook.
+          {uiCopy.reader.review.completionDescription}
         </p>
       </div>
 
-      <div style={{ padding: 18, borderRadius: 20, background: '#fff8ee' }}>
-        <strong>Article summary</strong>
+      <div
+        style={{
+          display: 'grid',
+          gap: 10,
+          padding: 20,
+          borderRadius: 20,
+          background: '#fff8ee',
+          border: '1px solid rgba(197,106,45,0.12)',
+        }}
+      >
+        <strong>{uiCopy.reader.review.summaryTitle}</strong>
+        <div style={{ color: 'var(--muted)', fontSize: 14 }}>
+          {uiCopy.reader.review.summaryDescription}
+        </div>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
           {article.summary}
         </p>
       </div>
 
-      <div style={{ padding: 18, borderRadius: 20, background: '#fcf6ee' }}>
-        <strong>Full translation</strong>
+      <div
+        style={{
+          display: 'grid',
+          gap: 10,
+          padding: 18,
+          borderRadius: 20,
+          background: '#fcf6ee',
+        }}
+      >
+        <strong>{uiCopy.reader.review.translationTitle}</strong>
+        <div style={{ color: 'var(--muted)', fontSize: 14 }}>
+          {uiCopy.reader.review.translationDescription}
+        </div>
         <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
           {article.translation}
         </p>
@@ -53,12 +81,19 @@ export function ReviewPanel({ article, savedWords }: ReviewPanelProps) {
             alignItems: 'center',
           }}
         >
-          <strong>Saved words from this article</strong>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <strong>{uiCopy.reader.review.savedWordsTitle}</strong>
+            <div style={{ color: 'var(--muted)', fontSize: 14 }}>
+              {savedWords.length
+                ? uiCopy.reader.review.savedWordsHint
+                : uiCopy.reader.review.emptySavedWordsHint}
+            </div>
+          </div>
           <Link
             href="/words"
             style={{ color: 'var(--accent)', fontWeight: 600 }}
           >
-            Open saved words
+            {uiCopy.reader.review.savedWordsCta}
           </Link>
         </div>
         {savedWords.length ? (
@@ -86,10 +121,27 @@ export function ReviewPanel({ article, savedWords }: ReviewPanelProps) {
           </div>
         ) : (
           <p style={{ margin: 0, color: 'var(--muted)' }}>
-            No saved words yet from this article.
+            {uiCopy.reader.review.emptySavedWords}
           </p>
         )}
       </section>
+
+      {nextArticleSlug ? (
+        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <Link
+            href={`/reader/${nextArticleSlug}`}
+            style={{
+              borderRadius: 999,
+              background: 'var(--accent)',
+              color: '#fff',
+              fontWeight: 700,
+              padding: '14px 20px',
+            }}
+          >
+            {uiCopy.reader.review.nextArticle}
+          </Link>
+        </div>
+      ) : null}
     </section>
   );
 }
