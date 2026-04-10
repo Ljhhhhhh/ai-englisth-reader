@@ -1,24 +1,31 @@
-import type { WordLookupResult } from '@/features/reader/word-lookup-service';
+import {
+  ExplainPanelContent,
+  type ExplainPanelViewState,
+} from '@/components/reader/explain-panel-content';
 import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelMobileProps = {
-  errorMessage?: string | null;
   onClose: () => void;
+  onRetry: () => void;
   onToggleSave: () => void;
   saved: boolean;
-  word: WordLookupResult;
+  saveEnabled: boolean;
+  saveErrorMessage?: string | null;
+  state: ExplainPanelViewState;
 };
 
 export function WordPanelMobile({
-  errorMessage,
   onClose,
+  onRetry,
   onToggleSave,
   saved,
-  word,
+  saveEnabled,
+  saveErrorMessage,
+  state,
 }: WordPanelMobileProps) {
   return (
     <div
-      aria-label={uiCopy.reader.wordPanel.ariaLabelMobile}
+      aria-label={uiCopy.reader.explainPanel.ariaLabelMobile}
       style={{
         position: 'fixed',
         inset: 'auto 0 0 0',
@@ -29,12 +36,15 @@ export function WordPanelMobile({
     >
       <section
         style={{
-          display: 'grid',
+          display: 'flex',
+          flexDirection: 'column',
           gap: 16,
           padding: 20,
           borderRadius: '24px 24px 0 0',
           background: 'var(--surface)',
           border: '1px solid var(--border)',
+          maxHeight: 'min(78vh, calc(100vh - 24px))',
+          overflow: 'hidden',
           boxShadow: '0 -20px 40px rgba(31, 41, 55, 0.16)',
         }}
       >
@@ -46,12 +56,6 @@ export function WordPanelMobile({
             alignItems: 'center',
           }}
         >
-          <div style={{ display: 'grid', gap: 4 }}>
-            <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-              {uiCopy.reader.wordPanel.title}
-            </p>
-            <strong style={{ fontSize: 24 }}>{word.surface}</strong>
-          </div>
           <button
             type="button"
             onClick={onClose}
@@ -66,70 +70,16 @@ export function WordPanelMobile({
             {uiCopy.common.close}
           </button>
         </div>
-
-        <p style={{ margin: 0, color: 'var(--muted)' }}>{word.lemma}</p>
-
-        <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
-          <strong>{uiCopy.reader.wordPanel.meaning}</strong>
-          <p
-            style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
-          >
-            {word.chineseMeaning}
-          </p>
+        <div style={{ overflowY: 'auto', paddingRight: 4 }}>
+          <ExplainPanelContent
+            onRetry={onRetry}
+            onToggleSave={onToggleSave}
+            saveEnabled={saveEnabled}
+            saveErrorMessage={saveErrorMessage}
+            saved={saved}
+            state={state}
+          />
         </div>
-
-        <div style={{ padding: 16, borderRadius: 18, background: '#fffaf2' }}>
-          <strong>{uiCopy.reader.wordPanel.contextMeaning}</strong>
-          <p
-            style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
-          >
-            {word.contextMeaning}
-          </p>
-        </div>
-
-        <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-          <strong>{uiCopy.reader.wordPanel.memoryHook}</strong>
-          <p
-            style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
-          >
-            {word.memoryType} · {word.memoryHook}
-          </p>
-        </div>
-
-        <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-          <strong>{uiCopy.reader.wordPanel.sourceSentence}</strong>
-          <p
-            style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
-          >
-            {word.sourceSentence}
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={onToggleSave}
-          style={{
-            borderRadius: 999,
-            border: 'none',
-            background: saved ? '#1f6f50' : 'var(--accent)',
-            color: '#fff',
-            padding: '16px 20px',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          {saved
-            ? uiCopy.reader.wordPanel.saved
-            : errorMessage
-              ? uiCopy.reader.wordPanel.retrySave
-              : uiCopy.reader.wordPanel.save}
-        </button>
-
-        {errorMessage ? (
-          <p style={{ margin: 0, color: '#9a3412', lineHeight: 1.6 }}>
-            {errorMessage}
-          </p>
-        ) : null}
       </section>
     </div>
   );

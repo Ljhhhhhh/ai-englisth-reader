@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { ArticleBody } from '@/components/reader/article-body';
 import { IntroPanel } from '@/components/reader/intro-panel';
+import { MobileExplainAssist } from '@/components/reader/mobile-explain-assist';
 import { ProgressBar } from '@/components/reader/progress-bar';
 import { ReviewPanel } from '@/components/reader/review-panel';
 import { StageNav } from '@/components/reader/stage-nav';
@@ -16,6 +17,11 @@ import {
   lookupWordFromArticle,
   type WordLookupResult,
 } from '@/features/reader/word-lookup-service';
+import {
+  buildExplainCacheKey,
+  type ReaderExplainMode,
+} from '@/features/reader/reader-explain-utils';
+import { getPhraseSuggestionsForWord } from '@/features/reader/reader-phrase-suggestions';
 import {
   loadProgress,
   saveProgress,
@@ -52,9 +58,30 @@ type ReaderShellProps = {
 };
 
 type LookupRequest = {
+  mode: ReaderExplainMode;
+  selectedText: string;
   sentenceId: string;
-  surface: string;
+  sentenceText: string;
 };
+
+type ExplainPanelData = {
+  mode: ReaderExplainMode;
+  selectedText: string;
+  meaning: string;
+  contextMeaning: string;
+  explanation: string;
+  sourceSentence: string;
+  lemma?: string;
+  memoryHook?: string;
+  memoryType?: string;
+  saveWord?: WordLookupResult;
+};
+
+type ExplainPanelState =
+  | { status: 'idle' }
+  | { status: 'loading'; request: LookupRequest }
+  | { status: 'error'; request: LookupRequest; message: string }
+  | { status: 'success'; request: LookupRequest; data: ExplainPanelData };
 
 function getDefaultParagraphId(article: Article) {
   return article.paragraphs[0]?.id;
@@ -94,11 +121,19 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const [hydrated, setHydrated] = useState(false);
   const [restoredProgress, setRestoredProgress] =
     useState<ReaderProgressRecord | null>(null);
-  const [selectedWord, setSelectedWord] = useState<WordLookupResult | null>(
-    null,
-  );
+  const explainCacheRef = useRef(new Map<string, ExplainPanelData>());
+  const explainRequestIdRef = useRef(0);
+  const explainAbortRef = useRef<AbortController | null>(null);
   const [savedLemmas, setSavedLemmas] = useState<string[]>([]);
-  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [explainPanelState, setExplainPanelState] =
+    useState<ExplainPanelState>({ status: 'idle' });
+  const [selectionNotice, setSelectionNotice] = useState<string | null>(null);
+  const [mobileAssistState, setMobileAssistState] = useState<{
+    sentenceId: string;
+    sentenceText: string;
+    selectedText: string;
+    suggestions: ReturnType<typeof getPhraseSuggestionsForWord>;
+  } | null>(null);
   const [saveWordError, setSaveWordError] = useState<string | null>(null);
   const [progressSaveNotice, setProgressSaveNotice] = useState<string | null>(
     null,
@@ -224,49 +259,187 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     selectStage(getPreviousStage(currentStage));
   }
 
-  function handleLookupWord(input: LookupRequest) {
+  useEffect(() => {
+    return () => {
+      explainAbortRef.current?.abort();
+    };
+  }, []);
+
+  function showSelectionNotice(reason: 'selection_invalid' | 'selection_too_long') {
+    setSelectionNotice(
+      reason === 'selection_too_long'
+        ? uiCopy.reader.shell.selectionTooLong
+        : uiCopy.reader.shell.selectionInvalid,
+    );
+
+    window.setTimeout(() => {
+      setSelectionNotice((current) =>
+        current ===
+        (reason === 'selection_too_long'
+          ? uiCopy.reader.shell.selectionTooLong
+          : uiCopy.reader.shell.selectionInvalid)
+          ? null
+          : current,
+      );
+    }, 2400);
+  }
+
+  async function handleLookupWord(input: LookupRequest) {
     setLastLookupRequest(input);
+    setSaveWordError(null);
+    setMobileAssistState(null);
+
+    const cacheKey = buildExplainCacheKey({
+      mode: input.mode,
+      sentenceId: input.sentenceId,
+      selectedText: input.selectedText,
+    });
+    const cached = explainCacheRef.current.get(cacheKey);
+
+    if (cached) {
+      setExplainPanelState({
+        status: 'success',
+        request: input,
+        data: cached,
+      });
+      return;
+    }
+
+    let fallbackWord: WordLookupResult | null = null;
+
+    if (input.mode === 'word') {
+      try {
+        fallbackWord = lookupWordFromArticle({
+          article,
+          sentenceId: input.sentenceId,
+          surface: input.selectedText,
+        });
+      } catch {
+        fallbackWord = null;
+      }
+    }
+
+    explainAbortRef.current?.abort();
+    const controller = new AbortController();
+    explainAbortRef.current = controller;
+    const requestId = explainRequestIdRef.current + 1;
+    explainRequestIdRef.current = requestId;
+    setExplainPanelState({ status: 'loading', request: input });
 
     try {
-      if (shouldFailOnce(consumedFailureFlagsRef.current, 'mockLookupError')) {
-        throw new Error('mock lookup failure');
-      }
-
-      const nextWord = lookupWordFromArticle({
-        article,
-        sentenceId: input.sentenceId,
-        surface: input.surface,
+      const response = await fetch('/api/reader/explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleSlug: article.slug,
+          sentenceId: input.sentenceId,
+          sentenceText: input.sentenceText,
+          selectedText: input.selectedText,
+          mode: input.mode,
+        }),
+        signal: controller.signal,
       });
 
-      setLookupError(null);
-      setSelectedWord(nextWord);
+      if (!response.ok || shouldFailOnce(consumedFailureFlagsRef.current, 'mockLookupError')) {
+        throw new Error('mock explain failure');
+      }
 
-      if (deviceId) {
+      const payload = (await response.json()) as {
+        mode: ReaderExplainMode;
+        selectedText: string;
+        meaning: string;
+        contextMeaning: string;
+        explanation: string;
+        sourceSentence: string;
+      };
+
+      if (requestId !== explainRequestIdRef.current) {
+        return;
+      }
+
+      const nextExplainData: ExplainPanelData = {
+        mode: payload.mode,
+        selectedText: payload.selectedText,
+        meaning: payload.meaning,
+        contextMeaning: payload.contextMeaning,
+        explanation: payload.explanation,
+        sourceSentence: payload.sourceSentence,
+        lemma: fallbackWord?.lemma,
+        memoryHook: fallbackWord?.memoryHook,
+        memoryType: fallbackWord?.memoryType,
+        saveWord: fallbackWord ?? undefined,
+      };
+
+      explainCacheRef.current.set(cacheKey, nextExplainData);
+      setExplainPanelState({
+        status: 'success',
+        request: input,
+        data: nextExplainData,
+      });
+
+      if (deviceId && input.mode === 'word') {
         recordEvent(
           {
             articleSlug: article.slug,
             deviceId,
-            payload: { lemma: nextWord.lemma },
+            payload: { lemma: input.selectedText.toLowerCase() },
             type: 'word_lookup_opened',
           },
           window.localStorage,
         );
       }
     } catch {
-      setSelectedWord(null);
-      setLookupError(uiCopy.reader.shell.lookupError);
+      if (controller.signal.aborted || requestId !== explainRequestIdRef.current) {
+        return;
+      }
+
+      if (input.mode === 'word' && fallbackWord) {
+        const fallbackData: ExplainPanelData = {
+          mode: 'word',
+          selectedText: fallbackWord.surface,
+          meaning: fallbackWord.chineseMeaning,
+          contextMeaning: fallbackWord.contextMeaning,
+          explanation: `${fallbackWord.memoryType} · ${fallbackWord.memoryHook}`,
+          sourceSentence: fallbackWord.sourceSentence,
+          lemma: fallbackWord.lemma,
+          memoryHook: fallbackWord.memoryHook,
+          memoryType: fallbackWord.memoryType,
+          saveWord: fallbackWord,
+        };
+
+        explainCacheRef.current.set(cacheKey, fallbackData);
+        setExplainPanelState({
+          status: 'success',
+          request: input,
+          data: fallbackData,
+        });
+        return;
+      }
+
+      setExplainPanelState({
+        status: 'error',
+        request: input,
+        message: uiCopy.reader.shell.explainPhraseError,
+      });
     }
   }
 
   function closeWordPanel() {
-    setSelectedWord(null);
+    setExplainPanelState({ status: 'idle' });
   }
 
   function toggleSavedWord() {
-    if (!deviceId || !selectedWord) {
+    if (
+      !deviceId ||
+      explainPanelState.status !== 'success' ||
+      !explainPanelState.data.saveWord
+    ) {
       return;
     }
 
+    const selectedWord = explainPanelState.data.saveWord;
     const normalizedLemma = selectedWord.lemma.toLowerCase();
 
     if (
@@ -371,9 +544,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     selectStage('review');
   }
 
-  const selectedWordSaved = selectedWord
-    ? savedLemmas.includes(selectedWord.lemma.toLowerCase())
-    : false;
+  const selectedWordSaved =
+    explainPanelState.status === 'success' && explainPanelState.data.saveWord
+      ? savedLemmas.includes(explainPanelState.data.saveWord.lemma.toLowerCase())
+      : false;
   const savedWords = deviceId
     ? listSavedWords(deviceId, window.localStorage, article.slug)
     : [];
@@ -391,12 +565,25 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           totalParagraphCount={totalParagraphCount}
           canGoPrevious={!isFirstParagraph}
           canGoNext={!isLastParagraph}
+          isMobile={isMobilePanel}
           article={article}
           lookupableWords={lookupableWords}
           onContinueToReview={goToReviewFromReading}
           onPreviousParagraph={goToPreviousParagraph}
           onNextParagraph={goToNextParagraph}
-          onLookupWord={handleLookupWord}
+          onExplainRequest={handleLookupWord}
+          onOpenMobileAssist={(input) => {
+            setMobileAssistState({
+              ...input,
+              suggestions: getPhraseSuggestionsForWord({
+                article,
+                sentenceId: input.sentenceId,
+                sentenceText: input.sentenceText,
+                selectedWord: input.selectedText,
+              }),
+            });
+          }}
+          onSelectionNotice={showSelectionNotice}
         />
       );
     }
@@ -415,7 +602,9 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       style={{
         minHeight: '100vh',
         padding:
-          isMobilePanel && selectedWord ? '32px 20px 320px' : '32px 20px 72px',
+          isMobilePanel && explainPanelState.status !== 'idle'
+            ? '32px 20px 320px'
+            : '32px 20px 72px',
         display: 'grid',
         gap: 20,
       }}
@@ -516,32 +705,12 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         </div>
       ) : null}
 
-      {lookupError ? (
+      {selectionNotice ? (
         <ErrorState
-          eyebrow={uiCopy.reader.shell.retryLookupCardEyebrow}
-          title={uiCopy.reader.shell.retryLookupCardTitle}
-          description={lookupError}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              if (lastLookupRequest) {
-                handleLookupWord(lastLookupRequest);
-              }
-            }}
-            style={{
-              borderRadius: 999,
-              border: 'none',
-              background: 'var(--accent)',
-              color: '#fff',
-              padding: '12px 18px',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-          >
-            {uiCopy.reader.shell.retryLookup}
-          </button>
-        </ErrorState>
+          eyebrow={uiCopy.reader.explainPanel.wordTitle}
+          title={selectionNotice}
+          description="缩短选区后再试就行。"
+        />
       ) : null}
 
       <div style={{ width: 'min(100%, 920px)' }}>{renderStage()}</div>
@@ -587,23 +756,95 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         </p>
       ) : null}
 
-      {!isMobilePanel && selectedWord ? (
+      {!isMobilePanel && explainPanelState.status !== 'idle' ? (
         <WordPanelDesktop
-          errorMessage={saveWordError}
           onClose={closeWordPanel}
+          onRetry={() => {
+            if (lastLookupRequest) {
+              void handleLookupWord(lastLookupRequest);
+            }
+          }}
           onToggleSave={toggleSavedWord}
           saved={selectedWordSaved}
-          word={selectedWord}
+          saveEnabled={
+            explainPanelState.status === 'success' &&
+            Boolean(explainPanelState.data.saveWord)
+          }
+          saveErrorMessage={saveWordError}
+          state={
+            explainPanelState.status === 'success'
+              ? { status: 'success', data: explainPanelState.data }
+              : explainPanelState.status === 'loading'
+                ? {
+                    status: 'loading',
+                    mode: explainPanelState.request.mode,
+                    selectedText: explainPanelState.request.selectedText,
+                  }
+                : {
+                    status: 'error',
+                    mode: explainPanelState.request.mode,
+                    selectedText: explainPanelState.request.selectedText,
+                    message: explainPanelState.message,
+                  }
+          }
         />
       ) : null}
 
-      {isMobilePanel && selectedWord ? (
+      {isMobilePanel && explainPanelState.status !== 'idle' ? (
         <WordPanelMobile
-          errorMessage={saveWordError}
           onClose={closeWordPanel}
+          onRetry={() => {
+            if (lastLookupRequest) {
+              void handleLookupWord(lastLookupRequest);
+            }
+          }}
           onToggleSave={toggleSavedWord}
           saved={selectedWordSaved}
-          word={selectedWord}
+          saveEnabled={
+            explainPanelState.status === 'success' &&
+            Boolean(explainPanelState.data.saveWord)
+          }
+          saveErrorMessage={saveWordError}
+          state={
+            explainPanelState.status === 'success'
+              ? { status: 'success', data: explainPanelState.data }
+              : explainPanelState.status === 'loading'
+                ? {
+                    status: 'loading',
+                    mode: explainPanelState.request.mode,
+                    selectedText: explainPanelState.request.selectedText,
+                  }
+                : {
+                    status: 'error',
+                    mode: explainPanelState.request.mode,
+                    selectedText: explainPanelState.request.selectedText,
+                    message: explainPanelState.message,
+                  }
+          }
+        />
+      ) : null}
+
+      {isMobilePanel && mobileAssistState ? (
+        <MobileExplainAssist
+          word={mobileAssistState.selectedText}
+          suggestions={mobileAssistState.suggestions}
+          onClose={() => setMobileAssistState(null)}
+          onExplainWord={() => {
+            void handleLookupWord({
+              mode: 'word',
+              selectedText: mobileAssistState.selectedText,
+              sentenceId: mobileAssistState.sentenceId,
+              sentenceText: mobileAssistState.sentenceText,
+            });
+          }}
+          onExplainPhrase={(text) => {
+            void handleLookupWord({
+              mode: 'phrase',
+              selectedText: text,
+              sentenceId: mobileAssistState.sentenceId,
+              sentenceText: mobileAssistState.sentenceText,
+            });
+          }}
         />
       ) : null}
     </main>

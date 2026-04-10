@@ -208,7 +208,7 @@ export default function GeneratePage() {
           </div>
 
           {mode === 'url' ? (
-            <label style={{ display: 'grid', gap: 8 }}>
+            <label key="url-input" style={{ display: 'grid', gap: 8 }}>
               <span>文章链接</span>
               <input
                 type="url"
@@ -224,7 +224,7 @@ export default function GeneratePage() {
               />
             </label>
           ) : (
-            <label style={{ display: 'grid', gap: 8 }}>
+            <label key="file-input" style={{ display: 'grid', gap: 8 }}>
               <span>上传文件</span>
               <input
                 type="file"

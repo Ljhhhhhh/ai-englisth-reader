@@ -1,36 +1,46 @@
-import type { WordLookupResult } from '@/features/reader/word-lookup-service';
+import {
+  ExplainPanelContent,
+  type ExplainPanelViewState,
+} from '@/components/reader/explain-panel-content';
 import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelDesktopProps = {
-  errorMessage?: string | null;
   onClose: () => void;
+  onRetry: () => void;
   onToggleSave: () => void;
   saved: boolean;
-  word: WordLookupResult;
+  saveEnabled: boolean;
+  saveErrorMessage?: string | null;
+  state: ExplainPanelViewState;
 };
 
 export function WordPanelDesktop({
-  errorMessage,
   onClose,
+  onRetry,
   onToggleSave,
   saved,
-  word,
+  saveEnabled,
+  saveErrorMessage,
+  state,
 }: WordPanelDesktopProps) {
   return (
     <aside
-      aria-label={uiCopy.reader.wordPanel.ariaLabelDesktop}
+      aria-label={uiCopy.reader.explainPanel.ariaLabelDesktop}
       style={{
         position: 'fixed',
         right: 20,
         bottom: 20,
         zIndex: 20,
-        display: 'grid',
+        display: 'flex',
+        flexDirection: 'column',
         gap: 16,
         padding: 20,
         borderRadius: 24,
         border: '1px solid var(--border)',
         background: 'var(--surface)',
         width: 'min(420px, calc(100vw - 40px))',
+        maxHeight: 'min(80vh, calc(100vh - 40px))',
+        overflow: 'hidden',
         boxShadow: '0 18px 40px rgba(104, 71, 33, 0.08)',
       }}
     >
@@ -42,9 +52,6 @@ export function WordPanelDesktop({
           alignItems: 'center',
         }}
       >
-        <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
-          {uiCopy.reader.wordPanel.title}
-        </p>
         <button
           type="button"
           onClick={onClose}
@@ -59,65 +66,16 @@ export function WordPanelDesktop({
           {uiCopy.common.close}
         </button>
       </div>
-
-      <div style={{ display: 'grid', gap: 6 }}>
-        <h2 style={{ margin: 0, fontSize: 28 }}>{word.surface}</h2>
-        <div style={{ color: 'var(--muted)' }}>{word.lemma}</div>
+      <div style={{ overflowY: 'auto', paddingRight: 4 }}>
+        <ExplainPanelContent
+          onRetry={onRetry}
+          onToggleSave={onToggleSave}
+          saveEnabled={saveEnabled}
+          saveErrorMessage={saveErrorMessage}
+          saved={saved}
+          state={state}
+        />
       </div>
-
-      <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
-        <strong>{uiCopy.reader.wordPanel.meaning}</strong>
-        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {word.chineseMeaning}
-        </p>
-      </div>
-
-      <div style={{ padding: 16, borderRadius: 18, background: '#fffaf2' }}>
-        <strong>{uiCopy.reader.wordPanel.contextMeaning}</strong>
-        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {word.contextMeaning}
-        </p>
-      </div>
-
-      <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-        <strong>{uiCopy.reader.wordPanel.memoryHook}</strong>
-        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {word.memoryType} · {word.memoryHook}
-        </p>
-      </div>
-
-      <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-        <strong>{uiCopy.reader.wordPanel.sourceSentence}</strong>
-        <p style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-          {word.sourceSentence}
-        </p>
-      </div>
-
-      <button
-        type="button"
-        onClick={onToggleSave}
-        style={{
-          borderRadius: 999,
-          border: 'none',
-          background: saved ? '#1f6f50' : 'var(--accent)',
-          color: '#fff',
-          padding: '14px 20px',
-          fontWeight: 700,
-          cursor: 'pointer',
-        }}
-      >
-        {saved
-          ? uiCopy.reader.wordPanel.saved
-          : errorMessage
-            ? uiCopy.reader.wordPanel.retrySave
-            : uiCopy.reader.wordPanel.save}
-      </button>
-
-      {errorMessage ? (
-        <p style={{ margin: 0, color: '#9a3412', lineHeight: 1.6 }}>
-          {errorMessage}
-        </p>
-      ) : null}
     </aside>
   );
 }

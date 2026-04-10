@@ -4,7 +4,7 @@ function normalizeToken(value: string) {
   return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '').toLowerCase();
 }
 
-function findSentence(article: Article, sentenceId: string) {
+export function findSentenceInArticle(article: Article, sentenceId: string) {
   for (const paragraph of article.paragraphs) {
     for (const sentence of paragraph.sentences) {
       if (sentence.id === sentenceId) {
@@ -22,7 +22,7 @@ function buildLookupResult(
   sentenceId: string,
 ) {
   const normalizedSurface = normalizeToken(surface);
-  const sentence = findSentence(article, sentenceId);
+  const sentence = findSentenceInArticle(article, sentenceId);
 
   if (!sentence) {
     throw new Error(`Sentence not found: ${sentenceId}`);
