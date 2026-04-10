@@ -122,24 +122,39 @@ export default async function HomePage({ searchParams }: HomePageProps) {
         </div>
 
         <ContinueReading
-          articles={articles.map((article) => ({
-            slug: article.slug,
-            title: article.title,
-          }))}
+          articles={articles.map((article) => {
+            const articleView = article as typeof article & {
+              chinese_title?: string;
+            };
+
+            return {
+              slug: article.slug,
+              chineseTitle: articleView.chinese_title ?? article.title,
+            };
+          })}
         />
 
         {articles.length ? (
           <section style={{ display: 'grid', gap: 20 }}>
-            {articles.map((article) => (
-              <ArticleCard
-                key={article.slug}
-                difficulty={article.difficulty}
-                estimatedMinutes={article.estimatedMinutes}
-                previewText={article.feynman_summary}
-                slug={article.slug}
-                title={article.title}
-              />
-            ))}
+            {articles.map((article) => {
+              const articleView = article as typeof article & {
+                chinese_title?: string;
+                list_summary_zh?: string;
+              };
+
+              return (
+                <ArticleCard
+                  key={article.slug}
+                  difficulty={article.difficulty}
+                  estimatedMinutes={article.estimatedMinutes}
+                  previewText={
+                    articleView.list_summary_zh ?? article.feynman_summary
+                  }
+                  slug={article.slug}
+                  title={articleView.chinese_title ?? article.title}
+                />
+              );
+            })}
           </section>
         ) : (
           <EmptyState

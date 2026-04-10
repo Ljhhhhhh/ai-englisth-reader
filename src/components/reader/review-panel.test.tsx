@@ -24,4 +24,14 @@ describe('ReviewPanel', () => {
       screen.getByText(/这一篇暂时还没有留下要记住的词/i),
     ).toBeInTheDocument();
   });
+
+  it('explains that remembered words no longer stay in the word list', async () => {
+    const article = await loadArticle('welcome-to-deep-reading');
+
+    render(<ReviewPanel article={article} savedWords={[]} />);
+
+    expect(
+      screen.getByText(/已记住的词不会再出现在这里/i),
+    ).toBeInTheDocument();
+  });
 });

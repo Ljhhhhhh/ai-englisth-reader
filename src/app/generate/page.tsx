@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { LlmLoadingCard } from '@/components/system/llm-loading-card';
 import { getOrCreateDeviceId } from '@/lib/device-id';
+import { uiCopy } from '@/lib/ui-copy';
 
 type JobStatus = 'pending' | 'processing' | 'done' | 'failed';
 
@@ -27,6 +29,24 @@ function StatusText({ status }: { status: JobStatus }) {
   }
 
   return <span>生成失败，请检查错误信息后重试。</span>;
+}
+
+function getGenerateLoadingCopy(status: Extract<JobStatus, 'pending' | 'processing'>) {
+  if (status === 'pending') {
+    return {
+      description: uiCopy.generate.queuedDescription,
+      eyebrow: uiCopy.generate.queuedEyebrow,
+      steps: uiCopy.generate.queuedSteps,
+      title: uiCopy.generate.queuedTitle,
+    };
+  }
+
+  return {
+    description: uiCopy.generate.processingDescription,
+    eyebrow: uiCopy.generate.processingEyebrow,
+    steps: uiCopy.generate.processingSteps,
+    title: uiCopy.generate.processingTitle,
+  };
 }
 
 export default function GeneratePage() {
@@ -248,6 +268,7 @@ export default function GeneratePage() {
             <button
               type="submit"
               disabled={!canSubmit}
+              className={isSubmitting ? 'llm-busy-button' : undefined}
               style={{
                 borderRadius: 999,
                 border: 'none',
@@ -260,7 +281,14 @@ export default function GeneratePage() {
                 padding: '14px 20px',
               }}
             >
-              {isSubmitting ? '提交中...' : '开始生成'}
+              {isSubmitting ? (
+                <>
+                  <span className="llm-busy-button__dot" aria-hidden="true" />
+                  {uiCopy.generate.submitBusy}
+                </>
+              ) : (
+                '开始生成'
+              )}
             </button>
             {remaining !== null ? (
               <span style={{ color: 'var(--muted)' }}>
@@ -286,7 +314,11 @@ export default function GeneratePage() {
             }}
           >
             <strong>任务状态</strong>
-            <StatusText status={job.status} />
+            {job.status === 'pending' || job.status === 'processing' ? (
+              <LlmLoadingCard {...getGenerateLoadingCopy(job.status)} />
+            ) : (
+              <StatusText status={job.status} />
+            )}
             {job.errorMsg ? (
               <p style={{ margin: 0, color: '#b42318' }}>{job.errorMsg}</p>
             ) : null}

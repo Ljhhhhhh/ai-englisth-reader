@@ -4,13 +4,9 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { ArticleBody } from '@/components/reader/article-body';
 import { IntroPanel } from '@/components/reader/intro-panel';
-import { MobileExplainAssist } from '@/components/reader/mobile-explain-assist';
-import { ProgressBar } from '@/components/reader/progress-bar';
 import { ReviewPanel } from '@/components/reader/review-panel';
-import { StageNav } from '@/components/reader/stage-nav';
 import { WordPanelDesktop } from '@/components/reader/word-panel-desktop';
 import { WordPanelMobile } from '@/components/reader/word-panel-mobile';
-import { ErrorState } from '@/components/system/error-state';
 import { hasEvent, recordEvent } from '@/features/analytics/event-service';
 import {
   getLookupableWords,
@@ -21,18 +17,21 @@ import {
   buildExplainCacheKey,
   type ReaderExplainMode,
 } from '@/features/reader/reader-explain-utils';
-import { getPhraseSuggestionsForWord } from '@/features/reader/reader-phrase-suggestions';
 import {
   loadProgress,
   saveProgress,
   type ReaderProgressRecord,
 } from '@/features/reader/progress-service';
 import {
-  getNextStage,
-  getPreviousStage,
   getStageLabel,
   type ReaderStage,
 } from '@/features/reader/stage-machine';
+import {
+  forgetRememberedItem,
+  isItemRemembered,
+  listRememberedItems,
+  rememberItem,
+} from '@/features/words/remembered-item-service';
 import {
   isWordSaved,
   listSavedWords,
@@ -83,23 +82,6 @@ type ExplainPanelState =
   | { status: 'error'; request: LookupRequest; message: string }
   | { status: 'success'; request: LookupRequest; data: ExplainPanelData };
 
-function getDefaultParagraphId(article: Article) {
-  return article.paragraphs[0]?.id;
-}
-
-function getParagraphIndex(article: Article, paragraphId?: string): number {
-  if (!paragraphId) return 0;
-  const index = article.paragraphs.findIndex((p) => p.id === paragraphId);
-  return index === -1 ? 0 : index;
-}
-
-function getParagraphIdByIndex(
-  article: Article,
-  index: number,
-): string | undefined {
-  return article.paragraphs[index]?.id;
-}
-
 function shouldFailOnce(consumedFlags: Record<string, boolean>, key: string) {
   const searchParams = new URLSearchParams(window.location.search);
   if (searchParams.get(key) !== 'once' || consumedFlags[key]) {
@@ -115,9 +97,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const [isMobilePanel, setIsMobilePanel] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [currentStage, setCurrentStage] = useState<ReaderStage>('intro');
-  const [currentParagraphId, setCurrentParagraphId] = useState<
-    string | undefined
-  >(getDefaultParagraphId(article));
+  const [isCompleted, setIsCompleted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [restoredProgress, setRestoredProgress] =
     useState<ReaderProgressRecord | null>(null);
@@ -125,15 +105,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const explainRequestIdRef = useRef(0);
   const explainAbortRef = useRef<AbortController | null>(null);
   const [savedLemmas, setSavedLemmas] = useState<string[]>([]);
+  const [rememberedWords, setRememberedWords] = useState<string[]>([]);
+  const [rememberedPhrases, setRememberedPhrases] = useState<string[]>([]);
   const [explainPanelState, setExplainPanelState] =
     useState<ExplainPanelState>({ status: 'idle' });
-  const [selectionNotice, setSelectionNotice] = useState<string | null>(null);
-  const [mobileAssistState, setMobileAssistState] = useState<{
-    sentenceId: string;
-    sentenceText: string;
-    selectedText: string;
-    suggestions: ReturnType<typeof getPhraseSuggestionsForWord>;
-  } | null>(null);
   const [saveWordError, setSaveWordError] = useState<string | null>(null);
   const [progressSaveNotice, setProgressSaveNotice] = useState<string | null>(
     null,
@@ -164,25 +139,37 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     const nextDeviceId = getOrCreateDeviceId(storage);
     const existing = loadProgress(nextDeviceId, article.slug, storage);
     const savedWords = listSavedWords(nextDeviceId, storage, article.slug);
+    const rememberedItems = listRememberedItems(nextDeviceId, storage);
 
     queueMicrotask(() => {
       setDeviceId(nextDeviceId);
       setSavedLemmas(savedWords.map((word) => word.lemma.toLowerCase()));
+      setRememberedWords(
+        rememberedItems
+          .filter((item) => item.type === 'word')
+          .map((item) => item.term.toLowerCase()),
+      );
+      setRememberedPhrases(
+        rememberedItems
+          .filter((item) => item.type === 'phrase')
+          .map((item) => item.term.toLowerCase()),
+      );
 
       if (existing) {
+        setIsCompleted(existing.isCompleted);
         setCurrentStage(existing.currentStage);
-        setCurrentParagraphId(
-          existing.paragraphId ?? getDefaultParagraphId(article),
-        );
-        setRestoredProgress(existing);
-        recordEvent(
-          {
-            articleSlug: article.slug,
-            deviceId: nextDeviceId,
-            type: 'article_resumed',
-          },
-          storage,
-        );
+
+        if (!existing.isCompleted) {
+          setRestoredProgress(existing);
+          recordEvent(
+            {
+              articleSlug: article.slug,
+              deviceId: nextDeviceId,
+              type: 'article_resumed',
+            },
+            storage,
+          );
+        }
       }
 
       setHydrated(true);
@@ -206,7 +193,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           articleSlug: article.slug,
           currentStage,
           deviceId,
-          paragraphId: currentParagraphId,
+          isCompleted,
         },
         window.localStorage,
       );
@@ -214,7 +201,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     } catch {
       setProgressSaveNotice(uiCopy.reader.progress.saveNotice);
     }
-  }, [article.slug, currentParagraphId, currentStage, deviceId, hydrated]);
+  }, [article.slug, currentStage, deviceId, hydrated, isCompleted]);
 
   function markArticleCompleted(nextDeviceId: string) {
     if (
@@ -241,22 +228,6 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
   function selectStage(stage: ReaderStage) {
     setCurrentStage(stage);
-
-    if (stage === 'read' && !currentParagraphId) {
-      setCurrentParagraphId(getDefaultParagraphId(article));
-    }
-
-    if (stage === 'review' && deviceId) {
-      markArticleCompleted(deviceId);
-    }
-  }
-
-  function goNext() {
-    selectStage(getNextStage(currentStage));
-  }
-
-  function goBack() {
-    selectStage(getPreviousStage(currentStage));
   }
 
   useEffect(() => {
@@ -265,29 +236,9 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     };
   }, []);
 
-  function showSelectionNotice(reason: 'selection_invalid' | 'selection_too_long') {
-    setSelectionNotice(
-      reason === 'selection_too_long'
-        ? uiCopy.reader.shell.selectionTooLong
-        : uiCopy.reader.shell.selectionInvalid,
-    );
-
-    window.setTimeout(() => {
-      setSelectionNotice((current) =>
-        current ===
-        (reason === 'selection_too_long'
-          ? uiCopy.reader.shell.selectionTooLong
-          : uiCopy.reader.shell.selectionInvalid)
-          ? null
-          : current,
-      );
-    }, 2400);
-  }
-
   async function handleLookupWord(input: LookupRequest) {
     setLastLookupRequest(input);
     setSaveWordError(null);
-    setMobileAssistState(null);
 
     const cacheKey = buildExplainCacheKey({
       mode: input.mode,
@@ -441,6 +392,28 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
     const selectedWord = explainPanelState.data.saveWord;
     const normalizedLemma = selectedWord.lemma.toLowerCase();
+    const remembered = isItemRemembered(
+      {
+        deviceId,
+        term: normalizedLemma,
+        type: 'word',
+      },
+      window.localStorage,
+    );
+
+    if (remembered) {
+      forgetRememberedItem(
+        {
+          deviceId,
+          term: normalizedLemma,
+          type: 'word',
+        },
+        window.localStorage,
+      );
+      setRememberedWords((current) =>
+        current.filter((item) => item !== normalizedLemma),
+      );
+    }
 
     if (
       isWordSaved(
@@ -508,7 +481,129 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     }
   }
 
+  function handleSaveWordFromIntro(word: string) {
+    if (!deviceId) {
+      return;
+    }
+
+    const selectedWord = article.growth_vocabulary.find(
+      (item) => item.word.toLowerCase() === word.toLowerCase(),
+    );
+    const sourceSentence = article.paragraphs[0]?.sentences[0];
+
+    if (!selectedWord || !sourceSentence) {
+      return;
+    }
+
+    forgetRememberedItem(
+      {
+        deviceId,
+        term: selectedWord.word,
+        type: 'word',
+      },
+      window.localStorage,
+    );
+    setRememberedWords((current) =>
+      current.filter((item) => item !== selectedWord.word.toLowerCase()),
+    );
+
+    saveWord(
+      {
+        articleSlug: article.slug,
+        articleTitle: article.chinese_title,
+        deviceId,
+        lemma: selectedWord.word,
+        meaning: selectedWord.chinese_meaning,
+        sentenceId: sourceSentence.id,
+        sourceSentence: sourceSentence.text,
+        surface: selectedWord.word,
+      },
+      window.localStorage,
+    );
+    setSavedLemmas((current) =>
+      current.includes(selectedWord.word.toLowerCase())
+        ? current
+        : [...current, selectedWord.word.toLowerCase()],
+    );
+  }
+
+  function handleRememberWord(word: string) {
+    if (!deviceId) {
+      return;
+    }
+
+    const selectedWord = article.growth_vocabulary.find(
+      (item) => item.word.toLowerCase() === word.toLowerCase(),
+    );
+
+    if (!selectedWord) {
+      return;
+    }
+
+    rememberItem(
+      {
+        deviceId,
+        displayText: selectedWord.word,
+        meaning: selectedWord.chinese_meaning,
+        savedFromArticleSlug: article.slug,
+        savedFromArticleTitle: article.chinese_title,
+        term: selectedWord.word,
+        type: 'word',
+      },
+      window.localStorage,
+    );
+    unsaveWord(
+      {
+        articleSlug: article.slug,
+        deviceId,
+        lemma: selectedWord.word,
+      },
+      window.localStorage,
+    );
+    setSavedLemmas((current) =>
+      current.filter((item) => item !== selectedWord.word.toLowerCase()),
+    );
+    setRememberedWords((current) =>
+      current.includes(selectedWord.word.toLowerCase())
+        ? current
+        : [...current, selectedWord.word.toLowerCase()],
+    );
+  }
+
+  function handleRememberPhrase(phrase: string) {
+    if (!deviceId) {
+      return;
+    }
+
+    const selectedPhrase = article.high_frequency_phrases.find(
+      (item) => item.phrase.toLowerCase() === phrase.toLowerCase(),
+    );
+
+    if (!selectedPhrase) {
+      return;
+    }
+
+    rememberItem(
+      {
+        deviceId,
+        displayText: selectedPhrase.phrase,
+        meaning: selectedPhrase.chinese_meaning,
+        savedFromArticleSlug: article.slug,
+        savedFromArticleTitle: article.chinese_title,
+        term: selectedPhrase.phrase,
+        type: 'phrase',
+      },
+      window.localStorage,
+    );
+    setRememberedPhrases((current) =>
+      current.includes(selectedPhrase.phrase.toLowerCase())
+        ? current
+        : [...current, selectedPhrase.phrase.toLowerCase()],
+    );
+  }
+
   function startReading() {
+    setIsCompleted(false);
     if (deviceId) {
       recordEvent(
         {
@@ -523,76 +618,64 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     selectStage('read');
   }
 
-  const totalParagraphCount = article.paragraphs.length;
-  const currentParagraphIndex = getParagraphIndex(article, currentParagraphId);
-  const isFirstParagraph = currentParagraphIndex === 0;
-  const isLastParagraph = currentParagraphIndex === totalParagraphCount - 1;
-
-  function goToPreviousParagraph() {
-    if (isFirstParagraph) return;
-    const prevId = getParagraphIdByIndex(article, currentParagraphIndex - 1);
-    if (prevId) setCurrentParagraphId(prevId);
-  }
-
-  function goToNextParagraph() {
-    if (isLastParagraph) return;
-    const nextId = getParagraphIdByIndex(article, currentParagraphIndex + 1);
-    if (nextId) setCurrentParagraphId(nextId);
-  }
-
-  function goToReviewFromReading() {
-    selectStage('review');
-  }
-
   const selectedWordSaved =
     explainPanelState.status === 'success' && explainPanelState.data.saveWord
       ? savedLemmas.includes(explainPanelState.data.saveWord.lemma.toLowerCase())
       : false;
-  const savedWords = deviceId
-    ? listSavedWords(deviceId, window.localStorage, article.slug)
-    : [];
+  const selectedWordRemembered =
+    explainPanelState.status === 'success' && explainPanelState.data.saveWord
+      ? rememberedWords.includes(
+          explainPanelState.data.saveWord.lemma.toLowerCase(),
+        )
+      : false;
+
+  function completeReading() {
+    setIsCompleted(true);
+    selectStage('review');
+    if (deviceId) {
+      markArticleCompleted(deviceId);
+    }
+  }
 
   function renderStage() {
     if (currentStage === 'intro') {
-      return <IntroPanel article={article} onStartReading={startReading} />;
+      return (
+        <IntroPanel
+          article={article}
+          onRememberPhrase={handleRememberPhrase}
+          onRememberWord={handleRememberWord}
+          onSaveWord={handleSaveWordFromIntro}
+          onStartReading={startReading}
+          rememberedPhrases={rememberedPhrases}
+          rememberedWords={rememberedWords}
+          savedWords={savedLemmas}
+        />
+      );
     }
 
-    if (currentStage === 'read') {
+    if (currentStage === 'review') {
+      const savedWords = deviceId
+        ? listSavedWords(deviceId, window.localStorage, article.slug)
+        : [];
+
       return (
-        <ArticleBody
-          activeParagraphId={currentParagraphId}
-          activeParagraphIndex={currentParagraphIndex}
-          totalParagraphCount={totalParagraphCount}
-          canGoPrevious={!isFirstParagraph}
-          canGoNext={!isLastParagraph}
-          isMobile={isMobilePanel}
+        <ReviewPanel
           article={article}
-          lookupableWords={lookupableWords}
-          onContinueToReview={goToReviewFromReading}
-          onPreviousParagraph={goToPreviousParagraph}
-          onNextParagraph={goToNextParagraph}
-          onExplainRequest={handleLookupWord}
-          onOpenMobileAssist={(input) => {
-            setMobileAssistState({
-              ...input,
-              suggestions: getPhraseSuggestionsForWord({
-                article,
-                sentenceId: input.sentenceId,
-                sentenceText: input.sentenceText,
-                selectedWord: input.selectedText,
-              }),
-            });
-          }}
-          onSelectionNotice={showSelectionNotice}
+          nextArticleSlug={navigation.nextArticle?.slug}
+          savedWords={savedWords}
         />
       );
     }
 
     return (
-      <ReviewPanel
+      <ArticleBody
+        activeExplainRequest={
+          explainPanelState.status === 'loading' ? explainPanelState.request : null
+        }
         article={article}
-        nextArticleSlug={navigation.nextArticle?.slug}
-        savedWords={savedWords}
+        lookupableWords={lookupableWords}
+        onCompleteReading={completeReading}
+        onExplainRequest={handleLookupWord}
       />
     );
   }
@@ -609,8 +692,6 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         gap: 20,
       }}
     >
-      <ProgressBar currentStage={currentStage} />
-
       <section
         style={{
           display: 'grid',
@@ -667,10 +748,14 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
             alignItems: 'center',
           }}
         >
-          <StageNav currentStage={currentStage} onSelectStage={selectStage} />
           <span style={{ color: 'var(--muted)', fontSize: 14 }}>
             {uiCopy.reader.navigation.currentStage(getStageLabel(currentStage))}
           </span>
+          {isCompleted ? (
+            <span style={{ color: 'var(--accent)', fontSize: 14 }}>
+              {uiCopy.reader.review.completionTitle}
+            </span>
+          ) : null}
         </div>
       </section>
 
@@ -700,55 +785,11 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         >
           {uiCopy.reader.progress.restoreReady(
             getStageLabel(restoredProgress.currentStage),
-            restoredProgress.paragraphId,
           )}
         </div>
       ) : null}
 
-      {selectionNotice ? (
-        <ErrorState
-          eyebrow={uiCopy.reader.explainPanel.wordTitle}
-          title={selectionNotice}
-          description="缩短选区后再试就行。"
-        />
-      ) : null}
-
       <div style={{ width: 'min(100%, 920px)' }}>{renderStage()}</div>
-
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-        <button
-          type="button"
-          onClick={goBack}
-          disabled={currentStage === 'intro'}
-          style={{
-            borderRadius: 999,
-            border: '1px solid var(--border)',
-            background: 'var(--surface)',
-            color: currentStage === 'intro' ? '#a8a29e' : 'var(--foreground)',
-            padding: '12px 18px',
-            fontWeight: 600,
-            cursor: currentStage === 'intro' ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {uiCopy.common.previous}
-        </button>
-        <button
-          type="button"
-          onClick={goNext}
-          disabled={currentStage === 'review'}
-          style={{
-            borderRadius: 999,
-            border: 'none',
-            background: currentStage === 'review' ? '#e7e5e4' : 'var(--accent)',
-            color: '#fff',
-            padding: '12px 18px',
-            fontWeight: 700,
-            cursor: currentStage === 'review' ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {uiCopy.common.next}
-        </button>
-      </div>
 
       {!hydrated ? (
         <p style={{ margin: 0, color: 'var(--muted)' }}>
@@ -764,6 +805,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
               void handleLookupWord(lastLookupRequest);
             }
           }}
+          remembered={selectedWordRemembered}
           onToggleSave={toggleSavedWord}
           saved={selectedWordSaved}
           saveEnabled={
@@ -798,6 +840,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
               void handleLookupWord(lastLookupRequest);
             }
           }}
+          remembered={selectedWordRemembered}
           onToggleSave={toggleSavedWord}
           saved={selectedWordSaved}
           saveEnabled={
@@ -821,30 +864,6 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
                     message: explainPanelState.message,
                   }
           }
-        />
-      ) : null}
-
-      {isMobilePanel && mobileAssistState ? (
-        <MobileExplainAssist
-          word={mobileAssistState.selectedText}
-          suggestions={mobileAssistState.suggestions}
-          onClose={() => setMobileAssistState(null)}
-          onExplainWord={() => {
-            void handleLookupWord({
-              mode: 'word',
-              selectedText: mobileAssistState.selectedText,
-              sentenceId: mobileAssistState.sentenceId,
-              sentenceText: mobileAssistState.sentenceText,
-            });
-          }}
-          onExplainPhrase={(text) => {
-            void handleLookupWord({
-              mode: 'phrase',
-              selectedText: text,
-              sentenceId: mobileAssistState.sentenceId,
-              sentenceText: mobileAssistState.sentenceText,
-            });
-          }}
         />
       ) : null}
     </main>

@@ -7,16 +7,18 @@ import {
 } from './stage-machine';
 
 describe('stage-machine', () => {
-  it('marks an article complete once the reader reaches review', () => {
+  it('marks an article complete only when the explicit completion flag is set', () => {
     expect(
       getCompletionState({
-        currentStage: 'review',
+        currentStage: 'read',
+        isCompleted: true,
       }),
     ).toBe('completed');
 
     expect(
       getCompletionState({
         currentStage: 'read',
+        isCompleted: false,
       }),
     ).toBe('in-progress');
   });
@@ -24,7 +26,9 @@ describe('stage-machine', () => {
   it('moves forward and backward through the three reader stages', () => {
     expect(getNextStage('intro')).toBe('read');
     expect(getNextStage('read')).toBe('review');
+    expect(getNextStage('review')).toBe('review');
     expect(getPreviousStage('review')).toBe('read');
+    expect(getPreviousStage('read')).toBe('intro');
     expect(getPreviousStage('intro')).toBe('intro');
   });
 

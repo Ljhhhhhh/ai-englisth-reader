@@ -1,9 +1,13 @@
-import { useEffect, useRef } from 'react';
-import type { Article } from '@/lib/content/article-schema';
+import { useRef, useState } from 'react';
+import { SelectionActionBar } from '@/components/reader/selection-action-bar';
 import {
-  normalizeExplainText,
-  validateExplainSelection,
-} from '@/features/reader/reader-explain-utils';
+  createWordSelection,
+  expandSelectionLeft,
+  expandSelectionRight,
+  selectionToExplainText,
+  type ReaderTokenSelection,
+} from '@/features/reader/reader-selection-state';
+import type { Article } from '@/lib/content/article-schema';
 import { uiCopy } from '@/lib/ui-copy';
 
 function normalizeToken(value: string) {
@@ -14,215 +18,115 @@ function tokenizeSentence(text: string) {
   return text.match(/[A-Za-z']+|[^A-Za-z']+/g) ?? [text];
 }
 
-type ArticleBodyProps = {
-  activeParagraphId?: string;
-  activeParagraphIndex: number;
-  totalParagraphCount: number;
-  article: Article;
-  lookupableWords: Set<string>;
-  canGoPrevious: boolean;
-  canGoNext: boolean;
-  isMobile: boolean;
-  onContinueToReview: () => void;
-  onPreviousParagraph: () => void;
-  onNextParagraph: () => void;
-  onExplainRequest: (input: {
-    mode: 'word' | 'phrase';
-    sentenceId: string;
-    sentenceText: string;
-    selectedText: string;
-  }) => void;
-  onOpenMobileAssist: (input: {
-    sentenceId: string;
-    sentenceText: string;
-    selectedText: string;
-  }) => void;
-  onSelectionNotice: (
-    reason: 'selection_invalid' | 'selection_too_long',
-  ) => void;
-};
-
-function findWordElement(target: Node | null) {
-  if (!target) {
-    return null;
-  }
-
-  const element = target instanceof Element ? target : target.parentElement;
-  return element?.closest<HTMLElement>("[data-reader-word='true']") ?? null;
+function getSentenceWords(text: string) {
+  return tokenizeSentence(text).filter((token) => /^[A-Za-z']+$/.test(token));
 }
 
-function findNearestWordElement(target: Node | null) {
-  const directMatch = findWordElement(target);
+type ExplainRequest = {
+  mode: 'word' | 'phrase';
+  sentenceId: string;
+  sentenceText: string;
+  selectedText: string;
+};
 
-  if (directMatch) {
-    return directMatch;
-  }
+type ArticleBodyProps = {
+  activeExplainRequest?: ExplainRequest | null;
+  article: Article;
+  lookupableWords: Set<string>;
+  onCompleteReading: () => void;
+  onExplainRequest: (input: ExplainRequest) => void;
+};
 
-  const element = target instanceof Element ? target : target?.parentElement;
+function getSelectedText(selection: ActiveSelection) {
+  return selection.selectedText;
+}
 
-  if (!element) {
-    return null;
-  }
+function getSelectionWordCount(selection: ActiveSelection) {
+  return selection.endWordIndex - selection.startWordIndex + 1;
+}
 
-  let sibling: Element | null = element.previousElementSibling;
+type ActiveSelection = ReaderTokenSelection;
 
-  while (sibling) {
-    if (
-      sibling instanceof HTMLElement &&
-      sibling.dataset.readerWord === 'true'
-    ) {
-      return sibling;
-    }
-
-    sibling = sibling.previousElementSibling;
-  }
-
-  sibling = element.nextElementSibling;
-
-  while (sibling) {
-    if (
-      sibling instanceof HTMLElement &&
-      sibling.dataset.readerWord === 'true'
-    ) {
-      return sibling;
-    }
-
-    sibling = sibling.nextElementSibling;
-  }
-
-  return null;
+function selectionIncludesWord(selection: ActiveSelection, wordIndex: number) {
+  return (
+    wordIndex >= selection.startWordIndex && wordIndex <= selection.endWordIndex
+  );
 }
 
 export function ArticleBody({
-  activeParagraphId,
-  totalParagraphCount,
+  activeExplainRequest = null,
   article,
   lookupableWords,
-  canGoPrevious,
-  canGoNext,
-  isMobile,
-  onContinueToReview,
-  onPreviousParagraph,
-  onNextParagraph,
+  onCompleteReading,
   onExplainRequest,
-  onOpenMobileAssist,
-  onSelectionNotice,
 }: ArticleBodyProps) {
-  const touchHoldTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(
+  const [expandedTranslations, setExpandedTranslations] = useState<
+    Record<string, boolean>
+  >({});
+  const [focusWordIndexes, setFocusWordIndexes] = useState<
+    Record<string, number>
+  >({});
+  const [activeSelection, setActiveSelection] = useState<ActiveSelection | null>(
     null,
   );
-  const touchHoldTriggeredRef = useRef(false);
+  const wordButtonRefs = useRef<Record<string, Array<HTMLButtonElement | null>>>(
+    {},
+  );
 
-  function clearTouchHoldTimer() {
-    if (touchHoldTimerRef.current) {
-      window.clearTimeout(touchHoldTimerRef.current);
-      touchHoldTimerRef.current = null;
-    }
+  const articleView = article as Article & {
+    chinese_title?: string;
+    paragraphs: Array<
+      Article['paragraphs'][number] & {
+        translation?: string;
+      }
+    >;
+  };
+
+  function toggleTranslation(paragraphId: string) {
+    setExpandedTranslations((current) => ({
+      ...current,
+      [paragraphId]: !current[paragraphId],
+    }));
   }
 
-  useEffect(() => () => clearTouchHoldTimer(), []);
+  function setSentenceFocusIndex(sentenceId: string, wordIndex: number) {
+    setFocusWordIndexes((current) => {
+      if (current[sentenceId] === wordIndex) {
+        return current;
+      }
 
-  function handleWordTouchStart(input: {
-    sentenceId: string;
-    sentenceText: string;
-    selectedText: string;
-  }) {
-    if (!isMobile) {
-      return;
-    }
-
-    touchHoldTriggeredRef.current = false;
-    clearTouchHoldTimer();
-    touchHoldTimerRef.current = window.setTimeout(() => {
-      touchHoldTriggeredRef.current = true;
-      onOpenMobileAssist(input);
-    }, 420);
-  }
-
-  function handleWordTouchEnd() {
-    clearTouchHoldTimer();
-  }
-
-  function handleSelectionEnd() {
-    if (touchHoldTriggeredRef.current) {
-      touchHoldTriggeredRef.current = false;
-      return;
-    }
-
-    const selection = window.getSelection();
-
-    if (!selection || selection.isCollapsed) {
-      return;
-    }
-
-    const startWord = findNearestWordElement(selection.anchorNode);
-    const endWord = findNearestWordElement(selection.focusNode);
-
-    if (!startWord || !endWord) {
-      selection.removeAllRanges();
-      return;
-    }
-
-    const sentenceId = startWord.dataset.sentenceId;
-    const sentenceText = startWord.dataset.sentenceText;
-    const startIndex = Number(startWord.dataset.wordIndex);
-    const endIndex = Number(endWord.dataset.wordIndex);
-
-    if (
-      !sentenceId ||
-      !sentenceText ||
-      sentenceId !== endWord.dataset.sentenceId ||
-      Number.isNaN(startIndex) ||
-      Number.isNaN(endIndex)
-    ) {
-      selection.removeAllRanges();
-      onSelectionNotice('selection_invalid');
-      return;
-    }
-
-    const wordElements = Array.from(
-      document.querySelectorAll<HTMLElement>(
-        `[data-sentence-id="${sentenceId}"][data-reader-word='true']`,
-      ),
-    );
-    const [fromIndex, toIndex] =
-      startIndex <= endIndex ? [startIndex, endIndex] : [endIndex, startIndex];
-    const selectedWords = wordElements
-      .filter((element) => {
-        const index = Number(element.dataset.wordIndex);
-        return index >= fromIndex && index <= toIndex;
-      })
-      .map((element) => element.textContent ?? '')
-      .join(' ');
-    const normalizedSelection = normalizeExplainText(selection.toString());
-
-    selection.removeAllRanges();
-
-    if (!normalizedSelection) {
-      onSelectionNotice('selection_invalid');
-      return;
-    }
-
-    const validation = validateExplainSelection({
-      mode: 'phrase',
-      selectedText: selectedWords,
-      sentenceText,
+      return {
+        ...current,
+        [sentenceId]: wordIndex,
+      };
     });
+  }
 
-    if (!validation.ok) {
-      onSelectionNotice(
-        validation.reason === 'too_long'
-          ? 'selection_too_long'
-          : 'selection_invalid',
-      );
+  function focusSentenceWord(sentenceId: string, wordIndex: number) {
+    setSentenceFocusIndex(sentenceId, wordIndex);
+    wordButtonRefs.current[sentenceId]?.[wordIndex]?.focus();
+  }
+
+  function requestExplain(mode: 'word' | 'phrase') {
+    if (!activeSelection) {
+      return;
+    }
+
+    const phraseText =
+      mode === 'phrase' ? selectionToExplainText(activeSelection) : null;
+
+    if (mode === 'phrase' && !phraseText) {
       return;
     }
 
     onExplainRequest({
-      mode: 'phrase',
-      sentenceId,
-      sentenceText,
-      selectedText: validation.selectedText,
+      mode,
+      sentenceId: activeSelection.sentenceId,
+      sentenceText: activeSelection.sentenceText,
+      selectedText:
+        mode === 'word'
+          ? activeSelection.tokens[activeSelection.startWordIndex] ?? ''
+          : phraseText ?? getSelectedText(activeSelection),
     });
   }
 
@@ -230,35 +134,38 @@ export function ArticleBody({
     <section style={{ display: 'grid', gap: 20 }}>
       <header style={{ display: 'grid', gap: 8 }}>
         <h1 style={{ margin: 0 }}>{article.title}</h1>
-        <p style={{ margin: 0, color: 'var(--muted)' }}>
-          {uiCopy.reader.articleBody.currentParagraph(
-            activeParagraphId ?? article.paragraphs[0]?.id,
-            totalParagraphCount,
-          )}
-        </p>
-        <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.6 }}>
-          {isMobile
-            ? uiCopy.reader.articleBody.mobileExplainHint
-            : uiCopy.reader.articleBody.desktopExplainHint}
-        </p>
+        {articleView.chinese_title ? (
+          <p style={{ margin: 0, color: 'var(--muted)', fontSize: 18 }}>
+            {articleView.chinese_title}
+          </p>
+        ) : null}
       </header>
 
-      <div style={{ display: 'grid', gap: 16 }}>
-        {article.paragraphs.map((paragraph, index) => {
-          const isActive = activeParagraphId === paragraph.id;
+      <p
+        style={{
+          margin: 0,
+          padding: '12px 14px',
+          borderRadius: 16,
+          background: '#fff8ee',
+          color: 'var(--muted)',
+          lineHeight: 1.6,
+        }}
+      >
+        {uiCopy.reader.articleBody.selectionHint}
+      </p>
 
+      <div style={{ display: 'grid', gap: 16 }}>
+        {articleView.paragraphs.map((paragraph, index) => {
+          const translationExpanded =
+            expandedTranslations[paragraph.id] ?? false;
           return (
             <article
               key={paragraph.id}
               style={{
                 padding: 20,
                 borderRadius: 22,
-                border: isActive
-                  ? '1px solid var(--accent)'
-                  : '1px solid var(--border)',
-                background: isActive ? '#fff8ee' : 'var(--surface)',
-                opacity: isActive ? 1 : 0.45,
-                transition: 'opacity 0.15s ease',
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
               }}
             >
               <strong style={{ display: 'block', marginBottom: 12 }}>
@@ -266,102 +173,236 @@ export function ArticleBody({
               </strong>
 
               <div style={{ display: 'grid', gap: 12 }}>
-                {paragraph.sentences.map((sentence) => (
-                  <p
-                    key={sentence.id}
-                    onMouseUp={handleSelectionEnd}
-                    onTouchEnd={handleSelectionEnd}
-                    style={{ margin: 0, lineHeight: 1.8, fontSize: 18 }}
-                  >
-                    {(() => {
-                      let wordIndex = -1;
+                {paragraph.sentences.map((sentence) => {
+                  const sentenceWords = getSentenceWords(sentence.text);
 
-                      return tokenizeSentence(sentence.text).map(
-                        (token, tokenIndex) => {
-                          const normalizedToken = normalizeToken(token);
-                          const isWord = /^[A-Za-z']+$/.test(token);
-                          const canTapWord = isActive && isWord;
-                          const isPriorityWord =
-                            lookupableWords.has(normalizedToken);
+                  return (
+                    <div key={sentence.id} style={{ display: 'grid', gap: 10 }}>
+                      <p style={{ margin: 0, lineHeight: 1.8, fontSize: 18 }}>
+                        {(() => {
+                          let wordIndex = -1;
 
-                          if (isWord) {
-                            wordIndex += 1;
-                          }
+                          return tokenizeSentence(sentence.text).map(
+                            (token, tokenIndex) => {
+                              const normalized = normalizeToken(token);
+                              const isWord = /^[A-Za-z']+$/.test(token);
+                              const isPriorityWord =
+                                lookupableWords.has(normalized);
 
-                          if (!canTapWord) {
-                            return (
-                              <span
-                                key={`${sentence.id}-${tokenIndex}`}
-                                data-reader-word={isWord ? 'true' : undefined}
-                                data-sentence-id={
-                                  isWord ? sentence.id : undefined
-                                }
-                                data-sentence-text={
-                                  isWord ? sentence.text : undefined
-                                }
-                                data-word-index={
-                                  isWord ? String(wordIndex) : undefined
-                                }
-                                data-token-index={String(tokenIndex)}
-                              >
-                                {token}
-                              </span>
-                            );
-                          }
-
-                          return (
-                            <button
-                              key={`${sentence.id}-${tokenIndex}`}
-                              type="button"
-                              onClick={() =>
-                                onExplainRequest({
-                                  mode: 'word',
-                                  sentenceId: sentence.id,
-                                  sentenceText: sentence.text,
-                                  selectedText: token,
-                                })
+                              if (isWord) {
+                                wordIndex += 1;
                               }
-                              onTouchStart={() =>
-                                handleWordTouchStart({
-                                  sentenceId: sentence.id,
-                                  sentenceText: sentence.text,
-                                  selectedText: token,
-                                })
+
+                              if (!isWord) {
+                                return (
+                                  <span key={`${sentence.id}-${tokenIndex}`}>
+                                    {token}
+                                  </span>
+                                );
                               }
-                              onTouchEnd={handleWordTouchEnd}
-                              onTouchCancel={handleWordTouchEnd}
-                              style={{
-                                border: 'none',
-                                padding: 0,
-                                background: 'transparent',
-                                color: isPriorityWord
-                                  ? 'var(--accent)'
-                                  : 'var(--foreground)',
-                                cursor: 'pointer',
-                                font: 'inherit',
-                                textDecoration: isPriorityWord
-                                  ? 'underline'
-                                  : 'none',
-                                textUnderlineOffset: isPriorityWord
-                                  ? 3
-                                  : undefined,
-                                borderRadius: 6,
-                              }}
-                              data-reader-word="true"
-                              data-sentence-id={sentence.id}
-                              data-sentence-text={sentence.text}
-                              data-word-index={String(wordIndex)}
-                              data-token-index={String(tokenIndex)}
-                            >
-                              {token}
-                            </button>
+
+                              const isSelected =
+                                activeSelection?.sentenceId === sentence.id &&
+                                selectionIncludesWord(activeSelection, wordIndex);
+                              const currentWordIndex = wordIndex;
+                              const isFocusableWord =
+                                (focusWordIndexes[sentence.id] ?? 0) ===
+                                currentWordIndex;
+
+                              return (
+                                <button
+                                  key={`${sentence.id}-${tokenIndex}`}
+                                  type="button"
+                                  ref={(element) => {
+                                    wordButtonRefs.current[sentence.id] ??= [];
+                                    wordButtonRefs.current[sentence.id][
+                                      currentWordIndex
+                                    ] = element;
+                                  }}
+                                  tabIndex={isFocusableWord ? 0 : -1}
+                                  onClick={() =>
+                                    {
+                                      setSentenceFocusIndex(
+                                        sentence.id,
+                                        currentWordIndex,
+                                      );
+                                      setActiveSelection(
+                                        createWordSelection({
+                                          sentenceId: sentence.id,
+                                          sentenceText: sentence.text,
+                                          tokens: sentenceWords,
+                                          wordIndex: currentWordIndex,
+                                        }),
+                                      );
+                                    }
+                                  }
+                                  onFocus={() =>
+                                    setSentenceFocusIndex(
+                                      sentence.id,
+                                      currentWordIndex,
+                                    )
+                                  }
+                                  onKeyDown={(event) => {
+                                    if (event.key === 'ArrowRight') {
+                                      event.preventDefault();
+                                      focusSentenceWord(
+                                        sentence.id,
+                                        Math.min(
+                                          currentWordIndex + 1,
+                                          sentenceWords.length - 1,
+                                        ),
+                                      );
+                                    } else if (event.key === 'ArrowLeft') {
+                                      event.preventDefault();
+                                      focusSentenceWord(
+                                        sentence.id,
+                                        Math.max(currentWordIndex - 1, 0),
+                                      );
+                                    } else if (event.key === 'Home') {
+                                      event.preventDefault();
+                                      focusSentenceWord(sentence.id, 0);
+                                    } else if (event.key === 'End') {
+                                      event.preventDefault();
+                                      focusSentenceWord(
+                                        sentence.id,
+                                        sentenceWords.length - 1,
+                                      );
+                                    }
+                                  }}
+                                  data-reader-word="true"
+                                  data-sentence-id={sentence.id}
+                                  data-sentence-text={sentence.text}
+                                  data-word-index={String(currentWordIndex)}
+                                  data-token-index={String(tokenIndex)}
+                                  aria-pressed={isSelected}
+                                  style={{
+                                    border: 'none',
+                                    padding: '0 2px',
+                                    background: isSelected
+                                      ? 'rgba(197, 106, 45, 0.16)'
+                                      : 'transparent',
+                                    color: isPriorityWord
+                                      ? 'var(--accent)'
+                                      : 'var(--foreground)',
+                                    cursor: 'pointer',
+                                    font: 'inherit',
+                                    textDecoration: isPriorityWord
+                                      ? 'underline'
+                                      : 'none',
+                                    textUnderlineOffset: isPriorityWord
+                                      ? 3
+                                      : undefined,
+                                    borderRadius: 6,
+                                    outlineOffset: 2,
+                                    boxShadow: isSelected
+                                      ? '0 0 0 1px rgba(197, 106, 45, 0.28)'
+                                      : 'none',
+                                  }}
+                                >
+                                  {token}
+                                </button>
+                              );
+                            },
                           );
-                        },
-                      );
-                    })()}
-                  </p>
-                ))}
+                        })()}
+                      </p>
+
+                      {activeSelection?.sentenceId === sentence.id ? (
+                        <SelectionActionBar
+                          busyLabel={
+                            activeExplainRequest &&
+                            activeExplainRequest.sentenceId === sentence.id &&
+                            activeExplainRequest.selectedText ===
+                              getSelectedText(activeSelection)
+                              ? activeExplainRequest.mode === 'word'
+                                ? uiCopy.reader.selectionBar.busyWord
+                                : uiCopy.reader.selectionBar.busyPhrase
+                              : null
+                          }
+                          isBusy={Boolean(
+                            activeExplainRequest &&
+                              activeExplainRequest.sentenceId === sentence.id &&
+                              activeExplainRequest.selectedText ===
+                                getSelectedText(activeSelection),
+                          )}
+                          selectedText={getSelectedText(activeSelection)}
+                          showExplainWord={
+                            activeSelection.startWordIndex ===
+                            activeSelection.endWordIndex
+                          }
+                          canExplainPhrase={
+                            getSelectionWordCount(activeSelection) > 1 &&
+                            selectionToExplainText(activeSelection) !== null
+                          }
+                          canExpandLeft={activeSelection.startWordIndex > 0}
+                          canExpandRight={
+                            activeSelection.endWordIndex <
+                              activeSelection.tokens.length - 1 &&
+                            getSelectionWordCount(activeSelection) < 6
+                          }
+                          onExplainWord={() => requestExplain('word')}
+                          onExplainPhrase={() => requestExplain('phrase')}
+                          onExpandLeft={() =>
+                            setActiveSelection((current) =>
+                              current ? expandSelectionLeft(current) ?? current : current,
+                            )
+                          }
+                          onExpandRight={() =>
+                            setActiveSelection((current) =>
+                              current ? expandSelectionRight(current) ?? current : current,
+                            )
+                          }
+                          onClear={() => setActiveSelection(null)}
+                          labels={{
+                            title: uiCopy.reader.selectionBar.title,
+                            explainWord: uiCopy.reader.selectionBar.explainWord,
+                            explainPhrase:
+                              uiCopy.reader.selectionBar.explainPhrase,
+                            expandLeft: uiCopy.reader.selectionBar.expandLeft,
+                            expandRight: uiCopy.reader.selectionBar.expandRight,
+                            clear: uiCopy.reader.selectionBar.clear,
+                          }}
+                        />
+                      ) : null}
+                    </div>
+                  );
+                })}
               </div>
+
+              {paragraph.translation ? (
+                <div style={{ display: 'grid', gap: 10, marginTop: 16 }}>
+                  <button
+                    type="button"
+                    onClick={() => toggleTranslation(paragraph.id)}
+                    style={{
+                      width: 'fit-content',
+                      borderRadius: 999,
+                      border: '1px solid var(--border)',
+                      background: '#fff8ee',
+                      color: 'var(--foreground)',
+                      padding: '10px 14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {translationExpanded
+                      ? uiCopy.reader.articleBody.hideTranslation
+                      : uiCopy.reader.articleBody.showTranslation}
+                  </button>
+
+                  {translationExpanded ? (
+                    <p
+                      style={{
+                        margin: 0,
+                        color: 'var(--muted)',
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {paragraph.translation}
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
             </article>
           );
         })}
@@ -381,57 +422,21 @@ export function ArticleBody({
         </p>
 
         <div style={{ display: 'flex', gap: 12 }}>
-          {canGoPrevious ? (
-            <button
-              type="button"
-              onClick={onPreviousParagraph}
-              style={{
-                borderRadius: 999,
-                border: '1px solid var(--border)',
-                background: 'var(--surface)',
-                color: 'var(--foreground)',
-                padding: '14px 20px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-            >
-              {uiCopy.reader.articleBody.previousParagraph}
-            </button>
-          ) : null}
-
-          {canGoNext ? (
-            <button
-              type="button"
-              onClick={onNextParagraph}
-              style={{
-                borderRadius: 999,
-                border: 'none',
-                background: 'var(--accent)',
-                color: '#fff',
-                padding: '14px 20px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {uiCopy.reader.articleBody.nextParagraph}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={onContinueToReview}
-              style={{
-                borderRadius: 999,
-                border: 'none',
-                background: 'var(--accent)',
-                color: '#fff',
-                padding: '14px 20px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              {uiCopy.reader.articleBody.continueToReview}
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={onCompleteReading}
+            style={{
+              borderRadius: 999,
+              border: 'none',
+              background: 'var(--accent)',
+              color: '#fff',
+              padding: '14px 20px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {uiCopy.reader.articleBody.completeReading}
+          </button>
         </div>
       </div>
     </section>

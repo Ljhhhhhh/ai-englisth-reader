@@ -23,6 +23,13 @@ function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function splitChineseParagraphs(value: string) {
+  return value
+    .split(/\n\s*\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+}
+
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -107,6 +114,33 @@ function normalizeTitle(titleHint: string) {
   return titleHint.trim() || 'Generated Reading';
 }
 
+function resolveParagraphTranslations(
+  payload: PromptOutput,
+  paragraphCount: number,
+) {
+  const normalizedTranslations = payload.paragraph_translations
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  if (normalizedTranslations.length === paragraphCount) {
+    return normalizedTranslations;
+  }
+
+  const fallbackTranslations = splitChineseParagraphs(payload.chinese_translation);
+
+  if (fallbackTranslations.length === paragraphCount) {
+    return fallbackTranslations;
+  }
+
+  if (paragraphCount === 1 && payload.chinese_translation.trim()) {
+    return [payload.chinese_translation.trim()];
+  }
+
+  throw new Error(
+    `段落译文数量 (${normalizedTranslations.length}) 与正文段落数量 (${paragraphCount}) 不一致。`,
+  );
+}
+
 function slugify(input: string) {
   const ascii = input
     .normalize('NFKD')
@@ -124,6 +158,12 @@ function buildArticle(
 ): Article {
   const normalizedPayload: PromptOutput = {
     ...payload,
+    chinese_title: payload.chinese_title.trim(),
+    list_summary_zh: payload.list_summary_zh.trim(),
+    chinese_translation: payload.chinese_translation.trim(),
+    paragraph_translations: payload.paragraph_translations
+      .map((paragraph) => paragraph.trim())
+      .filter(Boolean),
     feynman_summary: payload.feynman_summary.trim(),
     growth_vocabulary: payload.growth_vocabulary.filter((item) =>
       includesTerm(payload.feynman_summary, item.word),
@@ -156,15 +196,27 @@ function buildArticle(
     throw new Error('未能从 feynman_summary 解析出可阅读段落。');
   }
 
+  const paragraphTranslations = resolveParagraphTranslations(
+    normalizedPayload,
+    paragraphs.length,
+  );
+
   return articleSchema.parse({
     slug,
     title: normalizeTitle(input.titleHint),
+    chinese_title: normalizedPayload.chinese_title,
     source: input.source,
     difficulty: inferDifficulty(normalizedPayload),
     estimatedMinutes: estimateMinutes(normalizedPayload.feynman_summary),
+    list_summary_zh: normalizedPayload.list_summary_zh,
     feynman_summary: normalizedPayload.feynman_summary,
-    chinese_translation: normalizedPayload.chinese_translation.trim(),
-    paragraphs,
+    chinese_translation:
+      normalizedPayload.chinese_translation ||
+      paragraphTranslations.join('\n\n'),
+    paragraphs: paragraphs.map((paragraph, index) => ({
+      ...paragraph,
+      translation: paragraphTranslations[index] ?? '',
+    })),
     growth_vocabulary: normalizedPayload.growth_vocabulary,
     high_frequency_phrases: normalizedPayload.high_frequency_phrases,
     language_evolution: normalizedPayload.language_evolution,

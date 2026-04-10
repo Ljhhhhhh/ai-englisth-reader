@@ -9,14 +9,13 @@ import { uiCopy } from '@/lib/ui-copy';
 
 type ContinueReadingProps = {
   articles: Array<{
+    chineseTitle: string;
     slug: string;
-    title: string;
   }>;
 };
 
 export function ContinueReading({ articles }: ContinueReadingProps) {
   const [currentArticle, setCurrentArticle] = useState<{
-    paragraphId?: string;
     slug: string;
     stageLabel: string;
     title: string;
@@ -25,7 +24,9 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
   useEffect(() => {
     const storage = window.localStorage;
     const deviceId = getOrCreateDeviceId(storage);
-    const [nextProgress] = listRecentProgress(deviceId, storage);
+    const nextProgress = listRecentProgress(deviceId, storage).find(
+      (record) => !record.isCompleted,
+    );
 
     if (!nextProgress) {
       return;
@@ -40,10 +41,9 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
 
     queueMicrotask(() => {
       setCurrentArticle({
-        paragraphId: nextProgress.paragraphId,
         slug: article.slug,
         stageLabel: getStageLabel(nextProgress.currentStage),
-        title: article.title,
+        title: article.chineseTitle,
       });
     });
   }, [articles]);
@@ -67,10 +67,7 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
         <>
           <h2 style={{ margin: 0 }}>{currentArticle.title}</h2>
           <p style={{ margin: 0, color: 'var(--muted)' }}>
-            {uiCopy.continueReading.resumeFrom(
-              currentArticle.stageLabel,
-              currentArticle.paragraphId,
-            )}
+            {uiCopy.continueReading.resumeFrom(currentArticle.stageLabel)}
           </p>
           <Link
             href={`/reader/${currentArticle.slug}`}

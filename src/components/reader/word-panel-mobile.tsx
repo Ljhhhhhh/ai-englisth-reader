@@ -8,6 +8,7 @@ type WordPanelMobileProps = {
   onClose: () => void;
   onRetry: () => void;
   onToggleSave: () => void;
+  remembered?: boolean;
   saved: boolean;
   saveEnabled: boolean;
   saveErrorMessage?: string | null;
@@ -18,6 +19,7 @@ export function WordPanelMobile({
   onClose,
   onRetry,
   onToggleSave,
+  remembered = false,
   saved,
   saveEnabled,
   saveErrorMessage,
@@ -74,6 +76,7 @@ export function WordPanelMobile({
           <ExplainPanelContent
             onRetry={onRetry}
             onToggleSave={onToggleSave}
+            remembered={remembered}
             saveEnabled={saveEnabled}
             saveErrorMessage={saveErrorMessage}
             saved={saved}

@@ -68,19 +68,18 @@ export const uiCopy = {
   },
   reader: {
     articleBody: {
-      continueToReview: '读完，进入复盘',
+      completeReading: '完成本篇阅读',
       description:
         '带着刚刚预热过的词汇、语法和句型重新读正文。看到高亮词时，可以随时点开快速回忆。',
       eyebrow: '在上下文里巩固理解',
-      positionSaved: '这台设备上的阅读位置会自动保存。',
+      positionSaved: '这台设备上的阅读状态会自动保存。',
+      selectionHint: '点词即查；再点相邻词可扩成短语。',
       currentParagraph: (paragraphId?: string, totalParagraphCount?: number) =>
         formatParagraphProgress(paragraphId, totalParagraphCount),
-      desktopExplainHint: '点词可快查，划几个相邻英文词可看短语讲解。',
-      mobileExplainHint: '点词可快查，长按单词可直接挑短语讲解。',
-      nextParagraph: '下一段',
-      previousParagraph: '上一段',
       jumpToParagraph: (index: number) => `第 ${index} 段`,
       paragraphTitle: (index: number) => `第 ${index} 段`,
+      hideTranslation: '收起译文',
+      showTranslation: '显示译文',
     },
     intro: {
       ariaLabel: '导读面板',
@@ -116,8 +115,8 @@ export const uiCopy = {
     },
     progress: {
       loading: '正在恢复这台设备上的阅读进度...',
-      restoreReady: (_stageLabel: string, paragraphId?: string) =>
-        `已回到上次读到的位置${paragraphId ? ` · ${formatParagraphLabel(paragraphId)}` : ''}`,
+      restoreReady: (stageLabel: string) =>
+        `已回到上次读到的位置 · ${stageLabel}`,
       saveNotice:
         '暂时无法同步阅读进度。你当前的位置仍会保留在页面上，系统会自动重试。',
       title: '阅读进度',
@@ -129,7 +128,7 @@ export const uiCopy = {
         '在结束这一轮精读前，对照全文译文，并把值得留下的词收进生词本。',
       emptySavedWords: '这一篇暂时还没有留下要记住的词。',
       emptySavedWordsHint:
-        '如果你想补存几个词，可以回正文点词；不补也不影响这次完成阅读。',
+        '如果你想补存几个词，可以回正文点词；已记住的词不会再出现在这里。',
       savedWordsHint: '这一篇里你决定留下来的词，都在这里。',
       nextArticle: '开始下一篇',
       savedWordsCta: '查看全部生词',
@@ -141,9 +140,17 @@ export const uiCopy = {
     },
     shell: {
       explainPhraseError: '暂时无法讲解这段短语，请重试。',
-      selectionInvalid: '只支持同一句里相邻的英文词或短语。',
-      selectionTooLong: '这次选得有点长，缩短到几个相邻单词再试。',
       saveWordError: '这个词暂时无法保存。重试一次即可，当前阅读位置不会丢失。',
+    },
+    selectionBar: {
+      busyPhrase: '正在打磨短语讲解',
+      busyWord: '正在整理这个词的批注',
+      clear: '清除选择',
+      expandLeft: '向左扩展',
+      expandRight: '向右扩展',
+      explainPhrase: '讲解短语',
+      explainWord: '看这个词',
+      title: '正文讲解操作',
     },
     stageNav: {
       ariaLabel: '阅读阶段导航',
@@ -153,29 +160,35 @@ export const uiCopy = {
       ariaLabelMobile: '移动端阅读讲解面板',
       contextMeaning: '放回原句怎么理解',
       errorTitle: '这次讲解没成功',
+      loadingPhraseEyebrow: '短语批注稿',
       loadingPhrase: '正在结合当前句子整理这段短语的意思和拆解。',
+      loadingPhraseSteps: [
+        '抽取当前句子的搭配关系',
+        '压缩成更顺的中文解释',
+        '补齐你真正需要记住的提醒',
+      ],
       loadingTitle: '正在生成讲解',
+      loadingWordEyebrow: '单词批注稿',
       loadingWord: '正在结合当前句子整理这个词的讲解。',
+      loadingWordSteps: [
+        '定位这个词在原句里的真实意思',
+        '筛掉不必要的词典噪音',
+        '整理成更适合精读记忆的批注',
+      ],
       phraseExplanation: '为什么这里这样理解',
       phraseMeaning: '整体翻译',
       phraseTitle: '短语讲解',
+      readd: '重新加入生词库',
+      remembered: '已记住',
       retry: '重试讲解',
       retrySave: '重试保存',
-      save: '保存这个词',
-      saved: '已保存到本机',
+      save: '保存到生词库',
+      saved: '已在生词库',
       sourceSentence: '原句',
       wordMemory: '助记讲解',
       wordExplanation: '理解提醒',
       wordMeaning: '中文解释',
       wordTitle: '单词讲解',
-    },
-    mobileAssist: {
-      ariaLabel: '手机端讲解快捷入口',
-      explainWord: '先看这个词的讲解',
-      noSuggestions: '这个词附近暂时没有更合适的短语建议，先看单词讲解更稳。',
-      selectedWord: (word: string) => `当前词：${word}`,
-      suggestionsTitle: '也可以直接看这些短语',
-      title: '长按后快捷讲解',
     },
   },
   words: {
@@ -200,6 +213,7 @@ export const uiCopy = {
     actions: {
       browseArticles: '去看文章',
       filterAll: '全部文章',
+      markRemembered: '已记住',
       searchPlaceholder: '按单词原形或中文释义搜索',
       retry: '重新加载生词页',
     },
@@ -210,12 +224,30 @@ export const uiCopy = {
       '只要你进入任意文章，这里就会显示这台设备上最近一次未完成的阅读进度。',
     emptyTitle: '开始阅读后，你的下一次续读会显示在这里。',
     eyebrow: '继续阅读',
-    resumeFrom: (_stageLabel: string, paragraphId?: string) =>
-      paragraphId
-        ? `上次读到${formatParagraphLabel(paragraphId)}`
-        : '上次读到这里',
+    resumeFrom: (stageLabel: string) => `上次读到${stageLabel}`,
   },
   articleCard: {
     startReading: '开始精读',
+  },
+  generate: {
+    processingDescription:
+      '模型正在把原始内容整理成适合精读的文章与学习材料。',
+    processingEyebrow: '精读稿编修中',
+    processingSteps: [
+      '提炼主线与段落结构',
+      '重写为适合精读的成稿',
+      '补齐可进入阅读器的学习字段',
+    ],
+    processingTitle: '正在生成这篇精读文章',
+    queuedDescription:
+      '稿件已收下，系统正在排队准备抽取内容与结构。',
+    queuedEyebrow: '编辑部收稿中',
+    queuedSteps: [
+      '登记来源并检查可提取内容',
+      '准备抽取正文与结构信息',
+      '为精读稿生成任务预热上下文',
+    ],
+    queuedTitle: '文章已进入生成队列',
+    submitBusy: '正在提交任务...',
   },
 } as const;

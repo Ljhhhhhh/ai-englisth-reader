@@ -5,6 +5,7 @@ export type CompletionState = 'in-progress' | 'completed';
 
 type CompletionInput = {
   currentStage: ReaderStage;
+  isCompleted?: boolean;
 };
 
 export function normalizeStage(stage: string | undefined): ReaderStage {
@@ -41,9 +42,9 @@ export function getStageLabel(stage: ReaderStage) {
 }
 
 export function getCompletionState({
-  currentStage,
+  isCompleted,
 }: CompletionInput): CompletionState {
-  if (currentStage === 'review') {
+  if (isCompleted) {
     return 'completed';
   }
 

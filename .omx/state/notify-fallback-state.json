@@ -1,23 +1,23 @@
 {
-  "pid": 98118,
-  "parent_pid": 97932,
-  "started_at": "2026-04-10T07:57:49.407Z",
+  "pid": 523,
+  "parent_pid": 46643,
+  "started_at": "2026-04-10T15:24:40.655Z",
   "cwd": "/Users/pipilu/Documents/MaDun/ai-english-read",
   "notify_script": "/Users/pipilu/Library/pnpm/global/5/.pnpm/oh-my-codex@0.12.4/node_modules/oh-my-codex/dist/scripts/notify-hook.js",
-  "authority_only": false,
-  "poll_ms": 250,
-  "effective_poll_ms": 1000,
+  "authority_only": true,
+  "poll_ms": 75,
+  "effective_poll_ms": 75,
   "idle_max_poll_ms": 1000,
-  "pid_file": "/Users/pipilu/Documents/MaDun/ai-english-read/.omx/state/notify-fallback.pid",
-  "max_lifetime_ms": 21600000,
+  "pid_file": null,
+  "max_lifetime_ms": 0,
   "tracked_files": 0,
   "seen_turns": 0,
   "dispatch_drain": {
     "enabled": true,
     "max_per_tick": 5,
-    "run_count": 4,
+    "run_count": 1,
     "leader_only": true,
-    "last_tick_at": "2026-04-10T07:57:52.527Z",
+    "last_tick_at": "2026-04-10T15:24:40.657Z",
     "last_result": {
       "processed": 0,
       "skipped": 0,
@@ -29,10 +29,10 @@
     "enabled": true,
     "leader_only": true,
     "stale_threshold_ms": 180000,
-    "precomputed_leader_stale": false,
-    "last_tick_at": "2026-04-10T07:57:52.527Z",
+    "precomputed_leader_stale": true,
+    "last_tick_at": "2026-04-10T15:24:40.658Z",
     "last_error": null,
-    "run_count": 4
+    "run_count": 1
   },
   "ralph_continue_steer": {
     "enabled": true,
@@ -57,7 +57,7 @@
   "fallback_auto_nudge": {
     "enabled": true,
     "stall_ms": 5000,
-    "last_tick_at": "2026-04-10T07:57:52.558Z",
+    "last_tick_at": "2026-04-10T15:24:40.687Z",
     "last_turn_at": "2026-04-10T07:57:49.364Z",
     "last_turn_count": 0,
     "last_message": "",
@@ -68,7 +68,7 @@
   },
   "authority_backoff": {
     "active": false,
-    "reason": "",
+    "reason": "pid_missing",
     "primary_pid": null,
     "primary_last_tick_at": "",
     "freshness_ms": null,
@@ -76,15 +76,13 @@
   },
   "adaptive_poll": {
     "enabled": true,
-    "base_ms": 250,
+    "base_ms": 75,
     "max_ms": 1000,
-    "current_ms": 1000,
-    "idle_streak": 8,
-    "last_tick_at": "2026-04-10T07:57:52.559Z",
-    "last_activity_at": "2026-04-10T07:04:18.362Z",
-    "last_activity_reason": "hud_state_incomplete"
+    "current_ms": 75,
+    "idle_streak": 0,
+    "last_tick_at": "2026-04-10T15:24:40.688Z",
+    "last_activity_at": "2026-04-10T15:24:40.688Z",
+    "last_activity_reason": "leader_nudge"
   },
-  "stop_reason": "signal",
-  "stop_signal": "SIGTERM",
-  "stopping": true
+  "last_cycle_activity": "leader_nudge"
 }

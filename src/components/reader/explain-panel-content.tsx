@@ -1,4 +1,5 @@
 import type { ReaderExplainMode } from '@/features/reader/reader-explain-utils';
+import { LlmLoadingCard } from '@/components/system/llm-loading-card';
 import { uiCopy } from '@/lib/ui-copy';
 
 export type ExplainPanelSuccessData = {
@@ -33,6 +34,7 @@ export type ExplainPanelViewState =
 type ExplainPanelContentProps = {
   onRetry: () => void;
   onToggleSave: () => void;
+  remembered?: boolean;
   saveEnabled: boolean;
   saveErrorMessage?: string | null;
   saved: boolean;
@@ -58,12 +60,25 @@ function getPanelTitle(mode: ReaderExplainMode) {
 export function ExplainPanelContent({
   onRetry,
   onToggleSave,
+  remembered = false,
   saveEnabled,
   saveErrorMessage,
   saved,
   state,
 }: ExplainPanelContentProps) {
   const mode = getPanelMode(state);
+  const loadingEyebrow =
+    mode === 'word'
+      ? uiCopy.reader.explainPanel.loadingWordEyebrow
+      : uiCopy.reader.explainPanel.loadingPhraseEyebrow;
+  const loadingDescription =
+    mode === 'word'
+      ? uiCopy.reader.explainPanel.loadingWord
+      : uiCopy.reader.explainPanel.loadingPhrase;
+  const loadingSteps =
+    mode === 'word'
+      ? uiCopy.reader.explainPanel.loadingWordSteps
+      : uiCopy.reader.explainPanel.loadingPhraseSteps;
 
   return (
     <>
@@ -78,16 +93,12 @@ export function ExplainPanelContent({
       </div>
 
       {state.status === 'loading' ? (
-        <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
-          <strong>{uiCopy.reader.explainPanel.loadingTitle}</strong>
-          <p
-            style={{ marginBottom: 0, color: 'var(--muted)', lineHeight: 1.7 }}
-          >
-            {mode === 'word'
-              ? uiCopy.reader.explainPanel.loadingWord
-              : uiCopy.reader.explainPanel.loadingPhrase}
-          </p>
-        </div>
+        <LlmLoadingCard
+          description={loadingDescription}
+          eyebrow={loadingEyebrow}
+          steps={loadingSteps}
+          title={uiCopy.reader.explainPanel.loadingTitle}
+        />
       ) : null}
 
       {state.status === 'error' ? (
@@ -217,7 +228,9 @@ export function ExplainPanelContent({
                   marginTop: 12,
                 }}
               >
-                {saved
+                {remembered
+                  ? uiCopy.reader.explainPanel.readd
+                  : saved
                   ? uiCopy.reader.explainPanel.saved
                   : saveErrorMessage
                     ? uiCopy.reader.explainPanel.retrySave

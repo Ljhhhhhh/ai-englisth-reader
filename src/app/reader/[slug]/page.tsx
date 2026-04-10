@@ -38,10 +38,6 @@ function applyReaderMocks(
 }
 
 function validateReaderArticle(article: Article) {
-  if (!article.chinese_translation.trim()) {
-    return uiCopy.reader.page.issues.missingTranslation;
-  }
-
   if (
     !article.feynman_summary.includes(
       article.language_evolution.rewritten_sentence,
@@ -65,18 +61,22 @@ async function getReaderArticle(
     const nextArticle = applyReaderMocks(article, searchParams);
     const issue = validateReaderArticle(nextArticle);
     const currentIndex = articles.findIndex((item) => item.slug === slug);
+    const getNavigationTitle = (input: Article) => {
+      const articleView = input as Article & { chinese_title?: string };
+      return articleView.chinese_title ?? input.title;
+    };
     const previousArticle =
       currentIndex > 0
         ? {
             slug: articles[currentIndex - 1].slug,
-            title: articles[currentIndex - 1].title,
+            title: getNavigationTitle(articles[currentIndex - 1]),
           }
         : undefined;
     const followingArticle =
       currentIndex >= 0 && currentIndex < articles.length - 1
         ? {
             slug: articles[currentIndex + 1].slug,
-            title: articles[currentIndex + 1].title,
+            title: getNavigationTitle(articles[currentIndex + 1]),
           }
         : undefined;
 

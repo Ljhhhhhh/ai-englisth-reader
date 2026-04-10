@@ -1,7 +1,20 @@
 import { z } from 'zod';
 import { memoryTypeSchema } from '@/lib/content/article-schema';
 
+function hasMaxCharacters(value: string, max: number) {
+  return Array.from(value).length <= max;
+}
+
 export const promptOutputSchema = z.object({
+  chinese_title: z.string().trim().min(1),
+  list_summary_zh: z
+    .string()
+    .trim()
+    .min(1)
+    .refine(
+      (value) => hasMaxCharacters(value, 100),
+      'list_summary_zh must be 100 characters or fewer',
+    ),
   growth_vocabulary: z
     .array(
       z.object({
@@ -31,7 +44,8 @@ export const promptOutputSchema = z.object({
     imitation_example: z.string(),
   }),
   feynman_summary: z.string(),
-  chinese_translation: z.string(),
+  chinese_translation: z.string().trim().min(1),
+  paragraph_translations: z.array(z.string().trim().min(1)).min(1),
 });
 
 export type PromptOutput = z.infer<typeof promptOutputSchema>;

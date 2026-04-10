@@ -38,7 +38,7 @@ function buildLookupResult(
 
   return {
     articleSlug: article.slug,
-    articleTitle: article.title,
+    articleTitle: article.chinese_title,
     chineseMeaning: vocabularyItem.chinese_meaning,
     contextMeaning: vocabularyItem.context_meaning,
     lemma: vocabularyItem.word,

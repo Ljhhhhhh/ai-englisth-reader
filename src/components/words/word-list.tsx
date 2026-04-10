@@ -3,25 +3,81 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { EmptyState } from '@/components/system/empty-state';
-import { getOrCreateDeviceId } from '@/lib/device-id';
-import { uiCopy } from '@/lib/ui-copy';
+import {
+  isItemRemembered,
+  rememberItem,
+} from '@/features/words/remembered-item-service';
 import {
   listSavedWordsByArticle,
+  unsaveWord,
   type SavedWordsByArticleGroup,
 } from '@/features/words/saved-word-service';
+import { getOrCreateDeviceId } from '@/lib/device-id';
+import { uiCopy } from '@/lib/ui-copy';
 
 export function WordList() {
   const [groups, setGroups] = useState<SavedWordsByArticleGroup[]>([]);
   const [query, setQuery] = useState('');
   const [articleFilter, setArticleFilter] = useState('all');
 
-  useEffect(() => {
+  function loadGroups() {
     const storage = window.localStorage;
     const deviceId = getOrCreateDeviceId(storage);
 
-    queueMicrotask(() => {
-      setGroups(listSavedWordsByArticle(deviceId, storage));
-    });
+    const nextGroups = listSavedWordsByArticle(deviceId, storage)
+      .map((group) => ({
+        ...group,
+        words: group.words.filter(
+          (word) =>
+            !isItemRemembered(
+              {
+                deviceId,
+                term: word.lemma,
+                type: 'word',
+              },
+              storage,
+            ),
+        ),
+      }))
+      .filter((group) => group.words.length > 0);
+
+    setGroups(nextGroups);
+  }
+
+  function handleRememberWord(group: SavedWordsByArticleGroup, lemma: string) {
+    const storage = window.localStorage;
+    const deviceId = getOrCreateDeviceId(storage);
+    const word = group.words.find((item) => item.lemma === lemma);
+
+    if (!word) {
+      return;
+    }
+
+    rememberItem(
+      {
+        deviceId,
+        displayText: word.surface,
+        meaning: word.meaning,
+        savedFromArticleSlug: word.articleSlug,
+        savedFromArticleTitle: word.articleTitle,
+        term: word.lemma,
+        type: 'word',
+      },
+      storage,
+    );
+    unsaveWord(
+      {
+        articleSlug: word.articleSlug,
+        deviceId,
+        lemma: word.lemma,
+      },
+      storage,
+    );
+    loadGroups();
+  }
+
+  useEffect(() => {
+    queueMicrotask(() => loadGroups());
   }, []);
 
   const filteredGroups = groups
@@ -105,6 +161,23 @@ export function WordList() {
                   >
                     {word.sourceSentence}
                   </p>
+                  <div style={{ marginTop: 14 }}>
+                    <button
+                      type="button"
+                      onClick={() => handleRememberWord(group, word.lemma)}
+                      style={{
+                        borderRadius: 999,
+                        border: 'none',
+                        background: '#7c5a3c',
+                        color: '#fff',
+                        fontWeight: 700,
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {uiCopy.words.actions.markRemembered}
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>

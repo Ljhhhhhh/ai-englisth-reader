@@ -1,14 +1,17 @@
 {
   "slug": "deep-reading-beats-scattered-lookup",
-  "title": "为什么精读胜过零散查词",
+  "title": "Why Deep Reading Beats Scattered Lookup",
+  "chinese_title": "为什么精读胜过零散查词",
   "source": "编辑部示例",
   "difficulty": "B2",
   "estimatedMinutes": 10,
+  "list_summary_zh": "频繁跳出去查词会打断整篇理解；沿着完整文章继续读，反而更能带来深入而可持续的进步。",
   "feynman_summary": "Scattered lookup may feel hardworking, but it rarely gives the reader a full understanding of an article. When attention is pulled away again and again, the text stops feeling like a complete idea and turns into separate problems. A guided reading flow offers support without letting the article disappear behind too many tools. Although the learner still meets difficulty, staying with the whole passage makes comprehension deeper and progress more sustainable.",
   "chinese_translation": "零散查词看起来像是在认真学习，但它很少能让读者真正完整地理解一篇文章。当注意力一次又一次被拉走时，文本就不再像一个完整的思想，而会变成一个个分开的难点。引导式阅读流程会提供支持，同时不让文章被过多工具遮住。虽然学习者仍然会遇到困难，但坚持跟住整篇文章会让理解更深入，也让进步更可持续。",
   "paragraphs": [
     {
       "id": "p1",
+      "translation": "零散查词看起来像是在认真学习，但它很少能让读者真正完整地理解一篇文章。当注意力一次又一次被拉走时，文本就不再像一个完整的思想，而会变成一个个分开的难点。",
       "sentences": [
         {
           "id": "s1",
@@ -24,6 +27,7 @@
     },
     {
       "id": "p2",
+      "translation": "引导式阅读流程会提供支持，同时不让文章被过多工具遮住。虽然学习者仍然会遇到困难，但坚持跟住整篇文章会让理解更深入，也让进步更可持续。",
       "sentences": [
         {
           "id": "s3",

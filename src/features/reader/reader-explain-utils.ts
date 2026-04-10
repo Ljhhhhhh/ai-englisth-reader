@@ -12,8 +12,12 @@ function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, ' ').trim();
 }
 
-function tokenizeEnglishWords(value: string) {
+export function tokenizeExplainWords(value: string) {
   return value.match(/[A-Za-z]+(?:'[A-Za-z]+)*/g) ?? [];
+}
+
+export function getExplainModeForWordCount(wordCount: number): ReaderExplainMode {
+  return wordCount === 1 ? 'word' : 'phrase';
 }
 
 function hasContiguousWords(sentenceWords: string[], selectedWords: string[]) {
@@ -51,7 +55,7 @@ export function validateExplainSelection(input: {
     return { ok: false, reason: 'empty' };
   }
 
-  const selectedWords = tokenizeEnglishWords(normalizedSelectedText);
+  const selectedWords = tokenizeExplainWords(normalizedSelectedText);
 
   if (!selectedWords.length) {
     return { ok: false, reason: 'non_english' };
@@ -73,7 +77,7 @@ export function validateExplainSelection(input: {
     return { ok: false, reason: 'too_long' };
   }
 
-  const sentenceWords = tokenizeEnglishWords(input.sentenceText.toLowerCase());
+  const sentenceWords = tokenizeExplainWords(input.sentenceText.toLowerCase());
 
   if (!hasContiguousWords(sentenceWords, selectedWords.map((word) => word.toLowerCase()))) {
     return { ok: false, reason: 'not_found' };

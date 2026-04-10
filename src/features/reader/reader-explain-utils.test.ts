@@ -1,5 +1,7 @@
 import {
   buildExplainCacheKey,
+  getExplainModeForWordCount,
+  tokenizeExplainWords,
   validateExplainSelection,
 } from './reader-explain-utils';
 
@@ -84,5 +86,18 @@ describe('reader-explain-utils', () => {
         selectedText: ' Clear   Support ',
       }),
     ).toBe('phrase:s3:clear support');
+  });
+
+  it('tokenizes explainable english words without punctuation', () => {
+    expect(tokenizeExplainWords(" Guided, reader's focus. ")).toEqual([
+      'Guided',
+      "reader's",
+      'focus',
+    ]);
+  });
+
+  it('infers explain mode from selected word count', () => {
+    expect(getExplainModeForWordCount(1)).toBe('word');
+    expect(getExplainModeForWordCount(2)).toBe('phrase');
   });
 });

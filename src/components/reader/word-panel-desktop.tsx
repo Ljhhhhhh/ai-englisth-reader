@@ -8,6 +8,7 @@ type WordPanelDesktopProps = {
   onClose: () => void;
   onRetry: () => void;
   onToggleSave: () => void;
+  remembered?: boolean;
   saved: boolean;
   saveEnabled: boolean;
   saveErrorMessage?: string | null;
@@ -18,6 +19,7 @@ export function WordPanelDesktop({
   onClose,
   onRetry,
   onToggleSave,
+  remembered = false,
   saved,
   saveEnabled,
   saveErrorMessage,
@@ -70,6 +72,7 @@ export function WordPanelDesktop({
         <ExplainPanelContent
           onRetry={onRetry}
           onToggleSave={onToggleSave}
+          remembered={remembered}
           saveEnabled={saveEnabled}
           saveErrorMessage={saveErrorMessage}
           saved={saved}

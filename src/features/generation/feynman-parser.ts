@@ -1,5 +1,7 @@
 import type { Article } from '@/lib/content/article-schema';
 
+type ParsedParagraph = Pick<Article['paragraphs'][number], 'id' | 'sentences'>;
+
 function splitSentences(text: string) {
   return text
     .replace(/\s+/g, ' ')
@@ -19,7 +21,7 @@ function chunkSentences(sentences: string[], chunkSize: number) {
   return chunks;
 }
 
-export function parseFeynmanSummary(summary: string): Article['paragraphs'] {
+export function parseFeynmanSummary(summary: string): ParsedParagraph[] {
   const trimmedSummary = summary.trim();
 
   if (!trimmedSummary) {

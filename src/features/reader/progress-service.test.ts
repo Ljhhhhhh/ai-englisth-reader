@@ -18,7 +18,7 @@ function createMemoryStorage() {
 }
 
 describe('progress-service', () => {
-  it('restores last visited stage and paragraph for the same device', async () => {
+  it('restores last visited stage and completion state for the same device', async () => {
     const storage = createMemoryStorage();
 
     saveProgress(
@@ -26,15 +26,15 @@ describe('progress-service', () => {
         articleSlug: 'welcome-to-deep-reading',
         currentStage: 'read',
         deviceId: 'dev-1',
-        paragraphId: 'p2',
+        isCompleted: false,
       },
       storage,
     );
 
     const restored = loadProgress('dev-1', 'welcome-to-deep-reading', storage);
 
-    expect(restored?.paragraphId).toBe('p2');
     expect(restored?.currentStage).toBe('read');
+    expect(restored?.isCompleted).toBe(false);
   });
 
   it('sorts in-progress articles ahead of completed ones for the same device', () => {
@@ -43,8 +43,9 @@ describe('progress-service', () => {
     saveProgress(
       {
         articleSlug: 'welcome-to-deep-reading',
-        currentStage: 'review',
+        currentStage: 'read',
         deviceId: 'dev-1',
+        isCompleted: true,
       },
       storage,
     );
@@ -53,6 +54,7 @@ describe('progress-service', () => {
         articleSlug: 'deep-reading-beats-scattered-lookup',
         currentStage: 'read',
         deviceId: 'dev-1',
+        isCompleted: false,
       },
       storage,
     );

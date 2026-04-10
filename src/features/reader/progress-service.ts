@@ -12,7 +12,7 @@ export type ReaderProgressRecord = {
   articleSlug: string;
   currentStage: ReaderStage;
   deviceId: string;
-  paragraphId?: string;
+  isCompleted: boolean;
   updatedAt: number;
 };
 
@@ -20,7 +20,7 @@ type SaveProgressInput = {
   articleSlug: string;
   currentStage: ReaderStage;
   deviceId: string;
-  paragraphId?: string;
+  isCompleted?: boolean;
 };
 
 function createRecordKey(deviceId: string, articleSlug: string) {
@@ -65,7 +65,7 @@ export function saveProgress(input: SaveProgressInput, storage: StorageLike) {
     articleSlug: input.articleSlug,
     currentStage: normalizeStage(input.currentStage),
     deviceId: input.deviceId,
-    paragraphId: input.paragraphId ?? existing?.paragraphId,
+    isCompleted: input.isCompleted ?? existing?.isCompleted ?? false,
     updatedAt: Date.now(),
   };
 
