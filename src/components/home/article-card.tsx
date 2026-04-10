@@ -30,7 +30,12 @@ export function ArticleCard({
         {difficulty} · {formatEstimatedMinutes(estimatedMinutes)}
       </p>
       <h2 style={{ fontSize: 28, marginBottom: 12 }}>{title}</h2>
-      <p style={{ color: 'var(--muted)', lineHeight: 1.6 }}>{previewText}</p>
+      <p
+        suppressHydrationWarning
+        style={{ color: 'var(--muted)', lineHeight: 1.6 }}
+      >
+        {previewText}
+      </p>
       <Link
         href={`/reader/${slug}`}
         style={{

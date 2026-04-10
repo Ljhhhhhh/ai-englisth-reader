@@ -1,7 +1,9 @@
+import { v4 as uuidv4 } from 'uuid';
+
 const DEVICE_KEY = "ai-english-read-device-id";
 
 function createDeviceId() {
-  return `device_${crypto.randomUUID()}`;
+  return `device_${uuidv4()}`;
 }
 
 export function getOrCreateDeviceId(storage?: Pick<Storage, "getItem" | "setItem">) {

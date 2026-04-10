@@ -1,13 +1,13 @@
-import { useEffect, useRef } from "react";
-import type { Article } from "@/lib/content/article-schema";
+import { useEffect, useRef } from 'react';
+import type { Article } from '@/lib/content/article-schema';
 import {
   normalizeExplainText,
   validateExplainSelection,
-} from "@/features/reader/reader-explain-utils";
-import { uiCopy } from "@/lib/ui-copy";
+} from '@/features/reader/reader-explain-utils';
+import { uiCopy } from '@/lib/ui-copy';
 
 function normalizeToken(value: string) {
-  return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, "").toLowerCase();
+  return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '').toLowerCase();
 }
 
 function tokenizeSentence(text: string) {
@@ -27,7 +27,7 @@ type ArticleBodyProps = {
   onPreviousParagraph: () => void;
   onNextParagraph: () => void;
   onExplainRequest: (input: {
-    mode: "word" | "phrase";
+    mode: 'word' | 'phrase';
     sentenceId: string;
     sentenceText: string;
     selectedText: string;
@@ -37,7 +37,9 @@ type ArticleBodyProps = {
     sentenceText: string;
     selectedText: string;
   }) => void;
-  onSelectionNotice: (reason: "selection_invalid" | "selection_too_long") => void;
+  onSelectionNotice: (
+    reason: 'selection_invalid' | 'selection_too_long',
+  ) => void;
 };
 
 function findWordElement(target: Node | null) {
@@ -67,7 +69,7 @@ function findNearestWordElement(target: Node | null) {
   while (sibling) {
     if (
       sibling instanceof HTMLElement &&
-      sibling.dataset.readerWord === "true"
+      sibling.dataset.readerWord === 'true'
     ) {
       return sibling;
     }
@@ -80,7 +82,7 @@ function findNearestWordElement(target: Node | null) {
   while (sibling) {
     if (
       sibling instanceof HTMLElement &&
-      sibling.dataset.readerWord === "true"
+      sibling.dataset.readerWord === 'true'
     ) {
       return sibling;
     }
@@ -174,7 +176,7 @@ export function ArticleBody({
       Number.isNaN(endIndex)
     ) {
       selection.removeAllRanges();
-      onSelectionNotice("selection_invalid");
+      onSelectionNotice('selection_invalid');
       return;
     }
 
@@ -190,34 +192,34 @@ export function ArticleBody({
         const index = Number(element.dataset.wordIndex);
         return index >= fromIndex && index <= toIndex;
       })
-      .map((element) => element.textContent ?? "")
-      .join(" ");
+      .map((element) => element.textContent ?? '')
+      .join(' ');
     const normalizedSelection = normalizeExplainText(selection.toString());
 
     selection.removeAllRanges();
 
     if (!normalizedSelection) {
-      onSelectionNotice("selection_invalid");
+      onSelectionNotice('selection_invalid');
       return;
     }
 
     const validation = validateExplainSelection({
-      mode: "phrase",
+      mode: 'phrase',
       selectedText: selectedWords,
       sentenceText,
     });
 
     if (!validation.ok) {
       onSelectionNotice(
-        validation.reason === "too_long"
-          ? "selection_too_long"
-          : "selection_invalid",
+        validation.reason === 'too_long'
+          ? 'selection_too_long'
+          : 'selection_invalid',
       );
       return;
     }
 
     onExplainRequest({
-      mode: "phrase",
+      mode: 'phrase',
       sentenceId,
       sentenceText,
       selectedText: validation.selectedText,
@@ -225,23 +227,23 @@ export function ArticleBody({
   }
 
   return (
-    <section style={{ display: "grid", gap: 20 }}>
-      <header style={{ display: "grid", gap: 8 }}>
+    <section style={{ display: 'grid', gap: 20 }}>
+      <header style={{ display: 'grid', gap: 8 }}>
         <h1 style={{ margin: 0 }}>{article.title}</h1>
-        <p style={{ margin: 0, color: "var(--muted)" }}>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>
           {uiCopy.reader.articleBody.currentParagraph(
             activeParagraphId ?? article.paragraphs[0]?.id,
             totalParagraphCount,
           )}
         </p>
-        <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
+        <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.6 }}>
           {isMobile
             ? uiCopy.reader.articleBody.mobileExplainHint
             : uiCopy.reader.articleBody.desktopExplainHint}
         </p>
       </header>
 
-      <div style={{ display: "grid", gap: 16 }}>
+      <div style={{ display: 'grid', gap: 16 }}>
         {article.paragraphs.map((paragraph, index) => {
           const isActive = activeParagraphId === paragraph.id;
 
@@ -252,18 +254,18 @@ export function ArticleBody({
                 padding: 20,
                 borderRadius: 22,
                 border: isActive
-                  ? "1px solid var(--accent)"
-                  : "1px solid var(--border)",
-                background: isActive ? "#fff8ee" : "var(--surface)",
+                  ? '1px solid var(--accent)'
+                  : '1px solid var(--border)',
+                background: isActive ? '#fff8ee' : 'var(--surface)',
                 opacity: isActive ? 1 : 0.45,
-                transition: "opacity 0.15s ease",
+                transition: 'opacity 0.15s ease',
               }}
             >
-              <strong style={{ display: "block", marginBottom: 12 }}>
+              <strong style={{ display: 'block', marginBottom: 12 }}>
                 {uiCopy.reader.articleBody.paragraphTitle(index + 1)}
               </strong>
 
-              <div style={{ display: "grid", gap: 12 }}>
+              <div style={{ display: 'grid', gap: 12 }}>
                 {paragraph.sentences.map((sentence) => (
                   <p
                     key={sentence.id}
@@ -276,79 +278,86 @@ export function ArticleBody({
 
                       return tokenizeSentence(sentence.text).map(
                         (token, tokenIndex) => {
-                        const normalizedToken = normalizeToken(token);
-                        const isWord = /^[A-Za-z']+$/.test(token);
-                        const canTapWord = isActive && isWord;
-                        const isPriorityWord =
-                          lookupableWords.has(normalizedToken);
+                          const normalizedToken = normalizeToken(token);
+                          const isWord = /^[A-Za-z']+$/.test(token);
+                          const canTapWord = isActive && isWord;
+                          const isPriorityWord =
+                            lookupableWords.has(normalizedToken);
 
-                        if (isWord) {
-                          wordIndex += 1;
-                        }
+                          if (isWord) {
+                            wordIndex += 1;
+                          }
 
-                        if (!canTapWord) {
+                          if (!canTapWord) {
+                            return (
+                              <span
+                                key={`${sentence.id}-${tokenIndex}`}
+                                data-reader-word={isWord ? 'true' : undefined}
+                                data-sentence-id={
+                                  isWord ? sentence.id : undefined
+                                }
+                                data-sentence-text={
+                                  isWord ? sentence.text : undefined
+                                }
+                                data-word-index={
+                                  isWord ? String(wordIndex) : undefined
+                                }
+                                data-token-index={String(tokenIndex)}
+                              >
+                                {token}
+                              </span>
+                            );
+                          }
+
                           return (
-                            <span
+                            <button
                               key={`${sentence.id}-${tokenIndex}`}
-                              data-reader-word={isWord ? "true" : undefined}
-                              data-sentence-id={isWord ? sentence.id : undefined}
-                              data-sentence-text={isWord ? sentence.text : undefined}
-                              data-word-index={
-                                isWord ? String(wordIndex) : undefined
+                              type="button"
+                              onClick={() =>
+                                onExplainRequest({
+                                  mode: 'word',
+                                  sentenceId: sentence.id,
+                                  sentenceText: sentence.text,
+                                  selectedText: token,
+                                })
                               }
+                              onTouchStart={() =>
+                                handleWordTouchStart({
+                                  sentenceId: sentence.id,
+                                  sentenceText: sentence.text,
+                                  selectedText: token,
+                                })
+                              }
+                              onTouchEnd={handleWordTouchEnd}
+                              onTouchCancel={handleWordTouchEnd}
+                              style={{
+                                border: 'none',
+                                padding: 0,
+                                background: 'transparent',
+                                color: isPriorityWord
+                                  ? 'var(--accent)'
+                                  : 'var(--foreground)',
+                                cursor: 'pointer',
+                                font: 'inherit',
+                                textDecoration: isPriorityWord
+                                  ? 'underline'
+                                  : 'none',
+                                textUnderlineOffset: isPriorityWord
+                                  ? 3
+                                  : undefined,
+                                borderRadius: 6,
+                              }}
+                              data-reader-word="true"
+                              data-sentence-id={sentence.id}
+                              data-sentence-text={sentence.text}
+                              data-word-index={String(wordIndex)}
                               data-token-index={String(tokenIndex)}
                             >
                               {token}
-                            </span>
+                            </button>
                           );
-                        }
-
-                        return (
-                          <button
-                            key={`${sentence.id}-${tokenIndex}`}
-                            type="button"
-                            onClick={() =>
-                              onExplainRequest({
-                                mode: "word",
-                                sentenceId: sentence.id,
-                                sentenceText: sentence.text,
-                                selectedText: token,
-                              })
-                            }
-                            onTouchStart={() =>
-                              handleWordTouchStart({
-                                sentenceId: sentence.id,
-                                sentenceText: sentence.text,
-                                selectedText: token,
-                              })
-                            }
-                            onTouchEnd={handleWordTouchEnd}
-                            onTouchCancel={handleWordTouchEnd}
-                            style={{
-                              border: "none",
-                              padding: 0,
-                              background: "transparent",
-                              color: isPriorityWord
-                                ? "var(--accent)"
-                                : "var(--foreground)",
-                              cursor: "pointer",
-                              font: "inherit",
-                              textDecoration: isPriorityWord
-                                ? "underline"
-                                : "none",
-                              textUnderlineOffset: isPriorityWord ? 3 : undefined,
-                              borderRadius: 6,
-                            }}
-                            data-reader-word="true"
-                            data-sentence-id={sentence.id}
-                            data-sentence-text={sentence.text}
-                            data-word-index={String(wordIndex)}
-                            data-token-index={String(tokenIndex)}
-                          >
-                            {token}
-                          </button>
-                        );
-                      });
+                        },
+                      );
                     })()}
                   </p>
                 ))}
@@ -360,30 +369,30 @@ export function ArticleBody({
 
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
+          display: 'flex',
+          justifyContent: 'space-between',
           gap: 12,
-          flexWrap: "wrap",
-          alignItems: "center",
+          flexWrap: 'wrap',
+          alignItems: 'center',
         }}
       >
-        <p style={{ margin: 0, color: "var(--muted)" }}>
+        <p style={{ margin: 0, color: 'var(--muted)' }}>
           {uiCopy.reader.articleBody.positionSaved}
         </p>
 
-        <div style={{ display: "flex", gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
           {canGoPrevious ? (
             <button
               type="button"
               onClick={onPreviousParagraph}
               style={{
                 borderRadius: 999,
-                border: "1px solid var(--border)",
-                background: "var(--surface)",
-                color: "var(--foreground)",
-                padding: "14px 20px",
+                border: '1px solid var(--border)',
+                background: 'var(--surface)',
+                color: 'var(--foreground)',
+                padding: '14px 20px',
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: 'pointer',
               }}
             >
               {uiCopy.reader.articleBody.previousParagraph}
@@ -396,12 +405,12 @@ export function ArticleBody({
               onClick={onNextParagraph}
               style={{
                 borderRadius: 999,
-                border: "none",
-                background: "var(--accent)",
-                color: "#fff",
-                padding: "14px 20px",
+                border: 'none',
+                background: 'var(--accent)',
+                color: '#fff',
+                padding: '14px 20px',
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: 'pointer',
               }}
             >
               {uiCopy.reader.articleBody.nextParagraph}
@@ -412,12 +421,12 @@ export function ArticleBody({
               onClick={onContinueToReview}
               style={{
                 borderRadius: 999,
-                border: "none",
-                background: "var(--accent)",
-                color: "#fff",
-                padding: "14px 20px",
+                border: 'none',
+                background: 'var(--accent)',
+                color: '#fff',
+                padding: '14px 20px',
                 fontWeight: 700,
-                cursor: "pointer",
+                cursor: 'pointer',
               }}
             >
               {uiCopy.reader.articleBody.continueToReview}
