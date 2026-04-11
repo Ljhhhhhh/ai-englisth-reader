@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArticleBody } from '@/components/reader/article-body';
 import { IntroPanel } from '@/components/reader/intro-panel';
 import { ReviewPanel } from '@/components/reader/review-panel';
@@ -144,25 +144,28 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const usesServerState =
     process.env.NODE_ENV !== 'test' && Boolean(authenticatedUserId);
 
-  async function recordEventForCurrentUser(input: {
-    articleSlug?: string;
-    payload?: Record<string, string | number | boolean | null>;
-    type: string;
-  }) {
-    if (!usesServerState) {
-      return;
-    }
+  const recordEventForCurrentUser = useCallback(
+    async (input: {
+      articleSlug?: string;
+      payload?: Record<string, string | number | boolean | null>;
+      type: string;
+    }) => {
+      if (!usesServerState) {
+        return;
+      }
 
-    await fetch('/api/events', {
-      body: JSON.stringify(input),
-      headers: {
-        'content-type': 'application/json',
-      },
-      method: 'POST',
-    });
-  }
+      await fetch('/api/events', {
+        body: JSON.stringify(input),
+        headers: {
+          'content-type': 'application/json',
+        },
+        method: 'POST',
+      });
+    },
+    [usesServerState],
+  );
 
-  async function saveWordToServer(input: Omit<SavedWordRecord, 'savedAt'>) {
+  const saveWordToServer = useCallback(async (input: Omit<SavedWordRecord, 'savedAt'>) => {
     const response = await fetch('/api/words', {
       body: JSON.stringify(input),
       headers: {
@@ -176,7 +179,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     }
 
     return (await response.json()) as SavedWordRecord;
-  }
+  }, []);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -321,7 +324,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     return () => {
       cancelled = true;
     };
-  }, [article]);
+  }, [article, recordEventForCurrentUser]);
 
   useEffect(() => {
     if (!hydrated || !deviceId) {

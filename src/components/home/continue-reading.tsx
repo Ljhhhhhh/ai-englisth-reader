@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { loadClientSession } from '@/features/auth/client-session';
 import { listRecentProgress } from '@/features/reader/progress-service';
-import { getStageLabel } from '@/features/reader/stage-machine';
+import { getStageLabel, type ReaderStage } from '@/features/reader/stage-machine';
 import { getOrCreateDeviceId } from '@/lib/device-id';
 import { uiCopy } from '@/lib/ui-copy';
 
@@ -59,7 +59,7 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
 
               setCurrentArticle({
                 slug: article.slug,
-                stageLabel: getStageLabel(nextProgress.currentStage),
+                stageLabel: getStageLabel(nextProgress.currentStage as ReaderStage),
                 title: article.chineseTitle,
               });
               return;

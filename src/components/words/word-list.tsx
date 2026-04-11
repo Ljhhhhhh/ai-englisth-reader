@@ -2,7 +2,7 @@
 
 import * as Select from '@radix-ui/react-select';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { loadClientSession } from '@/features/auth/client-session';
 import {
   isItemRemembered,
@@ -10,6 +10,7 @@ import {
 } from '@/features/words/remembered-item-service';
 import {
   listSavedWordsByArticle,
+  type SavedWordRecord,
   unsaveWord,
   type SavedWordsByArticleGroup,
 } from '@/features/words/saved-word-service';
@@ -56,7 +57,7 @@ export function WordList({
   const [query, setQuery] = useState('');
   const [articleFilter, setArticleFilter] = useState('all');
 
-  async function loadGroups() {
+  const loadGroups = useCallback(async () => {
     const storage = window.localStorage;
     let nextIdentityKey = identityKey;
 
@@ -137,7 +138,7 @@ export function WordList({
       .filter((group) => group.words.length > 0);
 
     setGroups(nextGroups);
-  }
+  }, [identityKey]);
 
   async function handleRememberWord(group: SavedWordsByArticleGroup, lemma: string) {
     const storage = window.localStorage;
@@ -186,8 +187,10 @@ export function WordList({
   }
 
   useEffect(() => {
-    void loadGroups();
-  }, []);
+    queueMicrotask(() => {
+      void loadGroups();
+    });
+  }, [loadGroups]);
 
   const filteredGroups = groups
     .map((group) => ({

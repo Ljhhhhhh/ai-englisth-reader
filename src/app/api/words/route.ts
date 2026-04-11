@@ -59,5 +59,5 @@ export async function DELETE(request: Request) {
       lemma: body.lemma,
       userId: user.id,
     }),
-  );
+  });
 }

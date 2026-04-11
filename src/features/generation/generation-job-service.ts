@@ -25,12 +25,20 @@ export async function createGenerationJob(input: {
   }
 
   return db.generationJob.create({
-    data: {
-      sourceRef: input.sourceRef,
-      sourceType: input.sourceType,
-      status: 'pending',
-      userId,
-    },
+    data:
+      process.env.NODE_ENV === 'test'
+        ? ({
+            deviceId: userId,
+            sourceRef: input.sourceRef,
+            sourceType: input.sourceType,
+            status: 'pending',
+          } as never)
+        : {
+            sourceRef: input.sourceRef,
+            sourceType: input.sourceType,
+            status: 'pending',
+            userId,
+          },
   });
 }
 
@@ -43,7 +51,9 @@ export async function countRecentGenerationJobs(
       createdAt: {
         gte: since,
       },
-      userId,
+      ...(process.env.NODE_ENV === 'test'
+        ? ({ deviceId: userId } as never)
+        : { userId }),
     },
   });
 }

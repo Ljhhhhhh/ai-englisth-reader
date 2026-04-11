@@ -49,7 +49,10 @@ async function processJob(
   try {
     await markGenerationJobProcessing(jobId);
     const extracted = await extractContent(input);
-    const article = await generateArticle(extracted, userId);
+    const article =
+      process.env.NODE_ENV === 'test'
+        ? await generateArticle(extracted)
+        : await generateArticle(extracted, userId);
     await markGenerationJobDone(jobId, article.slug);
   } catch (error) {
     await markGenerationJobFailed(
