@@ -16,8 +16,8 @@ const shouldStartWebServer =
 export default defineConfig({
   testDir: './tests/e2e',
   use: {
-    baseURL: "http://127.0.0.1:3000",
-    trace: "on-first-retry",
+    baseURL,
+    trace: 'on-first-retry',
   },
   webServer: {
     command: "USE_FILE_ARTICLES=1 pnpm exec next start --hostname 127.0.0.1 --port 3000",

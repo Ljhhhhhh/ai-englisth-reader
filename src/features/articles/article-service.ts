@@ -32,12 +32,15 @@ async function withDevelopmentFileFallback<T>(
 }
 
 export async function listArticles(): Promise<Article[]> {
-  return withDevelopmentFileFallback(async () => {
-    const { listPersistedArticles } = await import(
-      '@/features/articles/article-repository'
-    );
-    return listPersistedArticles();
-  }, () => loadAllArticles());
+  return withDevelopmentFileFallback(
+    async () => {
+      const { listPersistedArticles } = await import(
+        '@/features/articles/article-repository'
+      );
+      return listPersistedArticles();
+    },
+    () => loadAllArticles(),
+  );
 }
 
 export async function loadArticle(slug: string): Promise<Article> {
@@ -48,10 +51,13 @@ export async function loadArticleForViewer(
   slug: string,
   viewerUserId?: string,
 ): Promise<Article> {
-  return withDevelopmentFileFallback(async () => {
-    const { loadPersistedArticle } = await import(
-      '@/features/articles/article-repository'
-    );
-    return loadPersistedArticle(slug, { viewerUserId });
-  }, () => loadArticleContent(slug));
+  return withDevelopmentFileFallback(
+    async () => {
+      const { loadPersistedArticle } = await import(
+        '@/features/articles/article-repository'
+      );
+      return loadPersistedArticle(slug, { viewerUserId });
+    },
+    () => loadArticleContent(slug),
+  );
 }
