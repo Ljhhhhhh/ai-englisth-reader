@@ -1,11 +1,10 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
 import type { Article } from '@/lib/content/article-schema';
 import { articleSchema } from '@/lib/content/article-schema';
 import { env } from '@/lib/env';
+import { upsertPersistedArticle } from '@/features/articles/article-repository';
 import {
   parseFeynmanSummary,
   splitSummaryIntoSentences,
@@ -223,16 +222,6 @@ function buildArticle(
   });
 }
 
-async function writeGeneratedArticle(article: Article) {
-  const articlesDir = path.join(process.cwd(), 'content', 'articles');
-  await mkdir(articlesDir, { recursive: true });
-  await writeFile(
-    path.join(articlesDir, `${article.slug}.json`),
-    `${JSON.stringify(article, null, 2)}\n`,
-    'utf8',
-  );
-}
-
 async function invokeModel(text: string) {
   if (!env.LLM_API_KEY) {
     throw new Error('缺少 LLM_API_KEY，暂时无法生成文章。');
@@ -263,8 +252,7 @@ export async function generateArticle(input: GenerateArticleInput) {
       const payload = await invokeModel(input.text);
       const article = buildArticle(payload, input);
 
-      await writeGeneratedArticle(article);
-      return article;
+      return upsertPersistedArticle(article, 'PRIVATE');
     } catch (error) {
       lastError = error;
     }

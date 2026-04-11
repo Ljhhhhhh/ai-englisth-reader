@@ -6,6 +6,8 @@ import { ContinueReading } from '@/components/home/continue-reading';
 import { listArticles } from '@/features/articles/article-service';
 import { uiCopy } from '@/lib/ui-copy';
 
+export const dynamic = 'force-dynamic';
+
 type HomePageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };

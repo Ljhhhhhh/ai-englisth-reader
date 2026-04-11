@@ -6,7 +6,8 @@
 
 - 首页展示文章列表与“继续阅读”入口
 - 阅读器提供三阶段流程：导读、正文、复盘
-- 基于 localStorage 恢复同一设备上的阅读进度
+- 邮箱验证码登录基础设施（JWT 会话 cookie）
+- 基于 localStorage 恢复同一设备上的阅读进度（迁移进行中）
 - 支持正文内行内查词与生词保存
 - 提供生词本页面，按文章分组查看已保存词汇
 - 支持在文章、首页和生词页之间快速跳转
@@ -27,7 +28,7 @@ pnpm install
 cp .env.example .env
 ```
 
-3. 可选：如果你希望本地 SQLite 结构和种子数据与项目计划保持一致，可执行 Prisma 初始化
+3. 准备本地 MySQL，并执行 Prisma 初始化
 
 ```bash
 pnpm db:push
@@ -54,9 +55,10 @@ pnpm dev
 
 ## 数据与实现说明
 
-- 当前文章内容来自 `content/articles/*.json`，并通过 Zod 做结构校验。
-- MVP 阶段的阅读进度、生词和学习事件都保存在同一设备的 localStorage 中。
-- Prisma 当前使用本地 SQLite 文件，便于轻量开发；但 Phase 1 UI 仍以本地 JSON 内容和同设备持久化为主。
+- 当前文章内容仍来自 `content/articles/*.json`，并通过 Zod 做结构校验；数据库持久化迁移正在推进。
+- 邮箱验证码登录与 JWT 会话 cookie 已作为账号体系基础设施落地。
+- 阅读进度、生词和学习事件仍处于从同设备 localStorage 向账号体系迁移的过程中。
+- Prisma 已切换为 MySQL datasource，后续会继续把文章与用户状态全部切到数据库。
 - 用户可见界面文案已统一集中在 [src/lib/ui-copy.ts](src/lib/ui-copy.ts)，后续修改措辞优先从这里调整。
 
 ## 验证建议

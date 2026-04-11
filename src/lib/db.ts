@@ -1,16 +1,14 @@
-import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import { PrismaClient } from '@prisma/client';
 
 import { env } from '@/lib/env';
+import { createPrismaMysqlAdapter } from '@/lib/prisma-mysql-adapter';
 
 declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
 function createPrismaClient() {
-  const adapter = new PrismaBetterSqlite3({
-    url: env.DATABASE_URL,
-  });
+  const adapter = createPrismaMysqlAdapter(env.DATABASE_URL);
 
   return new PrismaClient({
     adapter,

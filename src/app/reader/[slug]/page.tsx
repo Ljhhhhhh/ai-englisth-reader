@@ -6,6 +6,8 @@ import { listArticles, loadArticle } from '@/features/articles/article-service';
 import type { Article } from '@/lib/content/article-schema';
 import { uiCopy } from '@/lib/ui-copy';
 
+export const dynamic = 'force-dynamic';
+
 type ReaderPageProps = {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
