@@ -1,0 +1,10 @@
+.git
+.next
+.omx
+.env
+node_modules
+npm-debug.log*
+pnpm-debug.log*
+coverage
+playwright-report
+test-results
