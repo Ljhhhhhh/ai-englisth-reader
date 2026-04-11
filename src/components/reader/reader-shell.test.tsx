@@ -37,10 +37,12 @@ describe('ReaderShell', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: /进入正文开始精读/i }));
-    fireEvent.click(screen.getByRole('button', { name: /完成本篇阅读/i }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /完成本篇阅读/i }),
+    );
 
     expect(
-      screen.getByRole('heading', { name: /这一篇你已经读完了/i }),
+      await screen.findByRole('heading', { name: /这一篇你已经读完了/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/如果你想逐句对照，再看全文译文/i),

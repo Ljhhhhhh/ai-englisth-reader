@@ -167,7 +167,9 @@ describe('ArticleBody', () => {
     fireEvent.click(screen.getByRole('button', { name: 'clear' }));
     expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByText(/点词即查；再点相邻词可扩成短语/i));
+    fireEvent.click(
+      screen.getByRole('heading', { name: /Welcome to Deep Reading/i }),
+    );
 
     expect(screen.queryByLabelText(/正文讲解操作/i)).not.toBeInTheDocument();
   });
@@ -200,7 +202,7 @@ describe('ArticleBody', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the same explicit operation hint for desktop and mobile', async () => {
+  it('preserves the current selection across rerenders', async () => {
     const article = await createReaderArticle();
     const noopProps = {
       article,
@@ -210,14 +212,15 @@ describe('ArticleBody', () => {
     };
 
     const { rerender } = render(<ArticleBody {...noopProps} />);
-    expect(
-      screen.getByText(/点词即查；再点相邻词可扩成短语/i),
-    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('clear'));
+    expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
 
     rerender(<ArticleBody {...noopProps} />);
-    expect(
-      screen.getByText(/点词即查；再点相邻词可扩成短语/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /清除选择/i }));
+    expect(screen.queryByLabelText(/正文讲解操作/i)).not.toBeInTheDocument();
   });
 
   it('uses roving tabindex so keyboard users can move across words without tabbing through every token', async () => {
