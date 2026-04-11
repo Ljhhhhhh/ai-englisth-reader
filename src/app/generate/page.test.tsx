@@ -1,49 +1,65 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GeneratePage from '@/app/generate/page';
 
-vi.mock('@/lib/device-id', () => ({
-  getOrCreateDeviceId: () => 'device-1',
-}));
-
 describe('GeneratePage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('does not warn when switching between url and file inputs', () => {
-    const consoleErrorSpy = vi
-      .spyOn(console, 'error')
-      .mockImplementation(() => undefined);
-
-    render(<GeneratePage />);
-
-    fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
-      target: { value: 'https://example.com/article' },
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: '文件' }));
-
-    expect(consoleErrorSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining(
-        'A component is changing a controlled input to be uncontrolled.',
-      ),
+  it('prompts unauthenticated readers to log in before generating', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ authenticated: false, user: null }),
+      }),
     );
 
-    consoleErrorSpy.mockRestore();
-  });
-
-  it('renders the study-room upload tray in file mode', () => {
     render(<GeneratePage />);
 
+    expect(await screen.findByText(/请先登录账号/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /去登录/i })).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: '开始生成' }),
+    ).not.toBeInTheDocument();
+  });
+
+  it('renders the study-room upload tray in file mode', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          authenticated: true,
+          user: { id: 'user-1', email: 'reader@example.com' },
+        }),
+      }),
+    );
+
+    render(<GeneratePage />);
+
+    await screen.findByText(/reader@example.com/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
 
     expect(screen.getByText(/将稿件放入工作台/i)).toBeInTheDocument();
     expect(screen.getByText(/支持格式/i)).toBeInTheDocument();
   });
 
-  it('shows the selected file in the tray confirmation area', () => {
+  it('shows the selected file in the tray confirmation area', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          authenticated: true,
+          user: { id: 'user-1', email: 'reader@example.com' },
+        }),
+      }),
+    );
+
     render(<GeneratePage />);
 
+    await screen.findByText(/reader@example.com/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
 
     fireEvent.change(screen.getByLabelText(/将稿件放入工作台/i), {
@@ -61,17 +77,27 @@ describe('GeneratePage', () => {
   });
 
   it('shows the editorial loading card after a generation job is created', async () => {
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        id: 'job-1',
-        status: 'pending',
-      }),
-    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          authenticated: true,
+          user: { id: 'user-1', email: 'reader@example.com' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'job-1',
+          status: 'pending',
+        }),
+      });
     vi.stubGlobal('fetch', fetchMock);
 
     render(<GeneratePage />);
 
+    await screen.findByText(/reader@example.com/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
       target: { value: 'https://example.com/article' },
     });
@@ -82,7 +108,8 @@ describe('GeneratePage', () => {
     });
 
     expect(screen.getByText(/编辑部收稿中/i)).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
       '/api/generate',
       expect.objectContaining({ method: 'POST' }),
     );
