@@ -16,7 +16,6 @@ describe('article-repository mappers', () => {
       chineseTitle: article.chinese_title,
       difficulty: article.difficulty,
       listSummaryZh: article.list_summary_zh,
-      ownerId: null,
       slug: article.slug,
       title: article.title,
       visibility: 'PUBLIC',
@@ -42,7 +41,6 @@ describe('article-repository mappers', () => {
       id: 'article-1',
       languageEvolutionJson: article.language_evolution,
       listSummaryZh: article.list_summary_zh,
-      ownerId: null,
       paragraphsJson: article.paragraphs,
       slug: article.slug,
       source: article.source,
@@ -52,19 +50,5 @@ describe('article-repository mappers', () => {
     });
 
     expect(runtimeArticle).toEqual(article);
-  });
-
-  it('allows persisting a private article for a specific owner', async () => {
-    const article = await loadArticleFile('welcome-to-deep-reading.json');
-
-    const persistenceInput = mapArticleToPersistenceInput(article, {
-      ownerId: 'user-1',
-      visibility: 'PRIVATE',
-    });
-
-    expect(persistenceInput).toMatchObject({
-      ownerId: 'user-1',
-      visibility: 'PRIVATE',
-    });
   });
 });

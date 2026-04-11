@@ -256,10 +256,7 @@ export async function generateArticle(
       const payload = await invokeModel(input.text);
       const article = buildArticle(payload, input);
 
-      return upsertPersistedArticle(article, {
-        ownerId: userId,
-        visibility: userId ? 'PRIVATE' : 'PUBLIC',
-      });
+      return upsertPersistedArticle(article, 'PRIVATE');
     } catch (error) {
       lastError = error;
     }

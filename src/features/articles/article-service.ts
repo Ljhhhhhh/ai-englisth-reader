@@ -3,6 +3,14 @@ import {
   loadArticle as loadArticleContent,
 } from '@/lib/content/load-article';
 import type { Article } from '@/lib/content/article-schema';
+import {
+  listPersistedArticles,
+  loadPersistedArticle,
+} from '@/features/articles/article-repository';
+
+function shouldUseFileBackedArticles() {
+  return process.env.NODE_ENV === 'test';
+}
 
 function shouldUseFileBackedArticles() {
   return process.env.NODE_ENV === 'test' || process.env.USE_FILE_ARTICLES === '1';
@@ -32,32 +40,17 @@ async function withDevelopmentFileFallback<T>(
 }
 
 export async function listArticles(): Promise<Article[]> {
-  return withDevelopmentFileFallback(
-    async () => {
-      const { listPersistedArticles } = await import(
-        '@/features/articles/article-repository'
-      );
-      return listPersistedArticles();
-    },
-    () => loadAllArticles(),
-  );
+  if (shouldUseFileBackedArticles()) {
+    return loadAllArticles();
+  }
+
+  return listPersistedArticles();
 }
 
 export async function loadArticle(slug: string): Promise<Article> {
-  return loadArticleForViewer(slug);
-}
+  if (shouldUseFileBackedArticles()) {
+    return loadArticleContent(slug);
+  }
 
-export async function loadArticleForViewer(
-  slug: string,
-  viewerUserId?: string,
-): Promise<Article> {
-  return withDevelopmentFileFallback(
-    async () => {
-      const { loadPersistedArticle } = await import(
-        '@/features/articles/article-repository'
-      );
-      return loadPersistedArticle(slug, { viewerUserId });
-    },
-    () => loadArticleContent(slug),
-  );
+  return loadPersistedArticle(slug);
 }
