@@ -13,10 +13,9 @@ export type GenerationJobRecord = {
 };
 
 export async function createGenerationJob(input: {
-  deviceId?: string;
   sourceRef: string;
   sourceType: string;
-  userId?: string;
+  userId: string;
 }) {
   const userId = input.userId ?? input.deviceId;
 
@@ -25,35 +24,22 @@ export async function createGenerationJob(input: {
   }
 
   return db.generationJob.create({
-    data:
-      process.env.NODE_ENV === 'test'
-        ? ({
-            deviceId: userId,
-            sourceRef: input.sourceRef,
-            sourceType: input.sourceType,
-            status: 'pending',
-          } as never)
-        : {
-            sourceRef: input.sourceRef,
-            sourceType: input.sourceType,
-            status: 'pending',
-            userId,
-          },
+    data: {
+      sourceRef: input.sourceRef,
+      sourceType: input.sourceType,
+      status: 'pending',
+      userId: input.userId,
+    },
   });
 }
 
-export async function countRecentGenerationJobs(
-  userId: string,
-  since: Date,
-) {
+export async function countRecentGenerationJobs(userId: string, since: Date) {
   return db.generationJob.count({
     where: {
       createdAt: {
         gte: since,
       },
-      ...(process.env.NODE_ENV === 'test'
-        ? ({ deviceId: userId } as never)
-        : { userId }),
+      userId,
     },
   });
 }

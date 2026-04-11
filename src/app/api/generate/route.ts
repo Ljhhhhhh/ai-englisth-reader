@@ -49,10 +49,7 @@ async function processJob(
   try {
     await markGenerationJobProcessing(jobId);
     const extracted = await extractContent(input);
-    const article =
-      process.env.NODE_ENV === 'test'
-        ? await generateArticle(extracted)
-        : await generateArticle(extracted, userId);
+    const article = await generateArticle(extracted, userId);
     await markGenerationJobDone(jobId, article.slug);
   } catch (error) {
     await markGenerationJobFailed(
@@ -64,23 +61,19 @@ async function processJob(
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const deviceId = getStringValue(formData.get('deviceId'));
-    const user = process.env.NODE_ENV === 'test' ? null : await getCurrentUser();
+    const user = await getCurrentUser();
 
-    if (!user && process.env.NODE_ENV !== 'test') {
+    if (!user) {
       return Response.json(
         { error: '请先登录后再生成文章。' },
         { status: 401 },
       );
     }
 
-    if (!user && !deviceId) {
-      return Response.json({ error: 'deviceId is required' }, { status: 400 });
-    }
+    const formData = await request.formData();
 
     const recentCount = await countRecentGenerationJobs(
-      user?.id ?? deviceId,
+      user.id,
       new Date(Date.now() - ONE_DAY_MS),
     );
 
@@ -94,12 +87,12 @@ export async function POST(request: Request) {
     const input = parseGenerationInput(formData);
     const sourceRef = input.type === 'url' ? input.url : input.file.name;
     const job = await createGenerationJob({
-      ...(user ? { userId: user.id } : { deviceId }),
       sourceRef,
       sourceType: input.type,
+      userId: user.id,
     });
 
-    void processJob(job.id, input, user?.id ?? deviceId);
+    void processJob(job.id, input, user.id);
 
     return Response.json(
       {
