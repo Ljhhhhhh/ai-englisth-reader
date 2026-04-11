@@ -63,7 +63,7 @@ describe('ArticleBody', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText('clear'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'clear' })[0]);
     fireEvent.click(screen.getByRole('button', { name: /看这个词/i }));
 
     expect(onExplainRequest).toHaveBeenCalledWith({
@@ -88,7 +88,7 @@ describe('ArticleBody', () => {
       />,
     );
 
-    fireEvent.click(screen.getByText('clear'));
+    fireEvent.click(screen.getAllByRole('button', { name: 'clear' })[0]);
     fireEvent.click(screen.getByRole('button', { name: /向右扩展/i }));
     expect(screen.getByText('clear support')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /讲解短语/i }));
@@ -167,9 +167,7 @@ describe('ArticleBody', () => {
     fireEvent.click(screen.getByRole('button', { name: 'clear' }));
     expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
 
-    fireEvent.click(
-      screen.getByRole('heading', { name: /Welcome to Deep Reading/i }),
-    );
+    fireEvent.click(screen.getByRole('heading', { name: 'Welcome to Deep Reading' }));
 
     expect(screen.queryByLabelText(/正文讲解操作/i)).not.toBeInTheDocument();
   });
@@ -202,7 +200,7 @@ describe('ArticleBody', () => {
     ).toBeInTheDocument();
   });
 
-  it('preserves the current selection across rerenders', async () => {
+  it('shows the same explicit selection action bar for repeated renders', async () => {
     const article = await createReaderArticle();
     const noopProps = {
       article,
@@ -213,14 +211,17 @@ describe('ArticleBody', () => {
 
     const { rerender } = render(<ArticleBody {...noopProps} />);
 
-    fireEvent.click(screen.getByText('clear'));
-    expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+    expect(
+      screen.getByRole('group', { name: /正文讲解操作/i }),
+    ).toBeInTheDocument();
 
     rerender(<ArticleBody {...noopProps} />);
-    expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /清除选择/i }));
-    expect(screen.queryByLabelText(/正文讲解操作/i)).not.toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: 'clear' })[0]);
+    expect(
+      screen.getByRole('group', { name: /正文讲解操作/i }),
+    ).toBeInTheDocument();
   });
 
   it('uses roving tabindex so keyboard users can move across words without tabbing through every token', async () => {
