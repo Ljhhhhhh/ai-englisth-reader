@@ -1,54 +1,37 @@
-import { cookies } from 'next/headers';
-import type { LearningEventRecord } from '@/features/analytics/event-service';
+import { getCurrentUser } from '@/features/auth/current-user';
+import { recordLearningEvent } from '@/features/analytics/server-event-service';
 
-const EVENTS_COOKIE = 'ai-english-read-learning-events-cookie';
-
-async function readEventCookie() {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(EVENTS_COOKIE)?.value;
-
-  if (!raw) {
-    return [] as LearningEventRecord[];
-  }
-
-  try {
-    return JSON.parse(raw) as LearningEventRecord[];
-  } catch {
-    return [] as LearningEventRecord[];
-  }
-}
-
-async function writeEventCookie(events: LearningEventRecord[]) {
-  const cookieStore = await cookies();
-  cookieStore.set(EVENTS_COOKIE, JSON.stringify(events), {
-    httpOnly: false,
-    maxAge: 60 * 60 * 24 * 30,
-    path: '/',
-    sameSite: 'lax',
-  });
+function unauthorizedResponse() {
+  return Response.json({ error: 'Authentication required' }, { status: 401 });
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const deviceId = searchParams.get('deviceId');
-
-  if (!deviceId) {
-    return Response.json({ error: 'deviceId is required' }, { status: 400 });
+  void request;
+  const user = await getCurrentUser();
+  if (!user) {
+    return unauthorizedResponse();
   }
-
-  const events = await readEventCookie();
-  return Response.json(events.filter((event) => event.deviceId === deviceId));
+  return Response.json([]);
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as LearningEventRecord;
-  const events = await readEventCookie();
-  const nextEvent = {
-    ...body,
-    createdAt: body.createdAt ?? Date.now(),
+  const user = await getCurrentUser();
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
+  const body = (await request.json()) as {
+    articleSlug?: string;
+    payload?: Record<string, string | number | boolean | null>;
+    type: string;
   };
 
-  events.push(nextEvent);
-  await writeEventCookie(events);
-  return Response.json(nextEvent);
+  return Response.json(
+    await recordLearningEvent({
+      articleSlug: body.articleSlug,
+      payload: body.payload,
+      type: body.type,
+      userId: user.id,
+    }),
+  );
 }

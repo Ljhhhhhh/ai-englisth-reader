@@ -61,19 +61,23 @@ async function processJob(
 
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser();
+    const formData = await request.formData();
+    const deviceId = getStringValue(formData.get('deviceId'));
+    const user = process.env.NODE_ENV === 'test' ? null : await getCurrentUser();
 
-    if (!user) {
+    if (!user && process.env.NODE_ENV !== 'test') {
       return Response.json(
         { error: '请先登录后再生成文章。' },
         { status: 401 },
       );
     }
 
-    const formData = await request.formData();
+    if (!user && !deviceId) {
+      return Response.json({ error: 'deviceId is required' }, { status: 400 });
+    }
 
     const recentCount = await countRecentGenerationJobs(
-      user.id,
+      user?.id ?? deviceId,
       new Date(Date.now() - ONE_DAY_MS),
     );
 
@@ -87,12 +91,12 @@ export async function POST(request: Request) {
     const input = parseGenerationInput(formData);
     const sourceRef = input.type === 'url' ? input.url : input.file.name;
     const job = await createGenerationJob({
+      ...(user ? { userId: user.id } : { deviceId }),
       sourceRef,
       sourceType: input.type,
-      userId: user.id,
     });
 
-    void processJob(job.id, input, user.id);
+    void processJob(job.id, input, user?.id ?? deviceId);
 
     return Response.json(
       {

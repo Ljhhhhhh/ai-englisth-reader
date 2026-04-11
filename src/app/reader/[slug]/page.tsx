@@ -2,7 +2,11 @@ import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
 import { notFound } from 'next/navigation';
 import { ReaderShell } from '@/components/reader/reader-shell';
-import { listArticles, loadArticle } from '@/features/articles/article-service';
+import {
+  listArticles,
+  loadArticleForViewer,
+} from '@/features/articles/article-service';
+import { getCurrentUser } from '@/features/auth/current-user';
 import type { Article } from '@/lib/content/article-schema';
 import { uiCopy } from '@/lib/ui-copy';
 
@@ -56,8 +60,9 @@ async function getReaderArticle(
   searchParams?: Record<string, string | string[] | undefined>,
 ) {
   try {
+    const user = await getCurrentUser();
     const [article, articles] = await Promise.all([
-      loadArticle(slug),
+      loadArticleForViewer(slug, user?.id),
       listArticles(),
     ]);
     const nextArticle = applyReaderMocks(article, searchParams);

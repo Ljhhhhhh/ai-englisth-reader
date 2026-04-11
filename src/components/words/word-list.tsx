@@ -3,6 +3,7 @@
 import * as Select from '@radix-ui/react-select';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { loadClientSession } from '@/features/auth/client-session';
 import {
   isItemRemembered,
   rememberItem,
@@ -50,21 +51,82 @@ export function WordList({
   backLabel = uiCopy.words.actions.backHome,
 }: Partial<WordListProps>) {
   const [groups, setGroups] = useState<SavedWordsByArticleGroup[]>([]);
+  const [identityKey, setIdentityKey] = useState<string | null>(null);
+  const [useServerState, setUseServerState] = useState(false);
   const [query, setQuery] = useState('');
   const [articleFilter, setArticleFilter] = useState('all');
 
-  function loadGroups() {
+  async function loadGroups() {
     const storage = window.localStorage;
-    const deviceId = getOrCreateDeviceId(storage);
+    let nextIdentityKey = identityKey;
 
-    const nextGroups = listSavedWordsByArticle(deviceId, storage)
+    if (!nextIdentityKey) {
+      nextIdentityKey = getOrCreateDeviceId(storage);
+      setIdentityKey(nextIdentityKey);
+    }
+
+    if (process.env.NODE_ENV !== 'test') {
+      try {
+        const session = await loadClientSession();
+
+        if (session?.authenticated && session.user) {
+          const response = await fetch('/api/words', { cache: 'no-store' });
+
+          if (response.ok) {
+            const records = (await response.json()) as SavedWordRecord[];
+            const groupedWords = new Map<string, SavedWordsByArticleGroup>();
+
+            for (const word of records) {
+              const existing = groupedWords.get(word.articleSlug);
+
+              if (existing) {
+                existing.words.push(word);
+                continue;
+              }
+
+              groupedWords.set(word.articleSlug, {
+                articleSlug: word.articleSlug,
+                articleTitle: word.articleTitle,
+                words: [word],
+              });
+            }
+
+            setUseServerState(true);
+            setIdentityKey(`user:${session.user.id}`);
+            setGroups(
+              [...groupedWords.values()]
+                .map((group) => ({
+                  ...group,
+                  words: group.words.filter(
+                    (word) =>
+                      !isItemRemembered(
+                        {
+                          deviceId: `user:${session.user?.id}`,
+                          term: word.lemma,
+                          type: 'word',
+                        },
+                        storage,
+                      ),
+                  ),
+                }))
+                .filter((group) => group.words.length > 0),
+            );
+            return;
+          }
+        }
+      } catch {
+        // fall through to local state
+      }
+    }
+
+    const nextGroups = listSavedWordsByArticle(nextIdentityKey, storage)
       .map((group) => ({
         ...group,
         words: group.words.filter(
           (word) =>
             !isItemRemembered(
               {
-                deviceId,
+                deviceId: nextIdentityKey,
                 term: word.lemma,
                 type: 'word',
               },
@@ -77,9 +139,9 @@ export function WordList({
     setGroups(nextGroups);
   }
 
-  function handleRememberWord(group: SavedWordsByArticleGroup, lemma: string) {
+  async function handleRememberWord(group: SavedWordsByArticleGroup, lemma: string) {
     const storage = window.localStorage;
-    const deviceId = getOrCreateDeviceId(storage);
+    const nextIdentityKey = identityKey ?? getOrCreateDeviceId(storage);
     const word = group.words.find((item) => item.lemma === lemma);
 
     if (!word) {
@@ -88,7 +150,7 @@ export function WordList({
 
     rememberItem(
       {
-        deviceId,
+        deviceId: nextIdentityKey,
         displayText: word.surface,
         meaning: word.chineseMeaning,
         savedFromArticleSlug: word.articleSlug,
@@ -98,19 +160,33 @@ export function WordList({
       },
       storage,
     );
-    unsaveWord(
-      {
-        articleSlug: word.articleSlug,
-        deviceId,
-        lemma: word.lemma,
-      },
-      storage,
-    );
-    loadGroups();
+
+    if (useServerState && process.env.NODE_ENV !== 'test') {
+      await fetch('/api/words', {
+        body: JSON.stringify({
+          articleSlug: word.articleSlug,
+          lemma: word.lemma,
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+        method: 'DELETE',
+      });
+    } else {
+      unsaveWord(
+        {
+          articleSlug: word.articleSlug,
+          deviceId: nextIdentityKey,
+          lemma: word.lemma,
+        },
+        storage,
+      );
+    }
+    await loadGroups();
   }
 
   useEffect(() => {
-    queueMicrotask(() => loadGroups());
+    void loadGroups();
   }, []);
 
   const filteredGroups = groups

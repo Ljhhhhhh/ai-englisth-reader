@@ -1,4 +1,5 @@
-import { loadArticle } from '@/features/articles/article-service';
+import { loadArticleForViewer } from '@/features/articles/article-service';
+import { getCurrentUser } from '@/features/auth/current-user';
 import { explainReaderSelection } from '@/features/reader/reader-explain-service';
 
 export async function POST(request: Request) {
@@ -27,7 +28,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const article = await loadArticle(body.articleSlug);
+    const user = await getCurrentUser();
+    const article = await loadArticleForViewer(body.articleSlug, user?.id);
     const result = await explainReaderSelection({
       article,
       mode: body.mode,

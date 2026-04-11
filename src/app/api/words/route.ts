@@ -1,98 +1,63 @@
-import { cookies } from 'next/headers';
-import type { SavedWordRecord } from '@/features/words/saved-word-service';
+import { getCurrentUser } from '@/features/auth/current-user';
+import {
+  deleteWordForUser,
+  listSavedWordsForUser,
+  saveWordForUser,
+  type ServerSavedWordRecord,
+} from '@/features/words/server-saved-word-service';
 
-const SAVED_WORDS_COOKIE = 'ai-english-read-saved-words-cookie';
-
-async function readSavedWordsFromCookie() {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get(SAVED_WORDS_COOKIE)?.value;
-
-  if (!raw) {
-    return [] as SavedWordRecord[];
-  }
-
-  try {
-    return JSON.parse(raw) as SavedWordRecord[];
-  } catch {
-    return [] as SavedWordRecord[];
-  }
-}
-
-async function writeSavedWordsToCookie(records: SavedWordRecord[]) {
-  const cookieStore = await cookies();
-  cookieStore.set(SAVED_WORDS_COOKIE, JSON.stringify(records), {
-    httpOnly: false,
-    maxAge: 60 * 60 * 24 * 30,
-    path: '/',
-    sameSite: 'lax',
-  });
+function unauthorizedResponse() {
+  return Response.json({ error: 'Authentication required' }, { status: 401 });
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const deviceId = searchParams.get('deviceId');
+  const user = await getCurrentUser();
 
-  if (!deviceId) {
-    return Response.json({ error: 'deviceId is required' }, { status: 400 });
+  if (!user) {
+    return unauthorizedResponse();
   }
 
-  const records = await readSavedWordsFromCookie();
-  return Response.json(
-    records.filter((record) => record.deviceId === deviceId),
-  );
+  const { searchParams } = new URL(request.url);
+  const articleSlug = searchParams.get('articleSlug') ?? undefined;
+
+  return Response.json(await listSavedWordsForUser(user.id, articleSlug));
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as SavedWordRecord;
-  const records = await readSavedWordsFromCookie();
-  const existingIndex = records.findIndex(
-    (record) =>
-      record.deviceId === body.deviceId &&
-      record.articleSlug === body.articleSlug &&
-      record.lemma.toLowerCase() === body.lemma.toLowerCase(),
-  );
+  const user = await getCurrentUser();
 
-  const nextRecord = {
-    ...body,
-    savedAt: body.savedAt ?? Date.now(),
-  };
-
-  if (existingIndex >= 0) {
-    records[existingIndex] = nextRecord;
-  } else {
-    records.push(nextRecord);
+  if (!user) {
+    return unauthorizedResponse();
   }
 
-  await writeSavedWordsToCookie(records);
-  return Response.json(nextRecord);
+  const body = (await request.json()) as ServerSavedWordRecord;
+  return Response.json(await saveWordForUser({ ...body, userId: user.id }));
 }
 
 export async function DELETE(request: Request) {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   const body = (await request.json()) as {
     articleSlug?: string;
-    deviceId?: string;
     lemma?: string;
   };
 
-  if (!body.deviceId || !body.articleSlug || !body.lemma) {
+  if (!body.articleSlug || !body.lemma) {
     return Response.json(
-      { error: 'deviceId, articleSlug, and lemma are required' },
+      { error: 'articleSlug and lemma are required' },
       { status: 400 },
     );
   }
 
-  const { articleSlug, deviceId, lemma } = body;
-
-  const records = await readSavedWordsFromCookie();
-  const nextRecords = records.filter(
-    (record) =>
-      !(
-        record.deviceId === deviceId &&
-        record.articleSlug === articleSlug &&
-        record.lemma.toLowerCase() === lemma.toLowerCase()
-      ),
+  return Response.json({
+    ok: await deleteWordForUser({
+      articleSlug: body.articleSlug,
+      lemma: body.lemma,
+      userId: user.id,
+    }),
   );
-
-  await writeSavedWordsToCookie(nextRecords);
-  return Response.json({ ok: true });
 }

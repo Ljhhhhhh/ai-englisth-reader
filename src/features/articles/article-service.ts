@@ -25,10 +25,19 @@ export async function listArticles(): Promise<Article[]> {
 }
 
 export async function loadArticle(slug: string): Promise<Article> {
+  return loadArticleForViewer(slug);
+}
+
+export async function loadArticleForViewer(
+  slug: string,
+  viewerUserId?: string,
+): Promise<Article> {
   if (shouldUseFileBackedArticles()) {
     return loadArticleContent(slug);
   }
 
-  const { loadPersistedArticle } = await loadArticleRepository();
-  return loadPersistedArticle(slug);
+  const { loadPersistedArticle } = await import(
+    '@/features/articles/article-repository'
+  );
+  return loadPersistedArticle(slug, { viewerUserId });
 }

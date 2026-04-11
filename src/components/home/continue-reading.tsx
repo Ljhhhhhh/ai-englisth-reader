@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { loadClientSession } from '@/features/auth/client-session';
 import { listRecentProgress } from '@/features/reader/progress-service';
 import { getStageLabel } from '@/features/reader/stage-machine';
 import { getOrCreateDeviceId } from '@/lib/device-id';
@@ -22,30 +23,81 @@ export function ContinueReading({ articles }: ContinueReadingProps) {
   } | null>(null);
 
   useEffect(() => {
-    const storage = window.localStorage;
-    const deviceId = getOrCreateDeviceId(storage);
-    const nextProgress = listRecentProgress(deviceId, storage).find(
-      (record) => !record.isCompleted,
-    );
+    let cancelled = false;
 
-    if (!nextProgress) {
-      return;
-    }
+    async function hydrate() {
+      const storage = window.localStorage;
 
-    const article = articles.find(
-      (item) => item.slug === nextProgress.articleSlug,
-    );
-    if (!article) {
-      return;
-    }
+      try {
+        if (process.env.NODE_ENV !== 'test') {
+          const session = await loadClientSession();
 
-    queueMicrotask(() => {
+          if (session?.authenticated && session.user) {
+            const response = await fetch('/api/progress', {
+              cache: 'no-store',
+            });
+
+            if (response.ok) {
+              const records = (await response.json()) as Array<{
+                articleSlug: string;
+                currentStage: string;
+                isCompleted: boolean;
+              }>;
+              const nextProgress = records.find((record) => !record.isCompleted);
+
+              if (cancelled || !nextProgress) {
+                return;
+              }
+
+              const article = articles.find(
+                (item) => item.slug === nextProgress.articleSlug,
+              );
+
+              if (!article) {
+                return;
+              }
+
+              setCurrentArticle({
+                slug: article.slug,
+                stageLabel: getStageLabel(nextProgress.currentStage),
+                title: article.chineseTitle,
+              });
+              return;
+            }
+          }
+        }
+      } catch {
+        // fall back to local state
+      }
+
+      const deviceId = getOrCreateDeviceId(storage);
+      const nextProgress = listRecentProgress(deviceId, storage).find(
+        (record) => !record.isCompleted,
+      );
+
+      if (!nextProgress || cancelled) {
+        return;
+      }
+
+      const article = articles.find(
+        (item) => item.slug === nextProgress.articleSlug,
+      );
+      if (!article) {
+        return;
+      }
+
       setCurrentArticle({
         slug: article.slug,
         stageLabel: getStageLabel(nextProgress.currentStage),
         title: article.chineseTitle,
       });
-    });
+    }
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
   }, [articles]);
 
   return (

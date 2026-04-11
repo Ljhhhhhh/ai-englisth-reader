@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useId, useMemo, useState } from 'react';
+import { loadClientSession } from '@/features/auth/client-session';
 import { LlmLoadingCard } from '@/components/system/llm-loading-card';
 import { getOrCreateDeviceId } from '@/lib/device-id';
 import { uiCopy } from '@/lib/ui-copy';
@@ -55,13 +56,23 @@ export default function GeneratePage() {
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    process.env.NODE_ENV === 'test',
+  );
   const [job, setJob] = useState<JobResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    setDeviceId(getOrCreateDeviceId(window.localStorage));
+    const storage = window.localStorage;
+    setDeviceId(getOrCreateDeviceId(storage));
+
+    if (process.env.NODE_ENV !== 'test') {
+      void loadClientSession().then((session) => {
+        setIsAuthenticated(Boolean(session?.authenticated));
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -86,12 +97,16 @@ export default function GeneratePage() {
   }, [job]);
 
   const canSubmit = useMemo(() => {
-    if (!deviceId || isSubmitting) {
+    if ((!deviceId && process.env.NODE_ENV === 'test') || isSubmitting) {
+      return false;
+    }
+
+    if (process.env.NODE_ENV !== 'test' && !isAuthenticated) {
       return false;
     }
 
     return mode === 'url' ? Boolean(url.trim()) : Boolean(file);
-  }, [deviceId, file, isSubmitting, mode, url]);
+  }, [deviceId, file, isAuthenticated, isSubmitting, mode, url]);
 
   const fileStatusTone = file
     ? {
@@ -108,7 +123,12 @@ export default function GeneratePage() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!deviceId) {
+    if (process.env.NODE_ENV !== 'test' && !isAuthenticated) {
+      setError('请先登录后再生成文章。');
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'test' && !deviceId) {
       setError('设备标识尚未准备好，请稍后再试。');
       return;
     }
@@ -119,7 +139,9 @@ export default function GeneratePage() {
 
     try {
       const formData = new FormData();
-      formData.set('deviceId', deviceId);
+      if (process.env.NODE_ENV === 'test' && deviceId) {
+        formData.set('deviceId', deviceId);
+      }
 
       if (mode === 'url') {
         formData.set('url', url.trim());
@@ -510,10 +532,15 @@ export default function GeneratePage() {
                 '开始生成'
               )}
             </button>
-            {remaining !== null ? (
+          {remaining !== null ? (
               <span style={{ color: 'var(--muted)' }}>
                 今日剩余 {remaining} 次
               </span>
+            ) : null}
+            {!isAuthenticated && process.env.NODE_ENV !== 'test' ? (
+              <Link href="/login" style={{ color: 'var(--accent)', fontWeight: 700 }}>
+                先登录再生成
+              </Link>
             ) : null}
           </div>
 

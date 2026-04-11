@@ -1,4 +1,5 @@
-import { loadArticle } from '@/features/articles/article-service';
+import { loadArticleForViewer } from '@/features/articles/article-service';
+import { getCurrentUser } from '@/features/auth/current-user';
 import { lookupWordFromArticle } from '@/features/reader/word-lookup-service';
 
 export async function POST(request: Request) {
@@ -16,7 +17,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const article = await loadArticle(body.slug);
+    const user = await getCurrentUser();
+    const article = await loadArticleForViewer(body.slug, user?.id);
     const result = lookupWordFromArticle({
       article,
       surface: body.surface,

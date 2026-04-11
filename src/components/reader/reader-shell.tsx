@@ -9,6 +9,7 @@ import { StageNav } from '@/components/reader/stage-nav';
 import { WordPanelDesktop } from '@/components/reader/word-panel-desktop';
 import { WordPanelMobile } from '@/components/reader/word-panel-mobile';
 import { hasEvent, recordEvent } from '@/features/analytics/event-service';
+import { loadClientSession } from '@/features/auth/client-session';
 import {
   getLookupableWords,
   lookupWordFromArticle,
@@ -37,6 +38,7 @@ import {
   isWordSaved,
   listSavedWords,
   saveWord,
+  type SavedWordRecord,
   unsaveWord,
 } from '@/features/words/saved-word-service';
 import type { Article } from '@/lib/content/article-schema';
@@ -113,6 +115,9 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const consumedFailureFlagsRef = useRef<Record<string, boolean>>({});
   const [isMobilePanel, setIsMobilePanel] = useState(false);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const [authenticatedUserId, setAuthenticatedUserId] = useState<string | null>(
+    null,
+  );
   const [currentStage, setCurrentStage] = useState<ReaderStage>('intro');
   const [isCompleted, setIsCompleted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -122,6 +127,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const explainRequestIdRef = useRef(0);
   const explainAbortRef = useRef<AbortController | null>(null);
   const [savedLemmas, setSavedLemmas] = useState<string[]>([]);
+  const [savedWordRecords, setSavedWordRecords] = useState<SavedWordRecord[]>([]);
   const [rememberedWords, setRememberedWords] = useState<string[]>([]);
   const [rememberedPhrases, setRememberedPhrases] = useState<string[]>([]);
   const [explainPanelState, setExplainPanelState] =
@@ -135,6 +141,42 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     useState<LookupRequest | null>(null);
 
   const lookupableWords = getLookupableWords(article);
+  const usesServerState =
+    process.env.NODE_ENV !== 'test' && Boolean(authenticatedUserId);
+
+  async function recordEventForCurrentUser(input: {
+    articleSlug?: string;
+    payload?: Record<string, string | number | boolean | null>;
+    type: string;
+  }) {
+    if (!usesServerState) {
+      return;
+    }
+
+    await fetch('/api/events', {
+      body: JSON.stringify(input),
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
+    });
+  }
+
+  async function saveWordToServer(input: Omit<SavedWordRecord, 'savedAt'>) {
+    const response = await fetch('/api/words', {
+      body: JSON.stringify(input),
+      headers: {
+        'content-type': 'application/json',
+      },
+      method: 'POST',
+    });
+
+    if (!response.ok) {
+      throw new Error('save word failed');
+    }
+
+    return (await response.json()) as SavedWordRecord;
+  }
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 768px)');
@@ -153,14 +195,95 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   }, []);
 
   useEffect(() => {
-    const storage = window.localStorage;
-    const nextDeviceId = getOrCreateDeviceId(storage);
-    const existing = loadProgress(nextDeviceId, article.slug, storage);
-    const savedWords = listSavedWords(nextDeviceId, storage, article.slug);
-    const rememberedItems = listRememberedItems(nextDeviceId, storage);
+    let cancelled = false;
 
-    queueMicrotask(() => {
-      setDeviceId(nextDeviceId);
+    async function hydrate() {
+      const storage = window.localStorage;
+      const fallbackDeviceId = getOrCreateDeviceId(storage);
+
+      try {
+        if (process.env.NODE_ENV !== 'test') {
+          const session = await loadClientSession();
+
+          if (session?.authenticated && session.user) {
+            const identityKey = `user:${session.user.id}`;
+            const [progressResponse, wordsResponse] = await Promise.all([
+              fetch(`/api/progress?articleSlug=${encodeURIComponent(article.slug)}`, {
+                cache: 'no-store',
+              }),
+              fetch(`/api/words?articleSlug=${encodeURIComponent(article.slug)}`, {
+                cache: 'no-store',
+              }),
+            ]);
+
+            const existing = progressResponse.ok
+              ? ((await progressResponse.json()) as {
+                  articleSlug: string;
+                  currentStage: ReaderStage;
+                  isCompleted: boolean;
+                  updatedAt: string;
+                } | null)
+              : null;
+            const savedWords = wordsResponse.ok
+              ? ((await wordsResponse.json()) as SavedWordRecord[])
+              : [];
+            const rememberedItems = listRememberedItems(identityKey, storage);
+
+            if (cancelled) {
+              return;
+            }
+
+            setAuthenticatedUserId(session.user.id);
+            setDeviceId(identityKey);
+            setSavedWordRecords(savedWords);
+            setSavedLemmas(savedWords.map((word) => word.lemma.toLowerCase()));
+            setRememberedWords(
+              rememberedItems
+                .filter((item) => item.type === 'word')
+                .map((item) => item.term.toLowerCase()),
+            );
+            setRememberedPhrases(
+              rememberedItems
+                .filter((item) => item.type === 'phrase')
+                .map((item) => item.term.toLowerCase()),
+            );
+
+            if (existing) {
+              setIsCompleted(existing.isCompleted);
+              setCurrentStage(existing.currentStage);
+
+              if (!existing.isCompleted) {
+                setRestoredProgress({
+                  ...existing,
+                  deviceId: identityKey,
+                  updatedAt: new Date(existing.updatedAt).getTime(),
+                });
+                void recordEventForCurrentUser({
+                  articleSlug: article.slug,
+                  type: 'article_resumed',
+                });
+              }
+            }
+
+            setHydrated(true);
+            return;
+          }
+        }
+      } catch {
+        // fall through to local-state hydration
+      }
+
+      const existing = loadProgress(fallbackDeviceId, article.slug, storage);
+      const savedWords = listSavedWords(fallbackDeviceId, storage, article.slug);
+      const rememberedItems = listRememberedItems(fallbackDeviceId, storage);
+
+      if (cancelled) {
+        return;
+      }
+
+      setAuthenticatedUserId(null);
+      setDeviceId(fallbackDeviceId);
+      setSavedWordRecords(savedWords);
       setSavedLemmas(savedWords.map((word) => word.lemma.toLowerCase()));
       setRememberedWords(
         rememberedItems
@@ -182,7 +305,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           recordEvent(
             {
               articleSlug: article.slug,
-              deviceId: nextDeviceId,
+              deviceId: fallbackDeviceId,
               type: 'article_resumed',
             },
             storage,
@@ -191,7 +314,13 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       }
 
       setHydrated(true);
-    });
+    }
+
+    void hydrate();
+
+    return () => {
+      cancelled = true;
+    };
   }, [article]);
 
   useEffect(() => {
@@ -199,29 +328,60 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       return;
     }
 
-    try {
-      if (
-        shouldFailOnce(consumedFailureFlagsRef.current, 'mockProgressSaveError')
-      ) {
-        throw new Error('mock progress save failure');
-      }
+    const persist = async () => {
+      try {
+        if (
+          shouldFailOnce(consumedFailureFlagsRef.current, 'mockProgressSaveError')
+        ) {
+          throw new Error('mock progress save failure');
+        }
 
-      saveProgress(
-        {
-          articleSlug: article.slug,
-          currentStage,
-          deviceId,
-          isCompleted,
-        },
-        window.localStorage,
-      );
-      setProgressSaveNotice(null);
-    } catch {
-      setProgressSaveNotice(uiCopy.reader.progress.saveNotice);
-    }
-  }, [article.slug, currentStage, deviceId, hydrated, isCompleted]);
+        if (usesServerState) {
+          const response = await fetch('/api/progress', {
+            body: JSON.stringify({
+              articleSlug: article.slug,
+              currentStage,
+              isCompleted,
+            }),
+            headers: {
+              'content-type': 'application/json',
+            },
+            method: 'POST',
+          });
+
+          if (!response.ok) {
+            throw new Error('save progress failed');
+          }
+        } else {
+          saveProgress(
+            {
+              articleSlug: article.slug,
+              currentStage,
+              deviceId,
+              isCompleted,
+            },
+            window.localStorage,
+          );
+        }
+
+        setProgressSaveNotice(null);
+      } catch {
+        setProgressSaveNotice(uiCopy.reader.progress.saveNotice);
+      }
+    };
+
+    void persist();
+  }, [article.slug, currentStage, deviceId, hydrated, isCompleted, usesServerState]);
 
   function markArticleCompleted(nextDeviceId: string) {
+    if (usesServerState) {
+      void recordEventForCurrentUser({
+        articleSlug: article.slug,
+        type: 'article_completed',
+      });
+      return;
+    }
+
     if (
       !hasEvent(
         {
@@ -355,6 +515,14 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       });
 
       if (deviceId && input.mode === 'word') {
+        if (usesServerState) {
+          void recordEventForCurrentUser({
+            articleSlug: article.slug,
+            payload: { lemma: input.selectedText.toLowerCase() },
+            type: 'word_lookup_opened',
+          });
+          return;
+        }
         recordEvent(
           {
             articleSlug: article.slug,
@@ -405,7 +573,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     setExplainPanelState({ status: 'idle' });
   }
 
-  function toggleSavedWord() {
+  async function toggleSavedWord() {
     if (!deviceId || explainPanelState.status !== 'success') {
       return;
     }
@@ -441,23 +609,41 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     }
 
     if (
-      isWordSaved(
-        {
-          articleSlug: article.slug,
-          deviceId,
-          lemma: normalizedLemma,
-        },
-        window.localStorage,
-      )
+      (usesServerState && savedLemmas.includes(normalizedLemma)) ||
+      (!usesServerState &&
+        isWordSaved(
+          {
+            articleSlug: article.slug,
+            deviceId,
+            lemma: normalizedLemma,
+          },
+          window.localStorage,
+        ))
     ) {
-      unsaveWord(
-        {
-          articleSlug: article.slug,
-          deviceId,
-          lemma: normalizedLemma,
-        },
-        window.localStorage,
-      );
+      if (usesServerState) {
+        void fetch('/api/words', {
+          body: JSON.stringify({
+            articleSlug: article.slug,
+            lemma: normalizedLemma,
+          }),
+          headers: {
+            'content-type': 'application/json',
+          },
+          method: 'DELETE',
+        });
+        setSavedWordRecords((current) =>
+          current.filter((item) => item.lemma.toLowerCase() !== normalizedLemma),
+        );
+      } else {
+        unsaveWord(
+          {
+            articleSlug: article.slug,
+            deviceId,
+            lemma: normalizedLemma,
+          },
+          window.localStorage,
+        );
+      }
       setSavedLemmas((current) =>
         current.filter((item) => item !== normalizedLemma),
       );
@@ -472,26 +658,35 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         throw new Error('mock save word failure');
       }
 
-      saveWord(
-        {
-          articleSlug: article.slug,
-          articleTitle: article.chinese_title,
-          chineseMeaning: selectedWord.meaning,
-          contextMeaning: selectedWord.contextMeaning,
-          deviceId,
-          lemma,
-          memoryHook: selectedWord.memoryHook ?? selectedWord.explanation,
-          sentenceId: explainPanelState.request.sentenceId,
-          sourceSentence: selectedWord.sourceSentence,
-          surface: selectedWord.selectedText,
-          usageExample: buildUsageExampleFallback(
-            selectedWord.sourceSentence,
-            selectedWord.selectedText,
-            selectedWord.usageExample,
-          ),
-        },
-        window.localStorage,
-      );
+      const savedWordInput = {
+        articleSlug: article.slug,
+        articleTitle: article.chinese_title,
+        chineseMeaning: selectedWord.meaning,
+        contextMeaning: selectedWord.contextMeaning,
+        deviceId,
+        lemma,
+        memoryHook: selectedWord.memoryHook ?? selectedWord.explanation,
+        sentenceId: explainPanelState.request.sentenceId,
+        sourceSentence: selectedWord.sourceSentence,
+        surface: selectedWord.selectedText,
+        usageExample: buildUsageExampleFallback(
+          selectedWord.sourceSentence,
+          selectedWord.selectedText,
+          selectedWord.usageExample,
+        ),
+      };
+
+      if (usesServerState) {
+        const serverRecord = await saveWordToServer(savedWordInput);
+        setSavedWordRecords((current) => {
+          const filtered = current.filter(
+            (item) => item.lemma.toLowerCase() !== normalizedLemma,
+          );
+          return [serverRecord, ...filtered];
+        });
+      } else {
+        saveWord(savedWordInput, window.localStorage);
+      }
       setSavedLemmas((current) =>
         current.includes(normalizedLemma)
           ? current
@@ -499,15 +694,23 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       );
       setSaveWordError(null);
 
-      recordEvent(
-        {
+      if (usesServerState) {
+        void recordEventForCurrentUser({
           articleSlug: article.slug,
-          deviceId,
           payload: { lemma: normalizedLemma },
           type: 'word_saved',
-        },
-        window.localStorage,
-      );
+        });
+      } else {
+        recordEvent(
+          {
+            articleSlug: article.slug,
+            deviceId,
+            payload: { lemma: normalizedLemma },
+            type: 'word_saved',
+          },
+          window.localStorage,
+        );
+      }
     } catch {
       setSaveWordError(uiCopy.reader.shell.saveWordError);
     }
@@ -577,26 +780,35 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         usageExample?: string;
       };
 
-      saveWord(
-        {
-          articleSlug: article.slug,
-          articleTitle: article.chinese_title,
-          chineseMeaning: selectedWord.chinese_meaning,
-          contextMeaning: selectedWord.context_meaning,
-          deviceId,
-          lemma: payload.lemma ?? selectedWord.word,
-          memoryHook: selectedWord.memory_hook || payload.memoryHook || payload.explanation,
-          sentenceId: sourceSentence.id,
-          sourceSentence: sourceSentence.text,
-          surface: selectedWord.word,
-          usageExample: buildUsageExampleFallback(
-            payload.sourceSentence ?? sourceSentence.text,
-            selectedWord.word,
-            payload.usageExample,
-          ),
-        },
-        window.localStorage,
-      );
+      const savedWordInput = {
+        articleSlug: article.slug,
+        articleTitle: article.chinese_title,
+        chineseMeaning: selectedWord.chinese_meaning,
+        contextMeaning: selectedWord.context_meaning,
+        deviceId,
+        lemma: payload.lemma ?? selectedWord.word,
+        memoryHook: selectedWord.memory_hook || payload.memoryHook || payload.explanation,
+        sentenceId: sourceSentence.id,
+        sourceSentence: sourceSentence.text,
+        surface: selectedWord.word,
+        usageExample: buildUsageExampleFallback(
+          payload.sourceSentence ?? sourceSentence.text,
+          selectedWord.word,
+          payload.usageExample,
+        ),
+      };
+
+      if (usesServerState) {
+        const serverRecord = await saveWordToServer(savedWordInput);
+        setSavedWordRecords((current) => {
+          const filtered = current.filter(
+            (item) => item.lemma.toLowerCase() !== serverRecord.lemma.toLowerCase(),
+          );
+          return [serverRecord, ...filtered];
+        });
+      } else {
+        saveWord(savedWordInput, window.localStorage);
+      }
       setSavedLemmas((current) =>
         current.includes(selectedWord.word.toLowerCase())
           ? current
@@ -636,14 +848,32 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       },
       window.localStorage,
     );
-    unsaveWord(
-      {
-        articleSlug: article.slug,
-        deviceId,
-        lemma: selectedWord.word,
-      },
-      window.localStorage,
-    );
+    if (usesServerState) {
+      void fetch('/api/words', {
+        body: JSON.stringify({
+          articleSlug: article.slug,
+          lemma: selectedWord.word,
+        }),
+        headers: {
+          'content-type': 'application/json',
+        },
+        method: 'DELETE',
+      });
+      setSavedWordRecords((current) =>
+        current.filter(
+          (item) => item.lemma.toLowerCase() !== selectedWord.word.toLowerCase(),
+        ),
+      );
+    } else {
+      unsaveWord(
+        {
+          articleSlug: article.slug,
+          deviceId,
+          lemma: selectedWord.word,
+        },
+        window.localStorage,
+      );
+    }
     setSavedLemmas((current) =>
       current.filter((item) => item !== selectedWord.word.toLowerCase()),
     );
@@ -689,14 +919,21 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   function startReading() {
     setIsCompleted(false);
     if (deviceId) {
-      recordEvent(
-        {
+      if (usesServerState) {
+        void recordEventForCurrentUser({
           articleSlug: article.slug,
-          deviceId,
           type: 'article_started',
-        },
-        window.localStorage,
-      );
+        });
+      } else {
+        recordEvent(
+          {
+            articleSlug: article.slug,
+            deviceId,
+            type: 'article_started',
+          },
+          window.localStorage,
+        );
+      }
     }
 
     selectStage('read');
@@ -746,15 +983,11 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     }
 
     if (currentStage === 'review') {
-      const savedWords = deviceId
-        ? listSavedWords(deviceId, window.localStorage, article.slug)
-        : [];
-
       return (
         <ReviewPanel
           article={article}
           nextArticleSlug={navigation.nextArticle?.slug}
-          savedWords={savedWords}
+          savedWords={savedWordRecords}
         />
       );
     }

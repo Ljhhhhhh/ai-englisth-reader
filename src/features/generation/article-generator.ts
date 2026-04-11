@@ -244,7 +244,10 @@ async function invokeModel(text: string) {
   ]);
 }
 
-export async function generateArticle(input: GenerateArticleInput) {
+export async function generateArticle(
+  input: GenerateArticleInput,
+  userId?: string,
+) {
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
@@ -252,7 +255,10 @@ export async function generateArticle(input: GenerateArticleInput) {
       const payload = await invokeModel(input.text);
       const article = buildArticle(payload, input);
 
-      return upsertPersistedArticle(article, 'PRIVATE');
+      return upsertPersistedArticle(article, {
+        ownerId: userId,
+        visibility: userId ? 'PRIVATE' : 'PUBLIC',
+      });
     } catch (error) {
       lastError = error;
     }
