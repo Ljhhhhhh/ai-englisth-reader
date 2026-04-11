@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const articleMocks = vi.hoisted(() => ({
-  loadArticle: vi.fn(),
+  loadArticleForViewer: vi.fn(),
 }));
 
 const currentUserMocks = vi.hoisted(() => ({
@@ -39,7 +39,7 @@ describe('POST /api/lookup', () => {
   });
 
   it('passes anonymous access through as public-only article loading', async () => {
-    articleMocks.loadArticle.mockResolvedValue({ slug: 'welcome-to-deep-reading' });
+    articleMocks.loadArticleForViewer.mockResolvedValue({ slug: 'welcome-to-deep-reading' });
     lookupMocks.lookupWordFromArticle.mockReturnValue({
       lemma: 'clear',
       surface: 'clear',
@@ -57,9 +57,9 @@ describe('POST /api/lookup', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(articleMocks.loadArticle).toHaveBeenCalledWith(
+    expect(articleMocks.loadArticleForViewer).toHaveBeenCalledWith(
       'welcome-to-deep-reading',
-      { userId: null },
+      undefined,
     );
     expect(lookupMocks.lookupWordFromArticle).toHaveBeenCalledWith({
       article: { slug: 'welcome-to-deep-reading' },
@@ -74,7 +74,7 @@ describe('POST /api/lookup', () => {
 
   it('passes the authenticated user id for private article lookups', async () => {
     currentUserMocks.getCurrentUser.mockResolvedValue({ id: 'user-1' });
-    articleMocks.loadArticle.mockResolvedValue({ slug: 'private-generated-article' });
+    articleMocks.loadArticleForViewer.mockResolvedValue({ slug: 'private-generated-article' });
     lookupMocks.lookupWordFromArticle.mockReturnValue({
       lemma: 'focus',
       surface: 'focus',
@@ -92,9 +92,9 @@ describe('POST /api/lookup', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(articleMocks.loadArticle).toHaveBeenCalledWith(
+    expect(articleMocks.loadArticleForViewer).toHaveBeenCalledWith(
       'private-generated-article',
-      { userId: 'user-1' },
+      'user-1',
     );
   });
 });

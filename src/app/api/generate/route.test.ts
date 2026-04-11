@@ -84,8 +84,9 @@ describe('POST /api/generate', () => {
     generationJobMocks.markGenerationJobProcessing.mockResolvedValue(null);
     generationJobMocks.markGenerationJobDone.mockResolvedValue(null);
     generationContentMocks.extractContent.mockResolvedValue({
-      content: 'raw content',
-      title: 'Article Title',
+      source: 'https://example.com/article',
+      text: 'raw content',
+      titleHint: 'Article Title',
     });
     generationContentMocks.generateArticle.mockResolvedValue({
       slug: 'article-slug',
@@ -118,13 +119,12 @@ describe('POST /api/generate', () => {
         type: 'url',
         url: 'https://example.com/article',
       });
-      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith(
-        {
-          content: 'raw content',
-          title: 'Article Title',
-        },
-        'user-1',
-      );
+      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
+        ownerId: 'user-1',
+        source: 'https://example.com/article',
+        text: 'raw content',
+        titleHint: 'Article Title',
+      });
       expect(generationJobMocks.markGenerationJobDone).toHaveBeenCalledWith(
         'job-1',
         'article-slug',
@@ -141,8 +141,9 @@ describe('POST /api/generate', () => {
     generationJobMocks.markGenerationJobProcessing.mockResolvedValue(null);
     generationJobMocks.markGenerationJobDone.mockResolvedValue(null);
     generationContentMocks.extractContent.mockResolvedValue({
-      content: 'raw content',
-      title: 'Article Title',
+      source: 'my-article.txt',
+      text: 'raw content',
+      titleHint: 'Article Title',
     });
     generationContentMocks.generateArticle.mockResolvedValue({
       slug: 'article-slug',
