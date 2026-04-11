@@ -96,4 +96,31 @@ describe('POST /api/reader/explain', () => {
         'Clear instructions help new readers build confidence quickly.',
     });
   });
+
+  it('passes the authenticated user id when loading the article', async () => {
+    currentUserMocks.getCurrentUser.mockResolvedValue({ id: 'user-1' });
+    articleMocks.loadArticle.mockResolvedValue({ slug: 'private-generated-article' });
+    explainMocks.explainReaderSelection.mockResolvedValue({
+      explanation: 'ok',
+    });
+
+    const response = await POST(
+      new Request('http://localhost/api/reader/explain', {
+        body: JSON.stringify({
+          articleSlug: 'private-generated-article',
+          sentenceId: 's1',
+          sentenceText: 'Sentence text.',
+          selectedText: 'Sentence',
+          mode: 'word',
+        }),
+        method: 'POST',
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(articleMocks.loadArticle).toHaveBeenCalledWith(
+      'private-generated-article',
+      { userId: 'user-1' },
+    );
+  });
 });
