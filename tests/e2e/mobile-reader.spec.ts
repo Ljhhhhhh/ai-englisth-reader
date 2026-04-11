@@ -51,7 +51,7 @@ test('mobile reader keeps current stage after viewport resize', async ({
   await expect(page.getByText(/当前阶段：正文/i)).toBeVisible();
 });
 
-test('mobile reader finishes with the explicit completion action instead of review', async ({
+test('mobile reader finishes with the explicit completion action and opens the review stage', async ({
   page,
 }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-chrome', 'mobile only');
@@ -62,6 +62,7 @@ test('mobile reader finishes with the explicit completion action instead of revi
   await expect(page.getByRole('button', { name: /完成本篇阅读/i })).toBeVisible();
   await page.getByRole('button', { name: /完成本篇阅读/i }).click();
 
+  await expect(page.getByText(/当前阶段：复盘/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: /这一篇你已经读完了/i })).toBeVisible();
   await expect(page.getByText(/本机阅读复盘/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /Submit quiz/i })).toHaveCount(0);

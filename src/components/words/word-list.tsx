@@ -603,7 +603,7 @@ export function WordList({
                 boxShadow: '0 10px 20px rgba(197, 106, 45, 0.18)',
               }}
             >
-              {backLabel}
+              {backHref === '/' ? uiCopy.words.actions.browseArticles : backLabel}
             </Link>
           </div>
         </section>

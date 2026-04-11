@@ -170,7 +170,7 @@ test('reader retries progress persistence after a temporary failure', async ({
   await expect(page.getByText(/当前阶段：正文/i)).toBeVisible();
 });
 
-test('reader completes with an explicit completion action instead of review', async ({
+test('reader completes with an explicit completion action and opens the review stage', async ({
   page,
 }) => {
   await page.goto('/reader/welcome-to-deep-reading');
@@ -179,6 +179,7 @@ test('reader completes with an explicit completion action instead of review', as
   await expect(page.getByRole('button', { name: /完成本篇阅读/i })).toBeVisible();
   await page.getByRole('button', { name: /完成本篇阅读/i }).click();
 
+  await expect(page.getByText(/当前阶段：复盘/i)).toBeVisible();
   await expect(page.getByRole('heading', { name: /这一篇你已经读完了/i })).toBeVisible();
   await expect(page.getByText(/快速确认一下你刚刚读懂了什么/i)).toBeVisible();
   await expect(page.getByRole('link', { name: /开始下一篇/i })).toBeVisible();

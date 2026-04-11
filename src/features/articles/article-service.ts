@@ -5,14 +5,7 @@ import {
 import type { Article } from '@/lib/content/article-schema';
 
 function shouldUseFileBackedArticles() {
-  return (
-    process.env.NODE_ENV === 'test' ||
-    process.env.FILE_BACKED_ARTICLES === '1'
-  );
-}
-
-async function loadArticleRepository() {
-  return import('@/features/articles/article-repository');
+  return process.env.NODE_ENV === 'test' || process.env.USE_FILE_ARTICLES === '1';
 }
 
 function shouldAllowFileFallback() {
