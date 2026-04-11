@@ -1,7 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import { loadAllArticles } from '../src/lib/content/load-article';
+import { env } from '../src/lib/env';
+import { createPrismaMysqlAdapter } from '../src/lib/prisma-mysql-adapter';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: createPrismaMysqlAdapter(env.DATABASE_URL),
+});
 
 async function main() {
   const articles = await loadAllArticles();

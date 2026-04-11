@@ -13,7 +13,9 @@ try {
   }
 }
 
-const databaseUrl = process.env.DATABASE_URL ?? 'file:./dev.db';
+const databaseUrl =
+  process.env.DATABASE_URL ??
+  'mysql://root:password@127.0.0.1:3306/ai_english_read';
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

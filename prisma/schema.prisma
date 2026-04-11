@@ -3,24 +3,60 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
+}
+
+model User {
+  id                String                  @id @default(cuid())
+  email             String                  @unique
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  verificationCodes EmailVerificationCode[]
+  sessions          Session[]
+}
+
+model EmailVerificationCode {
+  id         String   @id @default(cuid())
+  userId     String
+  email      String
+  codeHash   String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([email, expiresAt])
+  @@index([userId, createdAt])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  expiresAt  DateTime
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
 }
 
 model Article {
-  id               String           @id @default(cuid())
-  slug             String           @unique
-  title            String
-  source           String
-  difficulty       String
-  estimatedMinutes Int
-  feynmanSummary   String
+  id                 String           @id @default(cuid())
+  slug               String           @unique
+  title              String
+  source             String
+  difficulty         String
+  estimatedMinutes   Int
+  feynmanSummary     String
   chineseTranslation String
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  progresses       ReadingProgress[]
-  quizAttempts     QuizAttempt[]
-  savedWords       SavedWord[]
-  learningEvents   LearningEvent[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  progresses         ReadingProgress[]
+  quizAttempts       QuizAttempt[]
+  savedWords         SavedWord[]
+  learningEvents     LearningEvent[]
 }
 
 model GenerationJob {
