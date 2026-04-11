@@ -65,5 +65,5 @@ test('saved words page explains the empty notebook state', async ({ page }) => {
       name: /当你第一次保留查词结果后，生词本才会开始积累内容/i,
     }),
   ).toBeVisible();
-  await expect(page.getByRole('link', { name: /返回首页/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: /返回首页/i }).first()).toBeVisible();
 });
