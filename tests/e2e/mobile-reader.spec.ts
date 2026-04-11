@@ -8,7 +8,7 @@ test('mobile reader opens a bottom word drawer and keeps stage stable', async ({
   await page.goto('/reader/welcome-to-deep-reading');
 
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
-  await expect(page.getByText(/当前阶段：正文/i)).toBeVisible();
+  await expect(page.getByRole('button', { name: /完成本篇阅读/i })).toBeVisible();
 
   await page.getByRole('button', { name: /^guided$/i }).click();
   await page.getByRole('button', { name: /看这个词/i }).click();
@@ -62,7 +62,7 @@ test('mobile reader finishes with the explicit completion action instead of revi
   await expect(page.getByRole('button', { name: /完成本篇阅读/i })).toBeVisible();
   await page.getByRole('button', { name: /完成本篇阅读/i }).click();
 
-  await expect(page.getByText(/这一篇你已经读完了/i)).toBeVisible();
-  await expect(page.getByText(/本机阅读复盘/i)).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /这一篇你已经读完了/i })).toBeVisible();
+  await expect(page.getByText(/本机阅读复盘/i)).toBeVisible();
   await expect(page.getByRole('button', { name: /Submit quiz/i })).toHaveCount(0);
 });

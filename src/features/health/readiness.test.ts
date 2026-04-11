@@ -80,4 +80,23 @@ describe('getReadinessSnapshot', () => {
     });
     expect(dbClient.$queryRawUnsafe).not.toHaveBeenCalled();
   });
+
+  it('fails fast when the database query hangs', async () => {
+    const snapshot = await getReadinessSnapshot({
+      dbClient: {
+        $queryRawUnsafe: vi.fn(() => new Promise(() => {})),
+      },
+      envValues: {
+        DATABASE_URL: 'mysql://user:pass@localhost:3306/app',
+        READINESS_DB_TIMEOUT_MS: 5,
+      },
+      now: () => new Date('2026-04-11T00:00:00.000Z'),
+    });
+
+    expect(snapshot.status).toBe('error');
+    expect(snapshot.checks.database).toEqual({
+      ok: false,
+      detail: 'database readiness timed out after 5ms',
+    });
+  });
 });

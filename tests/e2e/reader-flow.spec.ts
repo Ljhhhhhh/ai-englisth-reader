@@ -54,9 +54,9 @@ test('reader can lookup and save a word without losing current reading stage', a
     await expect(wordPanel.getByText(/单词讲解/i)).toBeVisible();
     await expect(wordPanel.getByText(/被引导的/i).first()).toBeVisible();
 
-    await page.getByRole('button', { name: /保存这个词/i }).click();
+    await page.getByRole('button', { name: /保存到生词库/i }).click();
     await expect(
-      page.getByRole('button', { name: /已保存到本机/i }),
+      page.getByRole('button', { name: /已在生词库/i }),
     ).toBeVisible();
 
     await page.getByRole('button', { name: /关闭/i }).first().click();
@@ -77,7 +77,7 @@ test('reader can explain a selected phrase inside one sentence', async ({
   await expect(phrasePanel).toBeVisible();
   await expect(phrasePanel.getByText(/短语讲解/i)).toBeVisible();
   await expect(phrasePanel.getByText(/clear support/i)).toBeVisible();
-  await expect(page.getByRole('button', { name: /保存这个词/i })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /保存到生词库/i })).toHaveCount(0);
 });
 
 test('reader can open explanation for a non-priority word without phrase suggestions', async ({
@@ -149,12 +149,12 @@ test('reader can retry after a temporary save-word failure', async ({
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /^guided$/i }).click();
   await page.getByRole('button', { name: /看这个词/i }).click();
-  await page.getByRole('button', { name: /保存这个词/i }).click();
+  await page.getByRole('button', { name: /保存到生词库/i }).click();
 
   await expect(page.getByText(/这个词暂时无法保存/i)).toBeVisible();
   await page.getByRole('button', { name: /重试保存/i }).click();
   await expect(
-    page.getByRole('button', { name: /已保存到本机/i }),
+    page.getByRole('button', { name: /已在生词库/i }),
   ).toBeVisible();
 });
 
@@ -179,9 +179,9 @@ test('reader completes with an explicit completion action instead of review', as
   await expect(page.getByRole('button', { name: /完成本篇阅读/i })).toBeVisible();
   await page.getByRole('button', { name: /完成本篇阅读/i }).click();
 
-  await expect(page.getByText(/这一篇你已经读完了/i)).toBeVisible();
-  await expect(page.getByText(/快速确认一下你刚刚读懂了什么/i)).toHaveCount(0);
-  await expect(page.getByRole('link', { name: /开始下一篇/i })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /这一篇你已经读完了/i })).toBeVisible();
+  await expect(page.getByText(/快速确认一下你刚刚读懂了什么/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: /开始下一篇/i })).toBeVisible();
 });
 
 test('reader offers route navigation to sibling articles and core pages', async ({
@@ -230,7 +230,7 @@ test('saved words page groups words by article', async ({ page }) => {
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
   await page.getByRole('button', { name: /^guided$/i }).click();
   await page.getByRole('button', { name: /看这个词/i }).click();
-  await page.getByRole('button', { name: /保存这个词/i }).click();
+  await page.getByRole('button', { name: /保存到生词库/i }).click();
 
   await page.goto('/words');
 
@@ -240,7 +240,7 @@ test('saved words page groups words by article', async ({ page }) => {
   await expect(
     page.getByText(
       /Guided by clear support, the reader can follow the main idea/i,
-    ),
+    ).first(),
   ).toBeVisible();
 });
 });

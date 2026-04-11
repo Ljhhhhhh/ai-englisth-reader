@@ -12,6 +12,7 @@ type ReadinessEnv = {
   LLM_API_KEY?: string;
   LLM_BASE_URL?: string;
   LLM_MODEL?: string;
+  READINESS_DB_TIMEOUT_MS?: number;
 };
 
 export type ReadinessSnapshot = {
@@ -33,6 +34,25 @@ export type ReadinessSnapshot = {
   };
 };
 
+async function queryWithTimeout(dbClient: QueryableDb, timeoutMs: number) {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      dbClient.$queryRawUnsafe('SELECT 1'),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error(`database readiness timed out after ${timeoutMs}ms`));
+        }, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) {
+      clearTimeout(timer);
+    }
+  }
+}
+
 export async function getReadinessSnapshot({
   dbClient = db,
   envValues = env,
@@ -43,13 +63,14 @@ export async function getReadinessSnapshot({
   now?: () => Date;
 } = {}): Promise<ReadinessSnapshot> {
   const missingEnv = envValues.DATABASE_URL ? [] : ['DATABASE_URL'];
+  const dbTimeoutMs = envValues.READINESS_DB_TIMEOUT_MS ?? 1000;
 
   let databaseOk = false;
   let databaseDetail = 'skipped';
 
   if (missingEnv.length === 0) {
     try {
-      await dbClient.$queryRawUnsafe('SELECT 1');
+      await queryWithTimeout(dbClient, dbTimeoutMs);
       databaseOk = true;
       databaseDetail = 'query ok';
     } catch (error) {
