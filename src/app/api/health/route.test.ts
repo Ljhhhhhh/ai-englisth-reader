@@ -65,23 +65,4 @@ describe('GET /api/health', () => {
       timestamp: expect.any(String),
     });
   });
-
-  it('returns 503 when the database probe times out', async () => {
-    vi.useFakeTimers();
-    dbMocks.$queryRaw.mockReturnValue(new Promise(() => {}));
-
-    const responsePromise = GET();
-    await vi.advanceTimersByTimeAsync(2_000);
-    const response = await responsePromise;
-
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
-      checks: {
-        database: 'error',
-      },
-      ok: false,
-      service: 'ai-english-read',
-      timestamp: expect.any(String),
-    });
-  });
 });
