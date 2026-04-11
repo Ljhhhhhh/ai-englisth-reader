@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+const currentUserMocks = vi.hoisted(() => ({
+  getCurrentUser: vi.fn(),
+}));
+
 const generationJobMocks = vi.hoisted(() => ({
   countRecentGenerationJobs: vi.fn(),
   createGenerationJob: vi.fn(),
@@ -17,6 +21,7 @@ vi.mock(
   '@/features/generation/generation-job-service',
   () => generationJobMocks,
 );
+vi.mock('@/features/auth/current-user', () => currentUserMocks);
 vi.mock('@/features/generation/extract-content', () => generationContentMocks);
 vi.mock(
   '@/features/generation/article-generator',
@@ -35,17 +40,23 @@ function createFormRequest(formData: FormData) {
 describe('POST /api/generate', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    currentUserMocks.getCurrentUser.mockResolvedValue({
+      email: 'reader@example.com',
+      id: 'user-1',
+    });
   });
 
-  it('rejects requests without deviceId', async () => {
+  it('rejects unauthenticated requests', async () => {
+    currentUserMocks.getCurrentUser.mockResolvedValue(null);
+
     const formData = new FormData();
     formData.set('url', 'https://example.com/article');
 
     const response = await POST(createFormRequest(formData));
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
-      error: 'deviceId is required',
+      error: '请先登录后再生成文章。',
     });
   });
 
@@ -53,7 +64,6 @@ describe('POST /api/generate', () => {
     generationJobMocks.countRecentGenerationJobs.mockResolvedValue(5);
 
     const formData = new FormData();
-    formData.set('deviceId', 'device-1');
     formData.set('url', 'https://example.com/article');
 
     const response = await POST(createFormRequest(formData));
@@ -82,7 +92,6 @@ describe('POST /api/generate', () => {
     });
 
     const formData = new FormData();
-    formData.set('deviceId', 'device-1');
     formData.set('url', ' https://example.com/article ');
 
     const response = await POST(createFormRequest(formData));
@@ -96,9 +105,9 @@ describe('POST /api/generate', () => {
     });
 
     expect(generationJobMocks.createGenerationJob).toHaveBeenCalledWith({
-      deviceId: 'device-1',
       sourceRef: 'https://example.com/article',
       sourceType: 'url',
+      userId: 'user-1',
     });
 
     await vi.waitFor(() => {
@@ -109,11 +118,13 @@ describe('POST /api/generate', () => {
         type: 'url',
         url: 'https://example.com/article',
       });
-      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
-        content: 'raw content',
-        ownerId: 'user-1',
-        title: 'Article Title',
-      });
+      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith(
+        {
+          content: 'raw content',
+          title: 'Article Title',
+        },
+        'user-1',
+      );
       expect(generationJobMocks.markGenerationJobDone).toHaveBeenCalledWith(
         'job-1',
         'article-slug',
@@ -138,7 +149,6 @@ describe('POST /api/generate', () => {
     });
 
     const formData = new FormData();
-    formData.set('deviceId', 'device-1');
     formData.set(
       'file',
       new File(['hello'], 'my-article.txt', { type: 'text/plain' }),
@@ -150,20 +160,15 @@ describe('POST /api/generate', () => {
 
     expect(response.status).toBe(202);
     expect(generationJobMocks.createGenerationJob).toHaveBeenCalledWith({
-      deviceId: 'device-1',
       sourceRef: 'my-article.txt',
       sourceType: 'file',
+      userId: 'user-1',
     });
 
     await vi.waitFor(() => {
       expect(generationContentMocks.extractContent).toHaveBeenCalledWith({
         type: 'file',
         file: expect.any(File),
-      });
-      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
-        content: 'raw content',
-        ownerId: 'user-1',
-        title: 'Article Title',
       });
     });
   });

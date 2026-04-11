@@ -31,14 +31,14 @@ describe('generation-job-service', () => {
     generationJobMocks.create.mockResolvedValue({ id: 'job-1' });
 
     const job = await createGenerationJob({
-      deviceId: 'device-1',
+      userId: 'user-1',
       sourceRef: 'https://example.com/article',
       sourceType: 'url',
     });
 
     expect(generationJobMocks.create).toHaveBeenCalledWith({
       data: {
-        deviceId: 'device-1',
+        userId: 'user-1',
         sourceRef: 'https://example.com/article',
         sourceType: 'url',
         status: 'pending',
@@ -51,14 +51,14 @@ describe('generation-job-service', () => {
     generationJobMocks.count.mockResolvedValue(3);
     const since = new Date('2026-04-08T00:00:00.000Z');
 
-    const count = await countRecentGenerationJobs('device-1', since);
+    const count = await countRecentGenerationJobs('user-1', since);
 
     expect(generationJobMocks.count).toHaveBeenCalledWith({
       where: {
         createdAt: {
           gte: since,
         },
-        deviceId: 'device-1',
+        userId: 'user-1',
       },
     });
     expect(count).toBe(3);

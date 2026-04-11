@@ -13,12 +13,11 @@ export type GenerationJobRecord = {
 };
 
 export async function createGenerationJob(input: {
-  deviceId?: string;
   sourceRef: string;
   sourceType: string;
-  userId?: string;
+  userId: string;
 }) {
-  const userId = input.userId ?? input.deviceId;
+  const userId = input.userId;
 
   if (!userId) {
     throw new Error('userId is required');
@@ -34,10 +33,7 @@ export async function createGenerationJob(input: {
   });
 }
 
-export async function countRecentGenerationJobs(
-  userId: string,
-  since: Date,
-) {
+export async function countRecentGenerationJobs(userId: string, since: Date) {
   return db.generationJob.count({
     where: {
       createdAt: {
