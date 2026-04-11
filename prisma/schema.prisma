@@ -6,22 +6,11 @@ datasource db {
   provider = "mysql"
 }
 
-enum ArticleVisibility {
-  PUBLIC
-  PRIVATE
-}
-
 model User {
   id                String                  @id @default(cuid())
-  articles          Article[]
   email             String                  @unique
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
-  generatedArticles Article[]
-  generationJobs    GenerationJob[]
-  progresses        ReadingProgress[]
-  savedWords        SavedWord[]
-  learningEvents    LearningEvent[]
   verificationCodes EmailVerificationCode[]
   sessions          Session[]
 }
@@ -54,34 +43,20 @@ model Session {
 }
 
 model Article {
-  id                       String            @id @default(cuid())
-  ownerId                  String?
-  slug                     String            @unique
-  title                    String
-  chineseTitle             String
-  source                   String
-  difficulty               String
-  estimatedMinutes         Int
-  listSummaryZh            String
-  feynmanSummary           String
-  chineseTranslation       String
-  paragraphsJson           Json
-  growthVocabularyJson     Json
-  highFrequencyPhrasesJson Json
-  languageEvolutionJson    Json
-  visibility               ArticleVisibility @default(PUBLIC)
-  ownerId                  String?
-  createdAt                DateTime          @default(now())
-  updatedAt                DateTime          @updatedAt
-  owner                    User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  progresses               ReadingProgress[]
-  quizAttempts             QuizAttempt[]
-  savedWords               SavedWord[]
-  learningEvents           LearningEvent[]
-
-  @@index([ownerId, visibility])
-  @@index([visibility, estimatedMinutes, createdAt])
-  @@index([ownerId, createdAt])
+  id                 String           @id @default(cuid())
+  slug               String           @unique
+  title              String
+  source             String
+  difficulty         String
+  estimatedMinutes   Int
+  feynmanSummary     String
+  chineseTranslation String
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  progresses         ReadingProgress[]
+  quizAttempts       QuizAttempt[]
+  savedWords         SavedWord[]
+  learningEvents     LearningEvent[]
 }
 
 model GenerationJob {
