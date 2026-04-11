@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const articleMocks = vi.hoisted(() => ({
-  loadArticle: vi.fn(),
+  loadArticleForViewer: vi.fn(),
 }));
 
 const explainMocks = vi.hoisted(() => ({
   explainReaderSelection: vi.fn(),
 }));
 
+const authMocks = vi.hoisted(() => ({
+  getCurrentUser: vi.fn(),
+}));
+
 vi.mock('@/features/articles/article-service', () => articleMocks);
+vi.mock('@/features/auth/current-user', () => authMocks);
 vi.mock('@/features/reader/reader-explain-service', () => explainMocks);
 
 import { POST } from './route';
@@ -16,6 +21,7 @@ import { POST } from './route';
 describe('POST /api/reader/explain', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authMocks.getCurrentUser.mockResolvedValue(null);
   });
 
   it('rejects incomplete requests', async () => {
@@ -34,7 +40,7 @@ describe('POST /api/reader/explain', () => {
   });
 
   it('loads the article and returns the explanation payload', async () => {
-    articleMocks.loadArticle.mockResolvedValue({ slug: 'welcome-to-deep-reading' });
+    articleMocks.loadArticleForViewer.mockResolvedValue({ slug: 'welcome-to-deep-reading' });
     explainMocks.explainReaderSelection.mockResolvedValue({
       mode: 'word',
       selectedText: 'clear',
@@ -64,8 +70,9 @@ describe('POST /api/reader/explain', () => {
     );
 
     expect(response.status).toBe(200);
-    expect(articleMocks.loadArticle).toHaveBeenCalledWith(
+    expect(articleMocks.loadArticleForViewer).toHaveBeenCalledWith(
       'welcome-to-deep-reading',
+      undefined,
     );
     expect(explainMocks.explainReaderSelection).toHaveBeenCalledWith({
       article: { slug: 'welcome-to-deep-reading' },

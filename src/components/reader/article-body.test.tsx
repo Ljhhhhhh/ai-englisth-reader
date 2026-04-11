@@ -200,7 +200,7 @@ describe('ArticleBody', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows the same explicit selection action bar for repeated renders', async () => {
+  it('keeps the retired static operation hint hidden across rerenders', async () => {
     const article = await createReaderArticle();
     const noopProps = {
       article,
@@ -213,15 +213,15 @@ describe('ArticleBody', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'clear' }));
     expect(
-      screen.getByRole('group', { name: /正文讲解操作/i }),
-    ).toBeInTheDocument();
+      screen.queryByText(/点词即查；再点相邻词可扩成短语/i),
+    ).not.toBeInTheDocument();
 
     rerender(<ArticleBody {...noopProps} />);
 
     fireEvent.click(screen.getAllByRole('button', { name: 'clear' })[0]);
     expect(
-      screen.getByRole('group', { name: /正文讲解操作/i }),
-    ).toBeInTheDocument();
+      screen.queryByText(/点词即查；再点相邻词可扩成短语/i),
+    ).not.toBeInTheDocument();
   });
 
   it('uses roving tabindex so keyboard users can move across words without tabbing through every token', async () => {

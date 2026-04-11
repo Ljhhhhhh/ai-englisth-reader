@@ -41,6 +41,7 @@ describe('article-repository mappers', () => {
       id: 'article-1',
       languageEvolutionJson: article.language_evolution,
       listSummaryZh: article.list_summary_zh,
+      ownerId: null,
       paragraphsJson: article.paragraphs,
       slug: article.slug,
       source: article.source,
