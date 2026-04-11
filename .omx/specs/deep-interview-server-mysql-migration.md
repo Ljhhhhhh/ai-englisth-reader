@@ -1,12 +1,12 @@
 ## Metadata
 
 - Profile: standard
-- Rounds: 6 + final clarifications
-- Final Ambiguity: 8%
+- Rounds: 4
+- Final Ambiguity: 6%
 - Threshold: 20%
 - Context Type: brownfield
-- Context Snapshot: [server-mysql-migration-20260410T104623Z.md](/Users/pipilu/Documents/MaDun/ai-english-read/.omx/context/server-mysql-migration-20260410T104623Z.md)
-- Interview Transcript: [server-mysql-migration-20260410T104623Z.md](/Users/pipilu/Documents/MaDun/ai-english-read/.omx/interviews/server-mysql-migration-20260410T104623Z.md)
+- Context Snapshot: [server-mysql-migration-20260411T121443Z.md](/Users/pipilu/Documents/MaDun/ai-english-read/.omx/context/server-mysql-migration-20260411T121443Z.md)
+- Interview Transcript: [server-mysql-migration-20260411T122309Z.md](/Users/pipilu/Documents/MaDun/ai-english-read/.omx/interviews/server-mysql-migration-20260411T122309Z.md)
 
 ## Clarity Breakdown
 
@@ -16,12 +16,12 @@
 | Outcome | 0.95 |
 | Scope | 0.95 |
 | Constraints | 0.92 |
-| Success | 0.90 |
-| Context | 0.90 |
+| Success | 0.92 |
+| Context | 0.95 |
 
 ## Intent
 
-Upgrade the current local-first MVP into a formally launchable online product that can be deployed on ECS and used reliably by authenticated users across devices.
+Upgrade the current local-first MVP into a formally launchable online product that can be deployed on ECS Ubuntu servers and used reliably by authenticated users across devices.
 
 ## Desired Outcome
 
@@ -75,6 +75,7 @@ Downstream planning/execution may decide these without re-asking:
 ## Constraints
 
 - Target deployment environment is ECS
+- Target server environment is Ubuntu
 - Database must be MySQL
 - No requirement to preserve existing browser-local data
 - No requirement to add admin operations UI
@@ -104,7 +105,7 @@ Downstream planning/execution may decide these without re-asking:
 
 ## Pressure-Pass Findings
 
-The phrase “正式上线可用” was initially underspecified. Pressure-testing on success criteria showed that launchability requires not only deployment but also user auth and synchronized account-bound data. That materially changes schema, API, and storage scope.
+The phrase “正式上线可用” was initially underspecified. Pressure-testing on success criteria showed that launchability requires not only deployment but also user auth, synchronized account-bound data, and service-backed article storage. That materially changes schema, API, and storage scope.
 
 ## Brownfield Evidence vs Inference
 
@@ -117,7 +118,7 @@ Evidence:
 - server-based AI routes already exist
 
 Inference:
-- ECS runtime and multi-instance deployment make file-backed generated article persistence an unsuitable primary storage model
+- ECS Ubuntu multi-instance deployment makes file-backed generated article persistence an unsuitable primary storage model
 - JWT + email verification can be integrated without splitting frontend/backend, given current monolithic Next.js structure
 
 ## Technical Context Findings
@@ -203,7 +204,7 @@ Recommended next step: `$ralplan`
 Suggested invocation:
 
 ```text
-$plan --consensus --direct .omx/specs/deep-interview-server-mysql-migration.md
+$plan --consensus --direct .omx/specs/deep-interview-server-mysql-migration-20260411.md
 ```
 
 Alternative handoffs:
