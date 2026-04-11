@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const generationJobMocks = vi.hoisted(() => ({
   count: vi.fn(),
   create: vi.fn(),
+  findFirst: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
 }));
@@ -17,6 +18,7 @@ import {
   countRecentGenerationJobs,
   createGenerationJob,
   getGenerationJob,
+  getGenerationJobForUser,
   markGenerationJobDone,
   markGenerationJobFailed,
   markGenerationJobProcessing,
@@ -34,6 +36,7 @@ describe('generation-job-service', () => {
       userId: 'user-1',
       sourceRef: 'https://example.com/article',
       sourceType: 'url',
+      userId: 'user-1',
     });
 
     expect(generationJobMocks.create).toHaveBeenCalledWith({
@@ -42,12 +45,13 @@ describe('generation-job-service', () => {
         sourceRef: 'https://example.com/article',
         sourceType: 'url',
         status: 'pending',
+        userId: 'user-1',
       },
     });
     expect(job).toEqual({ id: 'job-1' });
   });
 
-  it('counts recent jobs for the same device', async () => {
+  it('counts recent jobs for the same user', async () => {
     generationJobMocks.count.mockResolvedValue(3);
     const since = new Date('2026-04-08T00:00:00.000Z');
 
@@ -70,6 +74,18 @@ describe('generation-job-service', () => {
     await expect(getGenerationJob('job-1')).resolves.toEqual({ id: 'job-1' });
     expect(generationJobMocks.findUnique).toHaveBeenCalledWith({
       where: { id: 'job-1' },
+    });
+  });
+
+  it('loads a generation job scoped to a user', async () => {
+    generationJobMocks.findFirst.mockResolvedValue({ id: 'job-1', userId: 'user-1' });
+
+    await expect(getGenerationJobForUser('job-1', 'user-1')).resolves.toEqual({
+      id: 'job-1',
+      userId: 'user-1',
+    });
+    expect(generationJobMocks.findFirst).toHaveBeenCalledWith({
+      where: { id: 'job-1', userId: 'user-1' },
     });
   });
 
