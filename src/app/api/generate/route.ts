@@ -3,6 +3,7 @@ import {
   type ExtractContentInput,
 } from '@/features/generation/extract-content';
 import { generateArticle } from '@/features/generation/article-generator';
+import { getCurrentUser } from '@/features/auth/current-user';
 import {
   countRecentGenerationJobs,
   createGenerationJob,
@@ -40,11 +41,15 @@ function parseGenerationInput(formData: FormData): ExtractContentInput {
   throw new Error('请提供链接或上传文件。');
 }
 
-async function processJob(jobId: string, input: ExtractContentInput) {
+async function processJob(
+  jobId: string,
+  input: ExtractContentInput,
+  userId: string,
+) {
   try {
     await markGenerationJobProcessing(jobId);
     const extracted = await extractContent(input);
-    const article = await generateArticle(extracted);
+    const article = await generateArticle(extracted, userId);
     await markGenerationJobDone(jobId, article.slug);
   } catch (error) {
     await markGenerationJobFailed(
@@ -56,15 +61,19 @@ async function processJob(jobId: string, input: ExtractContentInput) {
 
 export async function POST(request: Request) {
   try {
-    const formData = await request.formData();
-    const deviceId = getStringValue(formData.get('deviceId'));
+    const user = await getCurrentUser();
 
-    if (!deviceId) {
-      return Response.json({ error: 'deviceId is required' }, { status: 400 });
+    if (!user) {
+      return Response.json(
+        { error: '请先登录后再生成文章。' },
+        { status: 401 },
+      );
     }
 
+    const formData = await request.formData();
+
     const recentCount = await countRecentGenerationJobs(
-      deviceId,
+      user.id,
       new Date(Date.now() - ONE_DAY_MS),
     );
 
@@ -78,12 +87,12 @@ export async function POST(request: Request) {
     const input = parseGenerationInput(formData);
     const sourceRef = input.type === 'url' ? input.url : input.file.name;
     const job = await createGenerationJob({
-      deviceId,
       sourceRef,
       sourceType: input.type,
+      userId: user.id,
     });
 
-    void processJob(job.id, input);
+    void processJob(job.id, input, user.id);
 
     return Response.json(
       {

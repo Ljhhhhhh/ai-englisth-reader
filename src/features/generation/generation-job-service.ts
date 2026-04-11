@@ -3,37 +3,37 @@ import { db } from '@/lib/db';
 export type GenerationJobRecord = {
   articleSlug: string | null;
   createdAt: Date;
-  deviceId: string;
   errorMsg: string | null;
   id: string;
   sourceRef: string;
   sourceType: string;
   status: string;
   updatedAt: Date;
+  userId: string;
 };
 
 export async function createGenerationJob(input: {
-  deviceId: string;
   sourceRef: string;
   sourceType: string;
+  userId: string;
 }) {
   return db.generationJob.create({
     data: {
-      deviceId: input.deviceId,
       sourceRef: input.sourceRef,
       sourceType: input.sourceType,
       status: 'pending',
+      userId: input.userId,
     },
   });
 }
 
-export async function countRecentGenerationJobs(deviceId: string, since: Date) {
+export async function countRecentGenerationJobs(userId: string, since: Date) {
   return db.generationJob.count({
     where: {
       createdAt: {
         gte: since,
       },
-      deviceId,
+      userId,
     },
   });
 }

@@ -25,7 +25,10 @@ export function mapArticleRecordToArticle(record: ArticleRecord): Article {
 
 export function mapArticleToPersistenceInput(
   article: Article,
-  visibility: Prisma.ArticleCreateInput['visibility'] = 'PUBLIC',
+  options: {
+    ownerId?: string;
+    visibility?: Prisma.ArticleCreateInput['visibility'];
+  } = {},
 ) {
   return {
     chineseTitle: article.chinese_title,
@@ -43,7 +46,8 @@ export function mapArticleToPersistenceInput(
     slug: article.slug,
     source: article.source,
     title: article.title,
-    visibility,
+    ownerId: options.ownerId,
+    visibility: options.visibility ?? 'PUBLIC',
   } satisfies Prisma.ArticleUncheckedCreateInput;
 }
 
@@ -65,7 +69,10 @@ export async function listPersistedArticles() {
   return articles.map(mapArticleRecordToArticle);
 }
 
-export async function loadPersistedArticle(slug: string) {
+export async function loadPersistedArticle(
+  slug: string,
+  options: { viewerUserId?: string } = {},
+) {
   const record = await db.article.findUnique({
     where: {
       slug,
@@ -76,14 +83,24 @@ export async function loadPersistedArticle(slug: string) {
     throw new Error(`Article not found: ${slug}`);
   }
 
+  if (
+    record.visibility === 'PRIVATE' &&
+    (!options.viewerUserId || record.ownerId !== options.viewerUserId)
+  ) {
+    throw new Error(`Article not found: ${slug}`);
+  }
+
   return mapArticleRecordToArticle(record);
 }
 
 export async function upsertPersistedArticle(
   article: Article,
-  visibility: Prisma.ArticleCreateInput['visibility'] = 'PUBLIC',
+  options: {
+    ownerId?: string;
+    visibility?: Prisma.ArticleCreateInput['visibility'];
+  } = {},
 ) {
-  const data = mapArticleToPersistenceInput(article, visibility);
+  const data = mapArticleToPersistenceInput(article, options);
 
   const record = await db.article.upsert({
     create: data,

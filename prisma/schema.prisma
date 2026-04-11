@@ -16,6 +16,11 @@ model User {
   email             String                  @unique
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
+  generatedArticles Article[]
+  generationJobs    GenerationJob[]
+  progresses        ReadingProgress[]
+  savedWords        SavedWord[]
+  learningEvents    LearningEvent[]
   verificationCodes EmailVerificationCode[]
   sessions          Session[]
 }
@@ -63,45 +68,51 @@ model Article {
   highFrequencyPhrasesJson Json
   languageEvolutionJson    Json
   visibility               ArticleVisibility @default(PUBLIC)
+  ownerId                  String?
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
+  owner                    User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   progresses               ReadingProgress[]
   quizAttempts             QuizAttempt[]
   savedWords               SavedWord[]
   learningEvents           LearningEvent[]
 
   @@index([visibility, estimatedMinutes, createdAt])
+  @@index([ownerId, createdAt])
 }
 
 model GenerationJob {
-  id         String   @id @default(cuid())
-  deviceId   String
-  status     String   @default("pending")
-  sourceType String
-  sourceRef  String
+  id          String   @id @default(cuid())
+  userId      String
+  status      String   @default("pending")
+  sourceType  String
+  sourceRef   String
   articleSlug String?
-  errorMsg   String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  errorMsg    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([deviceId, createdAt])
+  @@index([userId, createdAt])
   @@index([status])
 }
 
 model ReadingProgress {
   id            String   @id @default(cuid())
-  deviceId      String
+  userId        String
   articleId     String
   currentStage  String   @default("intro")
   paragraphId   String?
   quizStarted   Boolean  @default(false)
   quizSubmitted Boolean  @default(false)
+  isCompleted   Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   article       Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([deviceId, articleId])
-  @@index([deviceId])
+  @@unique([userId, articleId])
+  @@index([userId, updatedAt])
 }
 
 model QuizAttempt {
@@ -118,27 +129,33 @@ model QuizAttempt {
 
 model SavedWord {
   id             String   @id @default(cuid())
-  deviceId       String
+  userId         String
   articleId      String
   lemma          String
   surface        String
   meaning        String
+  contextMeaning String?
+  memoryHook     String?
+  usageExample   String?
+  sentenceId     String?
   sourceSentence String
   createdAt      DateTime @default(now())
   article        Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([deviceId, articleId, lemma])
-  @@index([deviceId])
+  @@unique([userId, articleId, lemma])
+  @@index([userId, createdAt])
 }
 
 model LearningEvent {
   id          String   @id @default(cuid())
-  deviceId    String
+  userId      String
   articleId   String?
   type        String
   payloadJson String?
   createdAt   DateTime @default(now())
   article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([deviceId, type])
+  @@index([userId, type, createdAt])
 }
