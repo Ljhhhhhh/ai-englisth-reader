@@ -12,24 +12,38 @@ async function main() {
 
   for (const article of articles) {
     await prisma.article.upsert({
-      where: { slug: article.slug },
-      update: {
-        title: article.title,
-        source: article.source,
-        difficulty: article.difficulty,
-        estimatedMinutes: article.estimatedMinutes,
-        feynmanSummary: article.feynman_summary,
-        chineseTranslation: article.chinese_translation,
-      },
       create: {
-        slug: article.slug,
-        title: article.title,
-        source: article.source,
+        chineseTitle: article.chinese_title,
+        chineseTranslation: article.chinese_translation,
         difficulty: article.difficulty,
         estimatedMinutes: article.estimatedMinutes,
         feynmanSummary: article.feynman_summary,
-        chineseTranslation: article.chinese_translation,
+        growthVocabularyJson: article.growth_vocabulary,
+        highFrequencyPhrasesJson: article.high_frequency_phrases,
+        languageEvolutionJson: article.language_evolution,
+        listSummaryZh: article.list_summary_zh,
+        paragraphsJson: article.paragraphs,
+        slug: article.slug,
+        source: article.source,
+        title: article.title,
+        visibility: 'PUBLIC',
       },
+      update: {
+        chineseTitle: article.chinese_title,
+        chineseTranslation: article.chinese_translation,
+        difficulty: article.difficulty,
+        estimatedMinutes: article.estimatedMinutes,
+        feynmanSummary: article.feynman_summary,
+        growthVocabularyJson: article.growth_vocabulary,
+        highFrequencyPhrasesJson: article.high_frequency_phrases,
+        languageEvolutionJson: article.language_evolution,
+        listSummaryZh: article.list_summary_zh,
+        paragraphsJson: article.paragraphs,
+        source: article.source,
+        title: article.title,
+        visibility: 'PUBLIC',
+      },
+      where: { slug: article.slug },
     });
   }
 }
