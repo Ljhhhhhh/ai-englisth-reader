@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? 'http://127.0.0.1:3000';
 const webServerCommand =
   process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ??
-  'pnpm exec next dev --hostname 127.0.0.1 --port 3000';
+  'FILE_BACKED_ARTICLES=1 pnpm exec next dev --hostname 127.0.0.1 --port 3000';
 const shouldStartWebServer =
   process.env.PLAYWRIGHT_SKIP_WEB_SERVER !== '1' &&
   !process.env.PLAYWRIGHT_BASE_URL;

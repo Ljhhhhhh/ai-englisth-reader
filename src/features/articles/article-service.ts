@@ -5,7 +5,10 @@ import {
 import type { Article } from '@/lib/content/article-schema';
 
 function shouldUseFileBackedArticles() {
-  return process.env.NODE_ENV === 'test';
+  return (
+    process.env.NODE_ENV === 'test' ||
+    process.env.FILE_BACKED_ARTICLES === '1'
+  );
 }
 
 async function loadArticleRepository() {

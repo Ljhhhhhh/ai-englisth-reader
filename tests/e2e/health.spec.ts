@@ -6,11 +6,21 @@ test('health endpoint returns the readiness payload', async ({ request }) => {
 
   expect([200, 503]).toContain(response.status());
   expect(body).toMatchObject({
+    checkedAt: expect.any(String),
+    status: expect.stringMatching(/ok|error/),
     checks: {
-      database: expect.stringMatching(/ok|error/),
+      database: {
+        ok: expect.any(Boolean),
+        detail: expect.any(String),
+      },
+      environment: {
+        ok: expect.any(Boolean),
+        missing: expect.any(Array),
+      },
+      llm: {
+        configured: expect.any(Boolean),
+        detail: expect.any(String),
+      },
     },
-    ok: expect.any(Boolean),
-    service: 'ai-english-read',
-    timestamp: expect.any(String),
   });
 });
