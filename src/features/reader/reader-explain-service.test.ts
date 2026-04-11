@@ -183,6 +183,9 @@ describe('reader-explain-service', () => {
     expect(systemPrompt?.content).toContain(
       '如果提供 supplementalReference，它只用于辅助校准；若与 currentSentence 冲突，一律以 currentSentence 为准。',
     );
+    expect(systemPrompt?.content).toContain(
+      '输出语言：meaning、contextMeaning 必须以自然、简洁、对中文母语者友好的中文为主；explanation、memoryHook 默认也用中文，但在更利于理解或记忆时可以少量中英结合。不要把讲解主体写成整段英文。只有 usageExample 保持英文例句，lemma 保持英文原形。',
+    );
     expect(humanPrompt?.content).toContain(
       'currentSentence: Guided by clear support, the reader can follow the main idea with less panic and more focus.',
     );
@@ -235,6 +238,9 @@ describe('reader-explain-service', () => {
 
     expect(systemPrompt?.content).toContain(
       '你是中文母语者的英文阅读讲解助手。只解释当前句子里的目标英文短语，不扩展整段，不闲聊。',
+    );
+    expect(systemPrompt?.content).toContain(
+      '输出语言：meaning、contextMeaning、phraseType 必须以自然、简洁、对中文母语者友好的中文为主；explanation 默认也用中文，但在更利于理解或记忆时可以少量中英结合。不要把讲解主体写成整段英文。只有 usageExample 保持英文例句。',
     );
     expect(humanPrompt?.content).toContain(
       'currentSentence: The Dash prototype demonstrates systemic design: layered contextual data improves query accuracy, databases replace files for storage, and tool permissions are configuration-based rather than prompt-dependent.',

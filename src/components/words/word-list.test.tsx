@@ -25,6 +25,7 @@ describe('WordList', () => {
           articleSlug: 'welcome-to-deep-reading',
           articleTitle: '更从容地读英文',
           chineseMeaning: '吸收',
+          contextMeaning: '这里指读者整个人沉进阅读状态。',
           deviceId: 'dev-1',
           lemma: 'absorb',
           memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
@@ -51,7 +52,7 @@ describe('WordList', () => {
     });
   });
 
-  it('shows the three saved-word sections in the word bank', async () => {
+  it('keeps memory fields primary and shows context meaning as a lightweight cue', async () => {
     const store = new Map<string, string>();
 
     Object.defineProperty(window, 'localStorage', {
@@ -74,6 +75,7 @@ describe('WordList', () => {
           articleSlug: 'welcome-to-deep-reading',
           articleTitle: '更从容地读英文',
           chineseMeaning: '吸收',
+          contextMeaning: '这里指读者整个人沉进阅读状态。',
           deviceId: 'dev-1',
           lemma: 'absorb',
           memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
@@ -102,6 +104,9 @@ describe('WordList', () => {
         'The team became absorbed in solving the final bug before launch.',
       ),
     ).toBeInTheDocument();
+    expect(screen.getByText('原文里怎么理解')).toBeInTheDocument();
+    expect(screen.getByText('这里指读者整个人沉进阅读状态。')).toBeInTheDocument();
+    expect(screen.getByText(/^原句$/i)).toBeInTheDocument();
   });
 
   it('uses the provided back action in the empty state', async () => {

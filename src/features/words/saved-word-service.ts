@@ -6,6 +6,7 @@ export type SavedWordRecord = {
   articleSlug: string;
   articleTitle: string;
   chineseMeaning: string;
+  contextMeaning?: string;
   deviceId: string;
   lemma: string;
   memoryHook: string;
@@ -26,7 +27,7 @@ type SaveWordInput = Omit<SavedWordRecord, 'savedAt'>;
 
 type LegacySavedWordRecord = Omit<
   SavedWordRecord,
-  'chineseMeaning' | 'memoryHook' | 'usageExample'
+  'chineseMeaning' | 'contextMeaning' | 'memoryHook' | 'usageExample'
 > & {
   meaning?: string;
   usageNote?: string;
@@ -34,6 +35,7 @@ type LegacySavedWordRecord = Omit<
 
 type SavedWordFields = {
   chineseMeaning?: string;
+  contextMeaning?: string;
   memoryHook?: string;
   usageExample?: string;
   usageNote?: string;
@@ -88,6 +90,7 @@ function normalizeSavedWordFields<T extends SavedWordFields>(record: T) {
   return {
     ...record,
     chineseMeaning: record.chineseMeaning ?? fallbackMeaning,
+    contextMeaning: record.contextMeaning,
     memoryHook: record.memoryHook ?? fallbackMeaning,
     usageExample: record.usageExample ?? record.usageNote ?? fallbackMeaning,
   };

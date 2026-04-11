@@ -70,6 +70,50 @@ function sectionCardStyle(background: string) {
   } as const;
 }
 
+function renderSection(title: string, body: string, background: string) {
+  return (
+    <div style={sectionCardStyle(background)}>
+      <strong>{title}</strong>
+      <p
+        style={{
+          margin: 0,
+          color: 'var(--muted)',
+          lineHeight: 1.7,
+        }}
+      >
+        {body}
+      </p>
+    </div>
+  );
+}
+
+function renderAnchorNote(title: string, body: string) {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gap: 4,
+        padding: '12px 14px',
+        borderRadius: 16,
+        background: 'rgba(197, 106, 45, 0.08)',
+        border: '1px solid rgba(197, 106, 45, 0.12)',
+      }}
+    >
+      <strong style={{ fontSize: 12, letterSpacing: '0.04em' }}>{title}</strong>
+      <p
+        style={{
+          margin: 0,
+          color: 'var(--muted)',
+          lineHeight: 1.65,
+          fontSize: 14,
+        }}
+      >
+        {body}
+      </p>
+    </div>
+  );
+}
+
 export function ExplainPanelContent({
   onRetry,
   onToggleSave,
@@ -92,6 +136,8 @@ export function ExplainPanelContent({
     mode === 'word'
       ? uiCopy.reader.explainPanel.loadingWordSteps
       : uiCopy.reader.explainPanel.loadingPhraseSteps;
+  const isSuccess = state.status === 'success';
+  const memoryExampleTitle = uiCopy.reader.explainPanel.wordUsage;
 
   return (
     <div style={{ display: 'grid', gap: 14 }}>
@@ -123,7 +169,7 @@ export function ExplainPanelContent({
         >
           {getPanelSelectedText(state)}
         </strong>
-        {state.status === 'success' && state.data.lemma ? (
+        {isSuccess && state.data.lemma ? (
           <p style={{ margin: 0, color: 'var(--muted)' }}>{state.data.lemma}</p>
         ) : null}
       </div>
@@ -170,86 +216,52 @@ export function ExplainPanelContent({
         </>
       ) : null}
 
-      {state.status === 'success' ? (
+      {isSuccess ? (
         <>
-          <div style={sectionCardStyle('#fcf6ee')}>
-            <strong>
-              {mode === 'word'
-                ? uiCopy.reader.explainPanel.wordMeaning
-                : uiCopy.reader.explainPanel.phraseMeaning}
-            </strong>
-            <p
-              style={{
-                margin: 0,
-                color: 'var(--muted)',
-                lineHeight: 1.7,
-              }}
-            >
-              {state.data.meaning}
-            </p>
-          </div>
+          {renderSection(
+            mode === 'word'
+              ? uiCopy.reader.explainPanel.wordMeaning
+              : uiCopy.reader.explainPanel.phraseMeaning,
+            state.data.meaning,
+            '#fcf6ee',
+          )}
 
-          <div style={sectionCardStyle('#fffaf2')}>
-            <strong>{uiCopy.reader.explainPanel.contextMeaning}</strong>
-            <p
-              style={{
-                margin: 0,
-                color: 'var(--muted)',
-                lineHeight: 1.7,
-              }}
-            >
-              {state.data.contextMeaning}
-            </p>
-          </div>
+          {renderAnchorNote(
+            uiCopy.reader.explainPanel.contextMeaning,
+            state.data.contextMeaning,
+          )}
 
-          <div style={sectionCardStyle('#fff8ee')}>
-            <strong>
-              {mode === 'word'
-                ? uiCopy.reader.explainPanel.wordExplanation
-                : uiCopy.reader.explainPanel.phraseExplanation}
-            </strong>
-            <p
-              style={{
-                margin: 0,
-                color: 'var(--muted)',
-                lineHeight: 1.7,
-              }}
-            >
-              {state.data.explanation}
-            </p>
-          </div>
-
-          {mode === 'word' && state.data.memoryHook ? (
-            <div style={sectionCardStyle('#fff8ee')}>
-              <strong>{uiCopy.reader.explainPanel.wordMemory}</strong>
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--muted)',
-                  lineHeight: 1.7,
-                }}
-              >
-                {state.data.memoryType
+          {mode === 'word' && state.data.memoryHook
+            ? renderSection(
+                uiCopy.reader.explainPanel.wordMemory,
+                state.data.memoryType
                   ? `${state.data.memoryType} · ${state.data.memoryHook}`
-                  : state.data.memoryHook}
-              </p>
-            </div>
-          ) : null}
+                  : state.data.memoryHook,
+                '#fff8ee',
+              )
+            : null}
 
-          {mode === 'phrase' ? (
-            <div style={sectionCardStyle('#fff8ee')}>
-              <strong>{uiCopy.reader.explainPanel.sourceSentence}</strong>
-              <p
-                style={{
-                  margin: 0,
-                  color: 'var(--muted)',
-                  lineHeight: 1.7,
-                }}
-              >
-                {state.data.sourceSentence}
-              </p>
-            </div>
-          ) : null}
+          {state.data.usageExample
+            ? renderSection(
+                memoryExampleTitle,
+                state.data.usageExample,
+                '#fffaf2',
+              )
+            : mode === 'phrase'
+              ? renderSection(
+                  uiCopy.reader.explainPanel.sourceSentence,
+                  state.data.sourceSentence,
+                  '#fffaf2',
+                )
+              : null}
+
+          {renderSection(
+            mode === 'word'
+              ? uiCopy.reader.explainPanel.wordExplanation
+              : uiCopy.reader.explainPanel.phraseExplanation,
+            state.data.explanation,
+            '#fff8ee',
+          )}
 
           {saveEnabled ? (
             <div style={{ display: 'grid', gap: 10, paddingTop: 4 }}>

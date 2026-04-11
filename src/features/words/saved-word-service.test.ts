@@ -30,6 +30,7 @@ function createSavedWordInput() {
     articleSlug: 'welcome-to-deep-reading',
     articleTitle: '更从容地读英文',
     chineseMeaning: '吸收',
+    contextMeaning: '这里指读者整个人沉进阅读状态。',
     deviceId: 'dev-1',
     lemma: 'absorb',
     memoryHook: '像海绵吸水一样记住 absorb。',
@@ -90,7 +91,7 @@ describe('saved-word-service', () => {
     });
   });
 
-  it('stores the explanation, memory hook, and usage example needed by the word bank', () => {
+  it('stores the memory fields and context cue needed by the word bank', () => {
     const storage = createMemoryStorage();
 
     saveWord(
@@ -105,6 +106,7 @@ describe('saved-word-service', () => {
 
     expect(listSavedWords('dev-1', storage)[0]).toMatchObject({
       chineseMeaning: '吸收',
+      contextMeaning: '这里指读者整个人沉进阅读状态。',
       memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
       usageExample:
         'The team became absorbed in solving the final bug before launch.',

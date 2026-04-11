@@ -130,6 +130,7 @@ describe('ReaderShell', () => {
 
       expect(record).toMatchObject({
         chineseMeaning: expect.any(String),
+        contextMeaning: article.growth_vocabulary[0].context_meaning,
         memoryHook: expect.any(String),
         usageExample: 'A guided introduction helps readers enter the topic smoothly.',
       });
@@ -180,6 +181,7 @@ describe('ReaderShell', () => {
 
       expect(record).toMatchObject({
         chineseMeaning: '清晰的',
+        contextMeaning: '这里指明确、能帮读者跟住文章的。',
         lemma: 'clear',
         memoryHook: '把 clear support 记成“清楚的支撑”。',
         surface: 'clear',

@@ -20,6 +20,31 @@ type WordListProps = {
   backLabel: string;
 };
 
+function renderSecondaryAnchor(label: string, body: string) {
+  return (
+    <div style={{ display: 'grid', gap: 3 }}>
+      <strong
+        style={{
+          fontSize: 12,
+          color: 'var(--muted)',
+          letterSpacing: '0.03em',
+        }}
+      >
+        {label}
+      </strong>
+      <div
+        style={{
+          color: 'var(--muted)',
+          lineHeight: 1.65,
+          fontSize: 14,
+        }}
+      >
+        {body}
+      </div>
+    </div>
+  );
+}
+
 export function WordList({
   backHref = '/',
   backLabel = uiCopy.words.actions.backHome,
@@ -100,6 +125,7 @@ export function WordList({
           word.lemma.toLowerCase().includes(keyword) ||
           word.surface.toLowerCase().includes(keyword) ||
           word.chineseMeaning.toLowerCase().includes(keyword) ||
+          word.contextMeaning?.toLowerCase().includes(keyword) ||
           word.memoryHook.toLowerCase().includes(keyword) ||
           word.usageExample.toLowerCase().includes(keyword);
 
@@ -396,29 +422,22 @@ export function WordList({
                   </div>
                   <div
                     style={{
-                      display: 'inline-flex',
-                      width: 'fit-content',
-                      alignItems: 'center',
-                      padding: '6px 10px',
-                      borderRadius: 999,
-                      background: 'rgba(197, 106, 45, 0.1)',
-                      color: 'var(--editorial-ink)',
-                      fontSize: 12,
-                      fontWeight: 700,
-                      letterSpacing: '0.04em',
+                      display: 'grid',
+                      gap: 10,
+                      padding: '12px 14px',
+                      borderRadius: 16,
+                      background: 'rgba(197, 106, 45, 0.06)',
+                      border: '1px solid rgba(197, 106, 45, 0.1)',
                     }}
                   >
-                    原句
+                    {word.contextMeaning
+                      ? renderSecondaryAnchor(
+                          uiCopy.words.labels.contextMeaning,
+                          word.contextMeaning,
+                        )
+                      : null}
+                    {renderSecondaryAnchor('原句', word.sourceSentence)}
                   </div>
-                  <p
-                    style={{
-                      margin: 0,
-                      color: 'var(--muted)',
-                      lineHeight: 1.8,
-                    }}
-                  >
-                    {word.sourceSentence}
-                  </p>
                   <div
                     style={{
                       display: 'flex',

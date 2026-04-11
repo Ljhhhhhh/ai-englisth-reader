@@ -219,6 +219,9 @@ export const uiCopy = {
       searchPlaceholder: '按单词原形或保存内容搜索',
       retry: '重新加载生词页',
     },
+    labels: {
+      contextMeaning: '原文里怎么理解',
+    },
   },
   continueReading: {
     button: '继续阅读',
