@@ -13,6 +13,7 @@ import { loadPrompt } from './load-prompt';
 import { type PromptOutput, promptOutputSchema } from './prompt-output-schema';
 
 type GenerateArticleInput = {
+  ownerId: string;
   source: string;
   text: string;
   titleHint: string;

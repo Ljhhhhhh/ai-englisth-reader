@@ -111,6 +111,7 @@ describe('POST /api/generate', () => {
       });
       expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
         content: 'raw content',
+        ownerId: 'user-1',
         title: 'Article Title',
       });
       expect(generationJobMocks.markGenerationJobDone).toHaveBeenCalledWith(
@@ -158,6 +159,11 @@ describe('POST /api/generate', () => {
       expect(generationContentMocks.extractContent).toHaveBeenCalledWith({
         type: 'file',
         file: expect.any(File),
+      });
+      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
+        content: 'raw content',
+        ownerId: 'user-1',
+        title: 'Article Title',
       });
     });
   });
