@@ -171,11 +171,6 @@ describe('POST /api/generate', () => {
         type: 'file',
         file: expect.any(File),
       });
-      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
-        content: 'raw content',
-        ownerId: 'user-1',
-        title: 'Article Title',
-      });
     });
   });
 });

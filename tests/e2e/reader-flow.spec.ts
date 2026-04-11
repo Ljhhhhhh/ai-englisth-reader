@@ -22,10 +22,10 @@ test.describe('desktop reader flow', () => {
     test.skip(testInfo.project.name === 'mobile-chrome', 'desktop-only reader flow suite');
   });
 
-  test('reader restores last stage for the same device without paragraph position', async ({
-    page,
-  }) => {
-    await page.goto('/reader/welcome-to-deep-reading');
+test('reader restores last stage for the same device without paragraph position', async ({
+  page,
+}) => {
+  await page.goto('/reader/welcome-to-deep-reading');
 
   await expect(page.getByRole('button', { name: /进入正文开始精读/i })).toBeVisible();
   await page.getByRole('button', { name: /进入正文开始精读/i }).click();
@@ -54,15 +54,34 @@ test.describe('desktop reader flow', () => {
     }
   }, 'welcome-to-deep-reading');
 
-    await page.reload();
+    if (!raw) {
+      return false;
+    }
 
-    await expect(page.getByText(/已回到上次读到的位置 · 正文/i)).toBeVisible();
-    await expect(page.getByText(/当前阶段：正文/i)).toBeVisible();
-  });
+    try {
+      const records = Object.values(JSON.parse(raw) as Record<
+        string,
+        { articleSlug: string; currentStage: string }
+      >);
 
-  test('reader can lookup and save a word without losing current reading stage', async ({
-    page,
-  }) => {
+      return records.some(
+        (record) =>
+          record.articleSlug === articleSlug && record.currentStage === 'read',
+      );
+    } catch {
+      return false;
+    }
+  }, 'welcome-to-deep-reading');
+
+  await page.reload();
+
+  await expect(page.getByText(/已回到上次读到的位置 · 正文/i)).toBeVisible();
+  await expect(page.getByText(/当前阶段：正文/i)).toBeVisible();
+});
+
+test('reader can lookup and save a word without losing current reading stage', async ({
+  page,
+}) => {
     await mockGuidedExplain(page);
     await page.goto('/reader/welcome-to-deep-reading');
 
