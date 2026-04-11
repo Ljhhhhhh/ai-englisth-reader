@@ -8,6 +8,7 @@ export type ExplainPanelSuccessData = {
   meaning: string;
   contextMeaning: string;
   explanation: string;
+  phraseType?: string;
   usageExample?: string;
   sourceSentence: string;
   lemma?: string;

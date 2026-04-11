@@ -12,14 +12,25 @@ import {
   lookupWordFromArticle,
 } from './word-lookup-service';
 
-const explainOutputSchema = z.object({
+const wordExplainOutputSchema = z.object({
   meaning: z.string().min(1),
   contextMeaning: z.string().min(1),
   explanation: z.string().min(1),
-  lemma: z.string().min(1).optional(),
-  memoryHook: z.string().min(1).optional(),
-  usageExample: z.string().min(1).optional(),
+  lemma: z.string().min(1),
+  memoryHook: z.string().min(1),
+  usageExample: z.string().min(1),
 });
+
+const phraseExplainOutputSchema = z.object({
+  meaning: z.string().min(1),
+  contextMeaning: z.string().min(1),
+  explanation: z.string().min(1),
+  phraseType: z.string().min(1).optional(),
+  usageExample: z.string().min(1),
+});
+
+type WordExplainOutput = z.infer<typeof wordExplainOutputSchema>;
+type PhraseExplainOutput = z.infer<typeof phraseExplainOutputSchema>;
 
 export type ReaderExplainResult = {
   mode: ReaderExplainMode;
@@ -29,6 +40,7 @@ export type ReaderExplainResult = {
   explanation: string;
   lemma?: string;
   memoryHook?: string;
+  phraseType?: string;
   sourceSentence: string;
   usageExample?: string;
 };
@@ -36,29 +48,23 @@ export type ReaderExplainResult = {
 function buildSystemPrompt(mode: ReaderExplainMode) {
   if (mode === 'word') {
     return [
-      '你是一个面向中文母语者的英文阅读讲解助手。',
-      '你只解释当前句子里的这个英文单词。',
-      '输出要短、准、贴合当前句子，不要扩展到整段，不要闲聊。',
-      'meaning 写这个词的中文解释。',
-      'contextMeaning 写它放进当前句子后的实际意思。',
-      'explanation 写一句简短提醒，可以是辨析、误区或理解抓手。',
-      'lemma 写这个词更适合保存到生词本的原形；拿不准时就沿用当前词形。',
-      'memoryHook 写一句短助记。',
-      'usageExample 写一个常用场景英文例句，并确保包含这个词。',
+      '你是中文母语者的英文阅读讲解助手。只解释当前句子里的目标英文单词，不扩展整段，不闲聊。',
+      '输入参数：currentSentence、targetWord、supplementalReference（可选）。',
+      '要求：只结合 currentSentence 解释 targetWord；不翻译整句；只保留当前语境最合适的意思；contextMeaning 写句中实际义，不要只重复字典义；explanation 只写一句简短提醒；lemma 写适合记生词本的原形，不确定就保留原词形；memoryHook 写一句短助记；usageExample 必须包含 targetWord。',
+      '如果提供 supplementalReference，它只用于辅助校准；若与 currentSentence 冲突，一律以 currentSentence 为准。不要直接照抄 supplementalReference，而要按当前句子重新组织表达。',
+      '只输出 JSON：{"meaning":"","contextMeaning":"","explanation":"","lemma":"","memoryHook":"","usageExample":""}',
     ].join('\n');
   }
 
   return [
-    '你是一个面向中文母语者的英文阅读讲解助手。',
-    '你只解释当前句子里的这个英文短语。',
-    '输出要简洁但比单词模式稍完整，不要扩展到整段，不要闲聊。',
-    'meaning 写这个短语的整体翻译。',
-    'contextMeaning 写它在当前句子里的实际含义。',
-    'explanation 写简短拆解，说明为什么这里这样理解。',
+    '你是中文母语者的英文阅读讲解助手。只解释当前句子里的目标英文短语，不扩展整段，不闲聊。',
+    '输入参数：currentSentence、targetPhrase。',
+    '要求：只结合 currentSentence 解释 targetPhrase；优先按整体理解，不要机械逐词翻译；不翻译整句；只保留当前语境最合适的意思；explanation 简要说明为什么这里这样理解；phraseType 可选：动词短语 / 固定搭配 / 介词短语 / 习惯表达 / 短语；usageExample 必须包含 targetPhrase。',
+    '只输出 JSON：{"meaning":"","contextMeaning":"","explanation":"","phraseType":"","usageExample":""}',
   ].join('\n');
 }
 
-async function requestExplanation(input: {
+function buildHumanMessage(input: {
   mode: ReaderExplainMode;
   selectedText: string;
   sentenceText: string;
@@ -67,6 +73,57 @@ async function requestExplanation(input: {
     contextMeaning: string;
   };
 }) {
+  const baseLines =
+    input.mode === 'word'
+      ? [
+          `currentSentence: ${input.sentenceText}`,
+          `targetWord: ${input.selectedText}`,
+        ]
+      : [
+          `currentSentence: ${input.sentenceText}`,
+          `targetPhrase: ${input.selectedText}`,
+        ];
+
+  if (!input.wordReference) {
+    return baseLines.join('\n');
+  }
+
+  return [
+    ...baseLines,
+    'supplementalReference:',
+    `referenceMeaning: ${input.wordReference.chineseMeaning}`,
+    `referenceContextMeaning: ${input.wordReference.contextMeaning}`,
+    'referencePolicy: 仅作参考；若与 currentSentence 冲突，以 currentSentence 为准。',
+  ].join('\n');
+}
+
+async function requestExplanation(input: {
+  mode: 'word';
+  selectedText: string;
+  sentenceText: string;
+  wordReference?: {
+    chineseMeaning: string;
+    contextMeaning: string;
+  };
+}): Promise<WordExplainOutput>;
+async function requestExplanation(input: {
+  mode: 'phrase';
+  selectedText: string;
+  sentenceText: string;
+  wordReference?: {
+    chineseMeaning: string;
+    contextMeaning: string;
+  };
+}): Promise<PhraseExplainOutput>;
+async function requestExplanation(input: {
+  mode: ReaderExplainMode;
+  selectedText: string;
+  sentenceText: string;
+  wordReference?: {
+    chineseMeaning: string;
+    contextMeaning: string;
+  };
+}): Promise<WordExplainOutput | PhraseExplainOutput> {
   if (!env.LLM_API_KEY) {
     throw new Error('LLM_API_KEY is required');
   }
@@ -78,17 +135,13 @@ async function requestExplanation(input: {
     },
     model: env.LLM_MODEL,
     temperature: input.mode === 'word' ? 0.2 : 0.3,
-  }).withStructuredOutput(explainOutputSchema);
-
-  const referenceBlock = input.wordReference
-    ? `\n站内参考释义：\n- 中文解释：${input.wordReference.chineseMeaning}\n- 语境意思：${input.wordReference.contextMeaning}\n`
-    : '';
+  }).withStructuredOutput(
+    input.mode === 'word' ? wordExplainOutputSchema : phraseExplainOutputSchema,
+  );
 
   return llm.invoke([
     new SystemMessage(buildSystemPrompt(input.mode)),
-    new HumanMessage(
-      `模式：${input.mode}\n当前句子：${input.sentenceText}\n选中内容：${input.selectedText}${referenceBlock}`,
-    ),
+    new HumanMessage(buildHumanMessage(input)),
   ]);
 }
 
@@ -135,21 +188,40 @@ export async function explainReaderSelection(input: {
         })()
       : undefined;
 
+  if (input.mode === 'word') {
+    const response = await requestExplanation({
+      mode: 'word',
+      selectedText: validation.selectedText,
+      sentenceText: sentence.text,
+      wordReference,
+    });
+
+    return {
+      mode: 'word',
+      selectedText: validation.selectedText,
+      meaning: response.meaning,
+      contextMeaning: response.contextMeaning,
+      explanation: response.explanation,
+      lemma: response.lemma,
+      memoryHook: response.memoryHook,
+      sourceSentence: sentence.text,
+      usageExample: response.usageExample,
+    };
+  }
+
   const response = await requestExplanation({
-    mode: input.mode,
+    mode: 'phrase',
     selectedText: validation.selectedText,
     sentenceText: sentence.text,
-    wordReference,
   });
 
   return {
-    mode: input.mode,
+    mode: 'phrase',
     selectedText: validation.selectedText,
     meaning: response.meaning,
     contextMeaning: response.contextMeaning,
     explanation: response.explanation,
-    lemma: response.lemma,
-    memoryHook: response.memoryHook,
+    phraseType: response.phraseType,
     sourceSentence: sentence.text,
     usageExample: response.usageExample,
   };
