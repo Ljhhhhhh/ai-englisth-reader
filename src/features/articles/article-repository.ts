@@ -30,6 +30,8 @@ export function mapArticleToPersistenceInput(
     visibility?: Prisma.ArticleCreateInput['visibility'];
   } = {},
 ) {
+  const { ownerId = null, visibility = 'PUBLIC' } = options;
+
   return {
     chineseTitle: article.chinese_title,
     chineseTranslation: article.chinese_translation,
@@ -42,6 +44,7 @@ export function mapArticleToPersistenceInput(
     languageEvolutionJson:
       article.language_evolution as Prisma.InputJsonValue,
     listSummaryZh: article.list_summary_zh,
+    ownerId,
     paragraphsJson: article.paragraphs as Prisma.InputJsonValue,
     slug: article.slug,
     source: article.source,
@@ -75,6 +78,37 @@ export async function loadPersistedArticle(
 ) {
   const record = await db.article.findUnique({
     where: {
+      visibility: 'PUBLIC',
+      slug,
+    },
+  });
+
+  if (!record) {
+    throw new Error(`Article not found: ${slug}`);
+  }
+
+  return mapArticleRecordToArticle(record);
+}
+
+export async function loadPersistedArticleForUser(
+  slug: string,
+  userId: string | null,
+) {
+  const record = await db.article.findFirst({
+    where: {
+      OR: [
+        {
+          visibility: 'PUBLIC',
+        },
+        ...(userId
+          ? [
+              {
+                ownerId: userId,
+                visibility: 'PRIVATE' as const,
+              },
+            ]
+          : []),
+      ],
       slug,
     },
   });
