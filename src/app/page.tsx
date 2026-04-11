@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { EmailLoginCard } from '@/components/auth/email-login-card';
 import { EmptyState } from '@/components/system/empty-state';
 import { ErrorState } from '@/components/system/error-state';
 import { ArticleCard } from '@/components/home/article-card';
@@ -122,6 +123,8 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </Link>
           </div>
         </div>
+
+        <EmailLoginCard />
 
         <ContinueReading
           articles={articles.map((article) => {
