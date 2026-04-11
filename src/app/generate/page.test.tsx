@@ -62,7 +62,7 @@ describe('GeneratePage', () => {
     await screen.findByText(/reader@example.com/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
 
-    fireEvent.change(screen.getByLabelText(/将稿件放入工作台/i), {
+    fireEvent.change(screen.getByLabelText(/将稿件放入工作台/i, { selector: 'input' }), {
       target: {
         files: [
           new File(['hello'], 'desk-notes.docx', {

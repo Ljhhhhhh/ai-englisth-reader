@@ -13,7 +13,7 @@ export async function GET(_request: Request, { params }: JobRouteProps) {
   }
 
   const { jobId } = await params;
-  const job = await getGenerationJob(jobId);
+  const job = await getGenerationJobForUser(jobId, user.id);
 
   if (!job || job.userId !== user.id) {
     return Response.json({ error: 'Job not found' }, { status: 404 });
