@@ -35,15 +35,15 @@ export function WordPanelDesktop({
         zIndex: 20,
         display: 'flex',
         flexDirection: 'column',
-        gap: 16,
-        padding: 20,
-        borderRadius: 24,
-        border: '1px solid var(--border)',
-        background: 'var(--surface)',
-        width: 'min(420px, calc(100vw - 40px))',
+        gap: 18,
+        padding: 22,
+        borderRadius: 28,
+        border: '1px solid rgba(214, 183, 154, 0.72)',
+        background: '#fffdf8',
+        width: 'min(448px, calc(100vw - 40px))',
         maxHeight: 'min(80vh, calc(100vh - 40px))',
         overflow: 'hidden',
-        boxShadow: '0 18px 40px rgba(104, 71, 33, 0.08)',
+        boxShadow: '0 24px 48px rgba(104, 71, 33, 0.12)',
       }}
     >
       <div
@@ -68,7 +68,7 @@ export function WordPanelDesktop({
           {uiCopy.common.close}
         </button>
       </div>
-      <div style={{ overflowY: 'auto', paddingRight: 4 }}>
+      <div style={{ overflowY: 'auto', paddingRight: 6, paddingBottom: 4 }}>
         <ExplainPanelContent
           onRetry={onRetry}
           onToggleSave={onToggleSave}

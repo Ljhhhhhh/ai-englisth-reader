@@ -5,13 +5,15 @@ const SAVED_WORDS_KEY = 'ai-english-read-saved-words';
 export type SavedWordRecord = {
   articleSlug: string;
   articleTitle: string;
+  chineseMeaning: string;
   deviceId: string;
   lemma: string;
-  meaning: string;
+  memoryHook: string;
   savedAt: number;
   sentenceId: string;
   sourceSentence: string;
   surface: string;
+  usageExample: string;
 };
 
 export type SavedWordsByArticleGroup = {
@@ -21,6 +23,22 @@ export type SavedWordsByArticleGroup = {
 };
 
 type SaveWordInput = Omit<SavedWordRecord, 'savedAt'>;
+
+type LegacySavedWordRecord = Omit<
+  SavedWordRecord,
+  'chineseMeaning' | 'memoryHook' | 'usageExample'
+> & {
+  meaning?: string;
+  usageNote?: string;
+};
+
+type SavedWordFields = {
+  chineseMeaning?: string;
+  memoryHook?: string;
+  usageExample?: string;
+  usageNote?: string;
+  meaning?: string;
+};
 
 function normalizeWordKey(value: string) {
   return value.trim().toLowerCase();
@@ -41,7 +59,17 @@ function readSavedWordMap(storage: StorageLike) {
   }
 
   try {
-    return JSON.parse(raw) as Record<string, SavedWordRecord>;
+    const savedWordMap = JSON.parse(raw) as Record<
+      string,
+      SavedWordRecord | LegacySavedWordRecord
+    >;
+
+    return Object.fromEntries(
+      Object.entries(savedWordMap).map(([key, record]) => [
+        key,
+        normalizeSavedWordFields(record),
+      ]),
+    );
   } catch {
     return {} as Record<string, SavedWordRecord>;
   }
@@ -54,6 +82,17 @@ function writeSavedWordMap(
   storage.setItem(SAVED_WORDS_KEY, JSON.stringify(savedWordMap));
 }
 
+function normalizeSavedWordFields<T extends SavedWordFields>(record: T) {
+  const fallbackMeaning = record.meaning ?? '';
+
+  return {
+    ...record,
+    chineseMeaning: record.chineseMeaning ?? fallbackMeaning,
+    memoryHook: record.memoryHook ?? fallbackMeaning,
+    usageExample: record.usageExample ?? record.usageNote ?? fallbackMeaning,
+  };
+}
+
 export function saveWord(input: SaveWordInput, storage: StorageLike) {
   const savedWordMap = readSavedWordMap(storage);
   const recordKey = createSavedWordKey(
@@ -64,7 +103,7 @@ export function saveWord(input: SaveWordInput, storage: StorageLike) {
   const existing = savedWordMap[recordKey];
 
   const nextRecord: SavedWordRecord = {
-    ...input,
+    ...normalizeSavedWordFields(input),
     savedAt: existing?.savedAt ?? Date.now(),
   };
 

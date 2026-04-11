@@ -10,6 +10,7 @@ type IntroPanelProps = {
   rememberedPhrases?: string[];
   rememberedWords?: string[];
   savedWords?: string[];
+  savingWords?: string[];
 };
 
 function normalizeTerm(value: string) {
@@ -38,10 +39,12 @@ export function IntroPanel({
   rememberedPhrases = [],
   rememberedWords = [],
   savedWords = [],
+  savingWords = [],
 }: IntroPanelProps) {
   const rememberedWordSet = new Set(rememberedWords.map(normalizeTerm));
   const rememberedPhraseSet = new Set(rememberedPhrases.map(normalizeTerm));
   const savedWordSet = new Set(savedWords.map(normalizeTerm));
+  const savingWordSet = new Set(savingWords.map(normalizeTerm));
 
   return (
     <section
@@ -75,6 +78,7 @@ export function IntroPanel({
               const normalizedWord = normalizeTerm(word.word);
               const isRemembered = rememberedWordSet.has(normalizedWord);
               const isSaved = savedWordSet.has(normalizedWord);
+              const isSaving = savingWordSet.has(normalizedWord);
 
               return (
                 <div
@@ -122,9 +126,10 @@ export function IntroPanel({
                       <button
                         type="button"
                         onClick={() => onSaveWord(word.word)}
+                        disabled={isSaving}
                         style={actionButtonStyle('var(--accent)')}
                       >
-                        {uiCopy.reader.explainPanel.readd}
+                        {isSaving ? uiCopy.reader.explainPanel.saving : uiCopy.reader.explainPanel.readd}
                       </button>
                     ) : isSaved ? (
                       <button
@@ -138,9 +143,10 @@ export function IntroPanel({
                       <button
                         type="button"
                         onClick={() => onSaveWord(word.word)}
-                        style={actionButtonStyle('var(--accent)')}
+                        disabled={isSaving}
+                        style={actionButtonStyle('var(--accent)', isSaving)}
                       >
-                        {uiCopy.reader.explainPanel.save}
+                        {isSaving ? uiCopy.reader.explainPanel.saving : uiCopy.reader.explainPanel.save}
                       </button>
                     )}
 

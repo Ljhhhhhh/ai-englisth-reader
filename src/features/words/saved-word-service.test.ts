@@ -1,6 +1,7 @@
 import {
   countSavedWords,
   isWordSaved,
+  listSavedWords,
   listSavedWordsByArticle,
   saveWord,
   unsaveWord,
@@ -24,38 +25,27 @@ function createMemoryStorage() {
   };
 }
 
+function createSavedWordInput() {
+  return {
+    articleSlug: 'welcome-to-deep-reading',
+    articleTitle: '更从容地读英文',
+    chineseMeaning: '吸收',
+    deviceId: 'dev-1',
+    lemma: 'absorb',
+    memoryHook: '像海绵吸水一样记住 absorb。',
+    sentenceId: 's3',
+    sourceSentence: 'When the reader feels absorbed instead of interrupted.',
+    surface: 'absorbed',
+    usageExample: 'The team became absorbed in solving the final bug before launch.',
+  };
+}
+
 describe('saved-word-service', () => {
   it('does not create dirty duplicates when saving the same word twice in one article', () => {
     const storage = createMemoryStorage();
 
-    saveWord(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
-      },
-      storage,
-    );
-    saveWord(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
-      },
-      storage,
-    );
+    saveWord(createSavedWordInput(), storage);
+    saveWord(createSavedWordInput(), storage);
 
     expect(countSavedWords('dev-1', storage)).toBe(1);
     expect(
@@ -73,20 +63,7 @@ describe('saved-word-service', () => {
   it('removes a saved word cleanly', () => {
     const storage = createMemoryStorage();
 
-    saveWord(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
-      },
-      storage,
-    );
+    saveWord(createSavedWordInput(), storage);
 
     expect(
       unsaveWord(
@@ -104,20 +81,7 @@ describe('saved-word-service', () => {
   it('shows saved words grouped by source article', () => {
     const storage = createMemoryStorage();
 
-    saveWord(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
-      },
-      storage,
-    );
+    saveWord(createSavedWordInput(), storage);
 
     const groups = listSavedWordsByArticle('dev-1', storage);
     expect(groups[0]).toMatchObject({
@@ -126,23 +90,59 @@ describe('saved-word-service', () => {
     });
   });
 
-  it('moves a saved word out of the review queue once it is remembered', () => {
+  it('stores the explanation, memory hook, and usage example needed by the word bank', () => {
     const storage = createMemoryStorage();
 
     saveWord(
       {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
+        ...createSavedWordInput(),
+        memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
+        usageExample:
+          'The team became absorbed in solving the final bug before launch.',
       },
       storage,
     );
+
+    expect(listSavedWords('dev-1', storage)[0]).toMatchObject({
+      chineseMeaning: '吸收',
+      memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
+      usageExample:
+        'The team became absorbed in solving the final bug before launch.',
+    });
+  });
+
+  it('maps legacy meaning-only records to the new word-bank fields', () => {
+    const storage = createMemoryStorage();
+
+    storage.setItem(
+      'ai-english-read-saved-words',
+      JSON.stringify({
+        'dev-1:welcome-to-deep-reading:absorb': {
+          articleSlug: 'welcome-to-deep-reading',
+          articleTitle: '更从容地读英文',
+          deviceId: 'dev-1',
+          lemma: 'absorb',
+          meaning: '吸收',
+          savedAt: 1,
+          sentenceId: 's3',
+          sourceSentence:
+            'When the reader feels absorbed instead of interrupted.',
+          surface: 'absorbed',
+        },
+      }),
+    );
+
+    expect(listSavedWords('dev-1', storage)[0]).toMatchObject({
+      chineseMeaning: '吸收',
+      memoryHook: '吸收',
+      usageExample: '吸收',
+    });
+  });
+
+  it('moves a saved word out of the review queue once it is remembered', () => {
+    const storage = createMemoryStorage();
+
+    saveWord(createSavedWordInput(), storage);
 
     const remembered = rememberItem(
       {
@@ -200,20 +200,7 @@ describe('saved-word-service', () => {
       storage,
     );
 
-    saveWord(
-      {
-        articleSlug: 'welcome-to-deep-reading',
-        articleTitle: '更从容地读英文',
-        deviceId: 'dev-1',
-        lemma: 'absorb',
-        meaning: '吸收',
-        sentenceId: 's3',
-        sourceSentence:
-          'When the reader feels absorbed instead of interrupted.',
-        surface: 'absorbed',
-      },
-      storage,
-    );
+    saveWord(createSavedWordInput(), storage);
 
     expect(countSavedWords('dev-1', storage)).toBe(1);
     expect(

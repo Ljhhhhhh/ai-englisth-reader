@@ -152,6 +152,26 @@ describe('ArticleBody', () => {
     expect(screen.queryByText('clear support')).not.toBeInTheDocument();
   });
 
+  it('clears the current selection when clicking non-interactive reading area', async () => {
+    const article = await createReaderArticle();
+
+    render(
+      <ArticleBody
+        article={article}
+        lookupableWords={new Set(['guided', 'panic'])}
+        onCompleteReading={() => {}}
+        onExplainRequest={() => {}}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'clear' }));
+    expect(screen.getByLabelText(/正文讲解操作/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText(/点词即查；再点相邻词可扩成短语/i));
+
+    expect(screen.queryByLabelText(/正文讲解操作/i)).not.toBeInTheDocument();
+  });
+
   it('stops offering further expansion once the selection reaches six words', async () => {
     const article = await createReaderArticle();
 

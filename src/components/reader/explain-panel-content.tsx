@@ -8,6 +8,7 @@ export type ExplainPanelSuccessData = {
   meaning: string;
   contextMeaning: string;
   explanation: string;
+  usageExample?: string;
   sourceSentence: string;
   lemma?: string;
   memoryHook?: string;
@@ -57,6 +58,17 @@ function getPanelTitle(mode: ReaderExplainMode) {
     : uiCopy.reader.explainPanel.phraseTitle;
 }
 
+function sectionCardStyle(background: string) {
+  return {
+    display: 'grid',
+    gap: 8,
+    padding: 18,
+    borderRadius: 20,
+    background,
+    border: '1px solid rgba(197, 106, 45, 0.10)',
+  } as const;
+}
+
 export function ExplainPanelContent({
   onRetry,
   onToggleSave,
@@ -81,12 +93,35 @@ export function ExplainPanelContent({
       : uiCopy.reader.explainPanel.loadingPhraseSteps;
 
   return (
-    <>
-      <div style={{ display: 'grid', gap: 6 }}>
-        <p style={{ margin: 0, color: 'var(--accent)', fontWeight: 600 }}>
+    <div style={{ display: 'grid', gap: 14 }}>
+      <div
+        style={{
+          display: 'grid',
+          gap: 8,
+          paddingBottom: 14,
+          borderBottom: '1px solid rgba(214, 183, 154, 0.55)',
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            color: 'var(--accent)',
+            fontWeight: 700,
+            fontSize: 12,
+            letterSpacing: '0.08em',
+          }}
+        >
           {getPanelTitle(mode)}
         </p>
-        <strong style={{ fontSize: 26 }}>{getPanelSelectedText(state)}</strong>
+        <strong
+          style={{
+            fontSize: 26,
+            lineHeight: 1.2,
+            overflowWrap: 'anywhere',
+          }}
+        >
+          {getPanelSelectedText(state)}
+        </strong>
         {state.status === 'success' && state.data.lemma ? (
           <p style={{ margin: 0, color: 'var(--muted)' }}>{state.data.lemma}</p>
         ) : null}
@@ -103,9 +138,15 @@ export function ExplainPanelContent({
 
       {state.status === 'error' ? (
         <>
-          <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
+          <div style={sectionCardStyle('#fff8ee')}>
             <strong>{uiCopy.reader.explainPanel.errorTitle}</strong>
-            <p style={{ marginBottom: 0, color: '#9a3412', lineHeight: 1.7 }}>
+            <p
+              style={{
+                margin: 0,
+                color: '#9a3412',
+                lineHeight: 1.7,
+              }}
+            >
               {state.message}
             </p>
           </div>
@@ -120,6 +161,7 @@ export function ExplainPanelContent({
               padding: '14px 20px',
               fontWeight: 700,
               cursor: 'pointer',
+              width: '100%',
             }}
           >
             {uiCopy.reader.explainPanel.retry}
@@ -129,7 +171,7 @@ export function ExplainPanelContent({
 
       {state.status === 'success' ? (
         <>
-          <div style={{ padding: 16, borderRadius: 18, background: '#fcf6ee' }}>
+          <div style={sectionCardStyle('#fcf6ee')}>
             <strong>
               {mode === 'word'
                 ? uiCopy.reader.explainPanel.wordMeaning
@@ -137,7 +179,7 @@ export function ExplainPanelContent({
             </strong>
             <p
               style={{
-                marginBottom: 0,
+                margin: 0,
                 color: 'var(--muted)',
                 lineHeight: 1.7,
               }}
@@ -146,11 +188,11 @@ export function ExplainPanelContent({
             </p>
           </div>
 
-          <div style={{ padding: 16, borderRadius: 18, background: '#fffaf2' }}>
+          <div style={sectionCardStyle('#fffaf2')}>
             <strong>{uiCopy.reader.explainPanel.contextMeaning}</strong>
             <p
               style={{
-                marginBottom: 0,
+                margin: 0,
                 color: 'var(--muted)',
                 lineHeight: 1.7,
               }}
@@ -159,7 +201,7 @@ export function ExplainPanelContent({
             </p>
           </div>
 
-          <div style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}>
+          <div style={sectionCardStyle('#fff8ee')}>
             <strong>
               {mode === 'word'
                 ? uiCopy.reader.explainPanel.wordExplanation
@@ -167,7 +209,7 @@ export function ExplainPanelContent({
             </strong>
             <p
               style={{
-                marginBottom: 0,
+                margin: 0,
                 color: 'var(--muted)',
                 lineHeight: 1.7,
               }}
@@ -177,13 +219,11 @@ export function ExplainPanelContent({
           </div>
 
           {mode === 'word' && state.data.memoryHook ? (
-            <div
-              style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}
-            >
+            <div style={sectionCardStyle('#fff8ee')}>
               <strong>{uiCopy.reader.explainPanel.wordMemory}</strong>
               <p
                 style={{
-                  marginBottom: 0,
+                  margin: 0,
                   color: 'var(--muted)',
                   lineHeight: 1.7,
                 }}
@@ -196,13 +236,11 @@ export function ExplainPanelContent({
           ) : null}
 
           {mode === 'phrase' ? (
-            <div
-              style={{ padding: 16, borderRadius: 18, background: '#fff8ee' }}
-            >
+            <div style={sectionCardStyle('#fff8ee')}>
               <strong>{uiCopy.reader.explainPanel.sourceSentence}</strong>
               <p
                 style={{
-                  marginBottom: 0,
+                  margin: 0,
                   color: 'var(--muted)',
                   lineHeight: 1.7,
                 }}
@@ -213,7 +251,7 @@ export function ExplainPanelContent({
           ) : null}
 
           {saveEnabled ? (
-            <>
+            <div style={{ display: 'grid', gap: 10, paddingTop: 4 }}>
               <button
                 type="button"
                 onClick={onToggleSave}
@@ -225,7 +263,7 @@ export function ExplainPanelContent({
                   padding: '14px 20px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  marginTop: 12,
+                  width: '100%',
                 }}
               >
                 {remembered
@@ -242,10 +280,10 @@ export function ExplainPanelContent({
                   {saveErrorMessage}
                 </p>
               ) : null}
-            </>
+            </div>
           ) : null}
         </>
       ) : null}
-    </>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 {
-  "pid": 523,
+  "pid": 21445,
   "parent_pid": 46643,
-  "started_at": "2026-04-10T15:24:40.655Z",
+  "started_at": "2026-04-11T06:14:33.044Z",
   "cwd": "/Users/pipilu/Documents/MaDun/ai-english-read",
   "notify_script": "/Users/pipilu/Library/pnpm/global/5/.pnpm/oh-my-codex@0.12.4/node_modules/oh-my-codex/dist/scripts/notify-hook.js",
   "authority_only": true,
@@ -17,7 +17,7 @@
     "max_per_tick": 5,
     "run_count": 1,
     "leader_only": true,
-    "last_tick_at": "2026-04-10T15:24:40.657Z",
+    "last_tick_at": "2026-04-11T06:14:33.046Z",
     "last_result": {
       "processed": 0,
       "skipped": 0,
@@ -30,7 +30,7 @@
     "leader_only": true,
     "stale_threshold_ms": 180000,
     "precomputed_leader_stale": true,
-    "last_tick_at": "2026-04-10T15:24:40.658Z",
+    "last_tick_at": "2026-04-11T06:14:33.047Z",
     "last_error": null,
     "run_count": 1
   },
@@ -57,7 +57,7 @@
   "fallback_auto_nudge": {
     "enabled": true,
     "stall_ms": 5000,
-    "last_tick_at": "2026-04-10T15:24:40.687Z",
+    "last_tick_at": "2026-04-11T06:14:33.101Z",
     "last_turn_at": "2026-04-10T07:57:49.364Z",
     "last_turn_count": 0,
     "last_message": "",
@@ -80,8 +80,8 @@
     "max_ms": 1000,
     "current_ms": 75,
     "idle_streak": 0,
-    "last_tick_at": "2026-04-10T15:24:40.688Z",
-    "last_activity_at": "2026-04-10T15:24:40.688Z",
+    "last_tick_at": "2026-04-11T06:14:33.101Z",
+    "last_activity_at": "2026-04-11T06:14:33.101Z",
     "last_activity_reason": "leader_nudge"
   },
   "last_cycle_activity": "leader_nudge"

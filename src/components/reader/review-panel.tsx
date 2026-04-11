@@ -71,7 +71,7 @@ export function ReviewPanel({
             </div>
           </div>
           <Link
-            href="/words"
+            href={`/words?from=reader&articleSlug=${encodeURIComponent(article.slug)}`}
             style={{ color: 'var(--accent)', fontWeight: 600 }}
           >
             {uiCopy.reader.review.savedWordsCta}
@@ -85,8 +85,31 @@ export function ReviewPanel({
                 style={{ padding: 16, borderRadius: 18, background: '#fffaf2' }}
               >
                 <strong>{word.surface}</strong>
-                <div style={{ color: 'var(--muted)', marginTop: 6 }}>
-                  {word.meaning}
+                <div style={{ display: 'grid', gap: 8, marginTop: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: 13 }}>
+                      {uiCopy.reader.explainPanel.wordMeaning}
+                    </strong>
+                    <div style={{ color: 'var(--muted)', marginTop: 4 }}>
+                      {word.chineseMeaning}
+                    </div>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 13 }}>
+                      {uiCopy.reader.explainPanel.wordMemory}
+                    </strong>
+                    <div style={{ color: 'var(--muted)', marginTop: 4 }}>
+                      {word.memoryHook}
+                    </div>
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: 13 }}>
+                      {uiCopy.reader.explainPanel.wordUsage}
+                    </strong>
+                    <div style={{ color: 'var(--muted)', marginTop: 4 }}>
+                      {word.usageExample}
+                    </div>
+                  </div>
                 </div>
                 <p
                   style={{

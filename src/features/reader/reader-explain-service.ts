@@ -16,6 +16,9 @@ const explainOutputSchema = z.object({
   meaning: z.string().min(1),
   contextMeaning: z.string().min(1),
   explanation: z.string().min(1),
+  lemma: z.string().min(1).optional(),
+  memoryHook: z.string().min(1).optional(),
+  usageExample: z.string().min(1).optional(),
 });
 
 export type ReaderExplainResult = {
@@ -24,7 +27,10 @@ export type ReaderExplainResult = {
   meaning: string;
   contextMeaning: string;
   explanation: string;
+  lemma?: string;
+  memoryHook?: string;
   sourceSentence: string;
+  usageExample?: string;
 };
 
 function buildSystemPrompt(mode: ReaderExplainMode) {
@@ -36,6 +42,9 @@ function buildSystemPrompt(mode: ReaderExplainMode) {
       'meaning 写这个词的中文解释。',
       'contextMeaning 写它放进当前句子后的实际意思。',
       'explanation 写一句简短提醒，可以是辨析、误区或理解抓手。',
+      'lemma 写这个词更适合保存到生词本的原形；拿不准时就沿用当前词形。',
+      'memoryHook 写一句短助记。',
+      'usageExample 写一个常用场景英文例句，并确保包含这个词。',
     ].join('\n');
   }
 
@@ -139,6 +148,9 @@ export async function explainReaderSelection(input: {
     meaning: response.meaning,
     contextMeaning: response.contextMeaning,
     explanation: response.explanation,
+    lemma: response.lemma,
+    memoryHook: response.memoryHook,
     sourceSentence: sentence.text,
+    usageExample: response.usageExample,
   };
 }

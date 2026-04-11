@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArticleBody } from '@/components/reader/article-body';
 import { IntroPanel } from '@/components/reader/intro-panel';
 import { ReviewPanel } from '@/components/reader/review-panel';
+import { StageNav } from '@/components/reader/stage-nav';
 import { WordPanelDesktop } from '@/components/reader/word-panel-desktop';
 import { WordPanelMobile } from '@/components/reader/word-panel-mobile';
 import { hasEvent, recordEvent } from '@/features/analytics/event-service';
@@ -70,10 +71,10 @@ type ExplainPanelData = {
   contextMeaning: string;
   explanation: string;
   sourceSentence: string;
+  usageExample?: string;
   lemma?: string;
   memoryHook?: string;
   memoryType?: string;
-  saveWord?: WordLookupResult;
 };
 
 type ExplainPanelState =
@@ -90,6 +91,22 @@ function shouldFailOnce(consumedFlags: Record<string, boolean>, key: string) {
 
   consumedFlags[key] = true;
   return true;
+}
+
+function normalizeWordKey(value: string) {
+  return value.replace(/^[^A-Za-z']+|[^A-Za-z']+$/g, '').trim().toLowerCase();
+}
+
+function buildUsageExampleFallback(
+  sourceSentence: string,
+  selectedText: string,
+  usageExample?: string,
+) {
+  if (usageExample?.trim()) {
+    return usageExample;
+  }
+
+  return sourceSentence.includes(selectedText) ? sourceSentence : sourceSentence;
 }
 
 export function ReaderShell({ article, navigation }: ReaderShellProps) {
@@ -110,6 +127,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   const [explainPanelState, setExplainPanelState] =
     useState<ExplainPanelState>({ status: 'idle' });
   const [saveWordError, setSaveWordError] = useState<string | null>(null);
+  const [savingIntroWords, setSavingIntroWords] = useState<string[]>([]);
   const [progressSaveNotice, setProgressSaveNotice] = useState<string | null>(
     null,
   );
@@ -227,6 +245,9 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   }
 
   function selectStage(stage: ReaderStage) {
+    if (stage !== 'read') {
+      closeWordPanel();
+    }
     setCurrentStage(stage);
   }
 
@@ -303,7 +324,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         meaning: string;
         contextMeaning: string;
         explanation: string;
+        lemma?: string;
+        memoryHook?: string;
         sourceSentence: string;
+        usageExample?: string;
       };
 
       if (requestId !== explainRequestIdRef.current) {
@@ -317,10 +341,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         contextMeaning: payload.contextMeaning,
         explanation: payload.explanation,
         sourceSentence: payload.sourceSentence,
-        lemma: fallbackWord?.lemma,
-        memoryHook: fallbackWord?.memoryHook,
+        usageExample: payload.usageExample,
+        lemma: fallbackWord?.lemma ?? payload.lemma,
+        memoryHook: fallbackWord?.memoryHook ?? payload.memoryHook,
         memoryType: fallbackWord?.memoryType,
-        saveWord: fallbackWord ?? undefined,
       };
 
       explainCacheRef.current.set(cacheKey, nextExplainData);
@@ -354,10 +378,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           contextMeaning: fallbackWord.contextMeaning,
           explanation: `${fallbackWord.memoryType} · ${fallbackWord.memoryHook}`,
           sourceSentence: fallbackWord.sourceSentence,
+          usageExample: fallbackWord.sourceSentence,
           lemma: fallbackWord.lemma,
           memoryHook: fallbackWord.memoryHook,
           memoryType: fallbackWord.memoryType,
-          saveWord: fallbackWord,
         };
 
         explainCacheRef.current.set(cacheKey, fallbackData);
@@ -382,16 +406,17 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   }
 
   function toggleSavedWord() {
-    if (
-      !deviceId ||
-      explainPanelState.status !== 'success' ||
-      !explainPanelState.data.saveWord
-    ) {
+    if (!deviceId || explainPanelState.status !== 'success') {
       return;
     }
 
-    const selectedWord = explainPanelState.data.saveWord;
-    const normalizedLemma = selectedWord.lemma.toLowerCase();
+    if (explainPanelState.data.mode !== 'word') {
+      return;
+    }
+
+    const selectedWord = explainPanelState.data;
+    const lemma = selectedWord.lemma ?? normalizeWordKey(selectedWord.selectedText);
+    const normalizedLemma = lemma.toLowerCase();
     const remembered = isItemRemembered(
       {
         deviceId,
@@ -449,14 +474,20 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
       saveWord(
         {
-          articleSlug: selectedWord.articleSlug,
-          articleTitle: selectedWord.articleTitle,
+          articleSlug: article.slug,
+          articleTitle: article.chinese_title,
+          chineseMeaning: selectedWord.meaning,
           deviceId,
-          lemma: selectedWord.lemma,
-          meaning: selectedWord.chineseMeaning,
-          sentenceId: selectedWord.sentenceId,
+          lemma,
+          memoryHook: selectedWord.memoryHook ?? selectedWord.explanation,
+          sentenceId: explainPanelState.request.sentenceId,
           sourceSentence: selectedWord.sourceSentence,
-          surface: selectedWord.surface,
+          surface: selectedWord.selectedText,
+          usageExample: buildUsageExampleFallback(
+            selectedWord.sourceSentence,
+            selectedWord.selectedText,
+            selectedWord.usageExample,
+          ),
         },
         window.localStorage,
       );
@@ -481,7 +512,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     }
   }
 
-  function handleSaveWordFromIntro(word: string) {
+  async function handleSaveWordFromIntro(word: string) {
     if (!deviceId) {
       return;
     }
@@ -489,7 +520,11 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     const selectedWord = article.growth_vocabulary.find(
       (item) => item.word.toLowerCase() === word.toLowerCase(),
     );
-    const sourceSentence = article.paragraphs[0]?.sentences[0];
+    const sourceSentence = article.paragraphs
+      .flatMap((paragraph) => paragraph.sentences)
+      .find((sentence) =>
+        sentence.text.toLowerCase().includes(word.toLowerCase()),
+      );
 
     if (!selectedWord || !sourceSentence) {
       return;
@@ -507,24 +542,71 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
       current.filter((item) => item !== selectedWord.word.toLowerCase()),
     );
 
-    saveWord(
-      {
-        articleSlug: article.slug,
-        articleTitle: article.chinese_title,
-        deviceId,
-        lemma: selectedWord.word,
-        meaning: selectedWord.chinese_meaning,
-        sentenceId: sourceSentence.id,
-        sourceSentence: sourceSentence.text,
-        surface: selectedWord.word,
-      },
-      window.localStorage,
-    );
-    setSavedLemmas((current) =>
+    setSavingIntroWords((current) =>
       current.includes(selectedWord.word.toLowerCase())
         ? current
         : [...current, selectedWord.word.toLowerCase()],
     );
+
+    try {
+      const response = await fetch('/api/reader/explain', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          articleSlug: article.slug,
+          sentenceId: sourceSentence.id,
+          sentenceText: sourceSentence.text,
+          selectedText: selectedWord.word,
+          mode: 'word',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('save intro word explain failed');
+      }
+
+      const payload = (await response.json()) as {
+        explanation: string;
+        lemma?: string;
+        meaning: string;
+        memoryHook?: string;
+        sourceSentence: string;
+        usageExample?: string;
+      };
+
+      saveWord(
+        {
+          articleSlug: article.slug,
+          articleTitle: article.chinese_title,
+          chineseMeaning: selectedWord.chinese_meaning,
+          deviceId,
+          lemma: payload.lemma ?? selectedWord.word,
+          memoryHook: selectedWord.memory_hook || payload.memoryHook || payload.explanation,
+          sentenceId: sourceSentence.id,
+          sourceSentence: sourceSentence.text,
+          surface: selectedWord.word,
+          usageExample: buildUsageExampleFallback(
+            payload.sourceSentence ?? sourceSentence.text,
+            selectedWord.word,
+            payload.usageExample,
+          ),
+        },
+        window.localStorage,
+      );
+      setSavedLemmas((current) =>
+        current.includes(selectedWord.word.toLowerCase())
+          ? current
+          : [...current, selectedWord.word.toLowerCase()],
+      );
+    } catch {
+      setSaveWordError(uiCopy.reader.shell.saveWordError);
+    } finally {
+      setSavingIntroWords((current) =>
+        current.filter((item) => item !== selectedWord.word.toLowerCase()),
+      );
+    }
   }
 
   function handleRememberWord(word: string) {
@@ -619,13 +701,20 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   }
 
   const selectedWordSaved =
-    explainPanelState.status === 'success' && explainPanelState.data.saveWord
-      ? savedLemmas.includes(explainPanelState.data.saveWord.lemma.toLowerCase())
+    explainPanelState.status === 'success' && explainPanelState.data.mode === 'word'
+      ? savedLemmas.includes(
+          (explainPanelState.data.lemma ??
+            normalizeWordKey(explainPanelState.data.selectedText)
+          ).toLowerCase(),
+        )
       : false;
   const selectedWordRemembered =
-    explainPanelState.status === 'success' && explainPanelState.data.saveWord
+    explainPanelState.status === 'success' && explainPanelState.data.mode === 'word'
       ? rememberedWords.includes(
-          explainPanelState.data.saveWord.lemma.toLowerCase(),
+          (
+            explainPanelState.data.lemma ??
+            normalizeWordKey(explainPanelState.data.selectedText)
+          ).toLowerCase(),
         )
       : false;
 
@@ -648,6 +737,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           onStartReading={startReading}
           rememberedPhrases={rememberedPhrases}
           rememberedWords={rememberedWords}
+          savingWords={savingIntroWords}
           savedWords={savedLemmas}
         />
       );
@@ -715,7 +805,10 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
             <Link href="/" style={navLinkStyle}>
               {uiCopy.common.backHome}
             </Link>
-            <Link href="/words" style={navLinkStyle}>
+            <Link
+              href={`/words?from=reader&articleSlug=${encodeURIComponent(article.slug)}`}
+              style={navLinkStyle}
+            >
               {uiCopy.common.openWords}
             </Link>
           </div>
@@ -741,21 +834,36 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
+            display: 'grid',
             gap: 12,
-            flexWrap: 'wrap',
-            alignItems: 'center',
           }}
         >
-          <span style={{ color: 'var(--muted)', fontSize: 14 }}>
-            {uiCopy.reader.navigation.currentStage(getStageLabel(currentStage))}
-          </span>
-          {isCompleted ? (
-            <span style={{ color: 'var(--accent)', fontSize: 14 }}>
-              {uiCopy.reader.review.completionTitle}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-start',
+              gap: 12,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+            }}
+          >
+            <span style={{ color: 'var(--muted)', fontSize: 14 }}>
+              {uiCopy.reader.navigation.currentStage(getStageLabel(currentStage))}
             </span>
-          ) : null}
+            {isCompleted ? (
+              <span style={{ color: 'var(--accent)', fontSize: 14 }}>
+                {uiCopy.reader.review.completionTitle}
+              </span>
+            ) : null}
+          </div>
+
+          <StageNav
+            currentStage={currentStage}
+            onSelectStage={selectStage}
+            canSelectStage={(stage) =>
+              stage !== 'review' || isCompleted || currentStage === 'review'
+            }
+          />
         </div>
       </section>
 
@@ -810,7 +918,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           saved={selectedWordSaved}
           saveEnabled={
             explainPanelState.status === 'success' &&
-            Boolean(explainPanelState.data.saveWord)
+            explainPanelState.data.mode === 'word'
           }
           saveErrorMessage={saveWordError}
           state={
@@ -845,7 +953,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
           saved={selectedWordSaved}
           saveEnabled={
             explainPanelState.status === 'success' &&
-            Boolean(explainPanelState.data.saveWord)
+            explainPanelState.data.mode === 'word'
           }
           saveErrorMessage={saveWordError}
           state={

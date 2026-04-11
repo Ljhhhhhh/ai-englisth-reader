@@ -31,7 +31,7 @@ export const uiCopy = {
   app: {
     description: '面向中文母语者的交互式英语精读阅读器',
     htmlLang: 'zh-CN',
-    title: 'AI 英语精读',
+    title: '萌芽英语精读',
   },
   common: {
     backHome: '返回首页',
@@ -72,8 +72,6 @@ export const uiCopy = {
       description:
         '带着刚刚预热过的词汇、语法和句型重新读正文。看到高亮词时，可以随时点开快速回忆。',
       eyebrow: '在上下文里巩固理解',
-      positionSaved: '这台设备上的阅读状态会自动保存。',
-      selectionHint: '点词即查；再点相邻词可扩成短语。',
       currentParagraph: (paragraphId?: string, totalParagraphCount?: number) =>
         formatParagraphProgress(paragraphId, totalParagraphCount),
       jumpToParagraph: (index: number) => `第 ${index} 段`,
@@ -184,10 +182,12 @@ export const uiCopy = {
       retrySave: '重试保存',
       save: '保存到生词库',
       saved: '已在生词库',
+      saving: '保存中...',
       sourceSentence: '原句',
       wordMemory: '助记讲解',
       wordExplanation: '理解提醒',
       wordMeaning: '中文解释',
+      wordUsage: '常用场景',
       wordTitle: '单词讲解',
     },
   },
@@ -211,10 +211,12 @@ export const uiCopy = {
       title: '暂时无法打开你的生词本。',
     },
     actions: {
+      backHome: '返回首页',
+      backReader: '返回正文',
       browseArticles: '去看文章',
       filterAll: '全部文章',
       markRemembered: '已记住',
-      searchPlaceholder: '按单词原形或中文释义搜索',
+      searchPlaceholder: '按单词原形或保存内容搜索',
       retry: '重新加载生词页',
     },
   },
@@ -230,8 +232,7 @@ export const uiCopy = {
     startReading: '开始精读',
   },
   generate: {
-    processingDescription:
-      '模型正在把原始内容整理成适合精读的文章与学习材料。',
+    processingDescription: '模型正在把原始内容整理成适合精读的文章与学习材料。',
     processingEyebrow: '精读稿编修中',
     processingSteps: [
       '提炼主线与段落结构',
@@ -239,8 +240,7 @@ export const uiCopy = {
       '补齐可进入阅读器的学习字段',
     ],
     processingTitle: '正在生成这篇精读文章',
-    queuedDescription:
-      '稿件已收下，系统正在排队准备抽取内容与结构。',
+    queuedDescription: '稿件已收下，系统正在排队准备抽取内容与结构。',
     queuedEyebrow: '编辑部收稿中',
     queuedSteps: [
       '登记来源并检查可提取内容',

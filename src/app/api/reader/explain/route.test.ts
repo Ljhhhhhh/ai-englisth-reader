@@ -36,13 +36,17 @@ describe('POST /api/reader/explain', () => {
   it('loads the article and returns the explanation payload', async () => {
     articleMocks.loadArticle.mockResolvedValue({ slug: 'welcome-to-deep-reading' });
     explainMocks.explainReaderSelection.mockResolvedValue({
-      mode: 'phrase',
-      selectedText: 'clear support',
-      meaning: '清晰的支持',
-      contextMeaning: '这里指阅读时得到明确帮助。',
-      explanation: 'clear 修饰 support，合起来表示明确、能落地的帮助。',
+      mode: 'word',
+      selectedText: 'clear',
+      lemma: 'clear',
+      meaning: '清晰的',
+      contextMeaning: '这里指明确、能帮读者跟住文章的。',
+      explanation: '这里不是“透明”，而是“明确、清楚”的支持。',
+      memoryHook: '把 clear support 记成“清楚的支撑”。',
       sourceSentence:
         'Guided by clear support, the reader can follow the main idea with less panic and more focus.',
+      usageExample:
+        'Clear instructions help new readers build confidence quickly.',
     });
 
     const response = await POST(
@@ -52,8 +56,8 @@ describe('POST /api/reader/explain', () => {
           sentenceId: 's3',
           sentenceText:
             'Guided by clear support, the reader can follow the main idea with less panic and more focus.',
-          selectedText: 'clear support',
-          mode: 'phrase',
+          selectedText: 'clear',
+          mode: 'word',
         }),
         method: 'POST',
       }),
@@ -65,20 +69,24 @@ describe('POST /api/reader/explain', () => {
     );
     expect(explainMocks.explainReaderSelection).toHaveBeenCalledWith({
       article: { slug: 'welcome-to-deep-reading' },
-      mode: 'phrase',
-      selectedText: 'clear support',
+      mode: 'word',
+      selectedText: 'clear',
       sentenceId: 's3',
       sentenceText:
         'Guided by clear support, the reader can follow the main idea with less panic and more focus.',
     });
     await expect(response.json()).resolves.toEqual({
-      mode: 'phrase',
-      selectedText: 'clear support',
-      meaning: '清晰的支持',
-      contextMeaning: '这里指阅读时得到明确帮助。',
-      explanation: 'clear 修饰 support，合起来表示明确、能落地的帮助。',
+      mode: 'word',
+      selectedText: 'clear',
+      lemma: 'clear',
+      meaning: '清晰的',
+      contextMeaning: '这里指明确、能帮读者跟住文章的。',
+      explanation: '这里不是“透明”，而是“明确、清楚”的支持。',
+      memoryHook: '把 clear support 记成“清楚的支撑”。',
       sourceSentence:
         'Guided by clear support, the reader can follow the main idea with less panic and more focus.',
+      usageExample:
+        'Clear instructions help new readers build confidence quickly.',
     });
   });
 });

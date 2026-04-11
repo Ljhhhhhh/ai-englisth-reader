@@ -37,6 +37,9 @@ describe('reader-explain-service', () => {
       meaning: '分层的',
       contextMeaning: '这里强调数据不是平铺，而是按层次组织。',
       explanation: 'layered 在这里不是“有层”的字面意思，而是“按层组织”的系统设计说法。',
+      lemma: 'layered',
+      memoryHook: '把 layer 想成一层层叠起来，就能记住 layered 的“分层组织”。',
+      usageExample: 'The system uses a layered design so each responsibility stays clear.',
     });
   });
 
@@ -57,7 +60,10 @@ describe('reader-explain-service', () => {
     ).resolves.toMatchObject({
       mode: 'word',
       selectedText: 'layered',
+      lemma: 'layered',
       meaning: '分层的',
+      memoryHook: expect.any(String),
+      usageExample: expect.any(String),
     });
   });
 });

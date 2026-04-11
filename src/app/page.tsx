@@ -106,7 +106,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
               生成文章
             </Link>
             <Link
-              href="/words"
+              href="/words?from=home"
               style={{
                 width: 'fit-content',
                 padding: '12px 18px',

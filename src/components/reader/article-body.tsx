@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type MouseEvent } from 'react';
 import { SelectionActionBar } from '@/components/reader/selection-action-bar';
 import {
   createWordSelection,
@@ -66,12 +66,11 @@ export function ArticleBody({
   const [focusWordIndexes, setFocusWordIndexes] = useState<
     Record<string, number>
   >({});
-  const [activeSelection, setActiveSelection] = useState<ActiveSelection | null>(
-    null,
-  );
-  const wordButtonRefs = useRef<Record<string, Array<HTMLButtonElement | null>>>(
-    {},
-  );
+  const [activeSelection, setActiveSelection] =
+    useState<ActiveSelection | null>(null);
+  const wordButtonRefs = useRef<
+    Record<string, Array<HTMLButtonElement | null>>
+  >({});
 
   const articleView = article as Article & {
     chinese_title?: string;
@@ -125,13 +124,37 @@ export function ArticleBody({
       sentenceText: activeSelection.sentenceText,
       selectedText:
         mode === 'word'
-          ? activeSelection.tokens[activeSelection.startWordIndex] ?? ''
-          : phraseText ?? getSelectedText(activeSelection),
+          ? (activeSelection.tokens[activeSelection.startWordIndex] ?? '')
+          : (phraseText ?? getSelectedText(activeSelection)),
     });
   }
 
+  function clearSelectionFromBackgroundClick(event: MouseEvent<HTMLElement>) {
+    if (!activeSelection) {
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (
+      target.closest(
+        'button, a, input, textarea, select, [role="button"], [data-selection-action-bar="true"]',
+      )
+    ) {
+      return;
+    }
+
+    setActiveSelection(null);
+  }
+
   return (
-    <section style={{ display: 'grid', gap: 20 }}>
+    <section
+      onClickCapture={clearSelectionFromBackgroundClick}
+      style={{ display: 'grid', gap: 20 }}
+    >
       <header style={{ display: 'grid', gap: 8 }}>
         <h1 style={{ margin: 0 }}>{article.title}</h1>
         {articleView.chinese_title ? (
@@ -140,19 +163,6 @@ export function ArticleBody({
           </p>
         ) : null}
       </header>
-
-      <p
-        style={{
-          margin: 0,
-          padding: '12px 14px',
-          borderRadius: 16,
-          background: '#fff8ee',
-          color: 'var(--muted)',
-          lineHeight: 1.6,
-        }}
-      >
-        {uiCopy.reader.articleBody.selectionHint}
-      </p>
 
       <div style={{ display: 'grid', gap: 16 }}>
         {articleView.paragraphs.map((paragraph, index) => {
@@ -203,7 +213,10 @@ export function ArticleBody({
 
                               const isSelected =
                                 activeSelection?.sentenceId === sentence.id &&
-                                selectionIncludesWord(activeSelection, wordIndex);
+                                selectionIncludesWord(
+                                  activeSelection,
+                                  wordIndex,
+                                );
                               const currentWordIndex = wordIndex;
                               const isFocusableWord =
                                 (focusWordIndexes[sentence.id] ?? 0) ===
@@ -220,22 +233,20 @@ export function ArticleBody({
                                     ] = element;
                                   }}
                                   tabIndex={isFocusableWord ? 0 : -1}
-                                  onClick={() =>
-                                    {
-                                      setSentenceFocusIndex(
-                                        sentence.id,
-                                        currentWordIndex,
-                                      );
-                                      setActiveSelection(
-                                        createWordSelection({
-                                          sentenceId: sentence.id,
-                                          sentenceText: sentence.text,
-                                          tokens: sentenceWords,
-                                          wordIndex: currentWordIndex,
-                                        }),
-                                      );
-                                    }
-                                  }
+                                  onClick={() => {
+                                    setSentenceFocusIndex(
+                                      sentence.id,
+                                      currentWordIndex,
+                                    );
+                                    setActiveSelection(
+                                      createWordSelection({
+                                        sentenceId: sentence.id,
+                                        sentenceText: sentence.text,
+                                        tokens: sentenceWords,
+                                        wordIndex: currentWordIndex,
+                                      }),
+                                    );
+                                  }}
                                   onFocus={() =>
                                     setSentenceFocusIndex(
                                       sentence.id,
@@ -321,9 +332,9 @@ export function ArticleBody({
                           }
                           isBusy={Boolean(
                             activeExplainRequest &&
-                              activeExplainRequest.sentenceId === sentence.id &&
-                              activeExplainRequest.selectedText ===
-                                getSelectedText(activeSelection),
+                            activeExplainRequest.sentenceId === sentence.id &&
+                            activeExplainRequest.selectedText ===
+                              getSelectedText(activeSelection),
                           )}
                           selectedText={getSelectedText(activeSelection)}
                           showExplainWord={
@@ -344,12 +355,16 @@ export function ArticleBody({
                           onExplainPhrase={() => requestExplain('phrase')}
                           onExpandLeft={() =>
                             setActiveSelection((current) =>
-                              current ? expandSelectionLeft(current) ?? current : current,
+                              current
+                                ? (expandSelectionLeft(current) ?? current)
+                                : current,
                             )
                           }
                           onExpandRight={() =>
                             setActiveSelection((current) =>
-                              current ? expandSelectionRight(current) ?? current : current,
+                              current
+                                ? (expandSelectionRight(current) ?? current)
+                                : current,
                             )
                           }
                           onClear={() => setActiveSelection(null)}
@@ -417,10 +432,6 @@ export function ArticleBody({
           alignItems: 'center',
         }}
       >
-        <p style={{ margin: 0, color: 'var(--muted)' }}>
-          {uiCopy.reader.articleBody.positionSaved}
-        </p>
-
         <div style={{ display: 'flex', gap: 12 }}>
           <button
             type="button"

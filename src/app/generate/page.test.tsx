@@ -32,6 +32,34 @@ describe('GeneratePage', () => {
     consoleErrorSpy.mockRestore();
   });
 
+  it('renders the study-room upload tray in file mode', () => {
+    render(<GeneratePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '文件' }));
+
+    expect(screen.getByText(/将稿件放入工作台/i)).toBeInTheDocument();
+    expect(screen.getByText(/支持格式/i)).toBeInTheDocument();
+  });
+
+  it('shows the selected file in the tray confirmation area', () => {
+    render(<GeneratePage />);
+
+    fireEvent.click(screen.getByRole('button', { name: '文件' }));
+
+    fireEvent.change(screen.getByLabelText(/将稿件放入工作台/i), {
+      target: {
+        files: [
+          new File(['hello'], 'desk-notes.docx', {
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          }),
+        ],
+      },
+    });
+
+    expect(screen.getByText(/已放入托盘/i)).toBeInTheDocument();
+    expect(screen.getByText('desk-notes.docx')).toBeInTheDocument();
+  });
+
   it('shows the editorial loading card after a generation job is created', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

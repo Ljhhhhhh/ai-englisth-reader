@@ -34,4 +34,44 @@ describe('ReviewPanel', () => {
       screen.getByText(/已记住的词不会再出现在这里/i),
     ).toBeInTheDocument();
   });
+
+  it('shows the saved word with explanation, memory hook, and usage note', async () => {
+    const article = await loadArticle('welcome-to-deep-reading');
+
+    render(
+      <ReviewPanel
+        article={article}
+        savedWords={[
+          {
+            articleSlug: article.slug,
+            articleTitle: article.chinese_title,
+            chineseMeaning: '吸收',
+            deviceId: 'device-1',
+            lemma: 'absorb',
+            memoryHook: '把海绵吸水的画面和 absorb 连起来记。',
+            savedAt: Date.now(),
+            sentenceId: 's3',
+            sourceSentence:
+              'When the reader feels absorbed instead of interrupted.',
+            surface: 'absorbed',
+            usageExample:
+              'The team became absorbed in solving the final bug before launch.',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText('中文解释')).toBeInTheDocument();
+    expect(screen.getByText('助记讲解')).toBeInTheDocument();
+    expect(screen.getByText('常用场景')).toBeInTheDocument();
+    expect(screen.getByText('吸收')).toBeInTheDocument();
+    expect(
+      screen.getByText('把海绵吸水的画面和 absorb 连起来记。'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'The team became absorbed in solving the final bug before launch.',
+      ),
+    ).toBeInTheDocument();
+  });
 });

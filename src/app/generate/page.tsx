@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { LlmLoadingCard } from '@/components/system/llm-loading-card';
 import { getOrCreateDeviceId } from '@/lib/device-id';
 import { uiCopy } from '@/lib/ui-copy';
@@ -50,6 +50,7 @@ function getGenerateLoadingCopy(status: Extract<JobStatus, 'pending' | 'processi
 }
 
 export default function GeneratePage() {
+  const fileInputId = useId();
   const [mode, setMode] = useState<'url' | 'file'>('url');
   const [url, setUrl] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -91,6 +92,18 @@ export default function GeneratePage() {
 
     return mode === 'url' ? Boolean(url.trim()) : Boolean(file);
   }, [deviceId, file, isSubmitting, mode, url]);
+
+  const fileStatusTone = file
+    ? {
+        background:
+          'linear-gradient(180deg, rgba(255,248,240,0.96) 0%, rgba(249,239,225,0.98) 100%)',
+        borderColor: 'rgba(197,106,45,0.26)',
+      }
+    : {
+        background:
+          'linear-gradient(180deg, rgba(255,253,248,0.94) 0%, rgba(248,243,234,0.98) 100%)',
+        borderColor: 'rgba(114,75,35,0.12)',
+      };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -177,7 +190,7 @@ export default function GeneratePage() {
               返回首页
             </Link>
             <Link
-              href="/words"
+              href="/words?from=home"
               style={{ color: 'var(--accent)', fontWeight: 600 }}
             >
               查看生词本
@@ -244,17 +257,224 @@ export default function GeneratePage() {
               />
             </label>
           ) : (
-            <label key="file-input" style={{ display: 'grid', gap: 8 }}>
-              <span>上传文件</span>
+            <div key="file-input" style={{ display: 'grid', gap: 14 }}>
+              <div style={{ display: 'grid', gap: 6 }}>
+                <span style={{ fontSize: 15, fontWeight: 700 }}>上传文件</span>
+                <span style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+                  把待处理的稿件放到工作台，系统会按当前 prompt 继续生成精读内容。
+                </span>
+              </div>
+
               <input
+                id={fileInputId}
                 type="file"
                 accept=".md,.txt,.docx"
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                aria-label="将稿件放入工作台"
+                style={{
+                  position: 'absolute',
+                  width: 1,
+                  height: 1,
+                  padding: 0,
+                  margin: -1,
+                  overflow: 'hidden',
+                  clip: 'rect(0, 0, 0, 0)',
+                  whiteSpace: 'nowrap',
+                  border: 0,
+                }}
               />
+              <label
+                htmlFor={fileInputId}
+                style={{
+                  display: 'grid',
+                  gap: 18,
+                  padding: '22px 22px 20px',
+                  borderRadius: 28,
+                  cursor: 'pointer',
+                  border: '1px solid rgba(114,75,35,0.14)',
+                  background:
+                    'linear-gradient(145deg, rgba(244,229,210,0.9) 0%, rgba(239,219,194,0.82) 100%)',
+                  boxShadow:
+                    '0 18px 40px rgba(114,75,35,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 14,
+                    padding: '24px 18px',
+                    borderRadius: 22,
+                    border: '1px dashed rgba(114,75,35,0.22)',
+                    background:
+                      'linear-gradient(180deg, rgba(255,252,247,0.98) 0%, rgba(250,243,233,0.98) 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.78)',
+                    textAlign: 'center',
+                    justifyItems: 'center',
+                  }}
+                >
+                  <div
+                    aria-hidden="true"
+                    style={{
+                      position: 'relative',
+                      width: 72,
+                      height: 56,
+                    }}
+                  >
+                    <span
+                      style={{
+                        position: 'absolute',
+                        inset: '14px 8px 0 8px',
+                        borderRadius: '14px 14px 18px 18px',
+                        background: 'rgba(197,106,45,0.14)',
+                        border: '1px solid rgba(197,106,45,0.16)',
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        inset: '0 16px auto 16px',
+                        height: 34,
+                        borderRadius: 12,
+                        background:
+                          'linear-gradient(180deg, rgba(255,255,255,0.96) 0%, rgba(248,237,220,0.96) 100%)',
+                        border: '1px solid rgba(114,75,35,0.14)',
+                        transform: 'rotate(-4deg)',
+                        boxShadow: '0 8px 18px rgba(114,75,35,0.1)',
+                      }}
+                    />
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        left: 28,
+                        width: 16,
+                        height: 2,
+                        borderRadius: 999,
+                        background: 'rgba(197,106,45,0.48)',
+                        boxShadow:
+                          '0 7px 0 rgba(197,106,45,0.32), 0 14px 0 rgba(197,106,45,0.22)',
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <span
+                      style={{
+                        fontSize: 'clamp(1.15rem, 2vw, 1.35rem)',
+                        fontWeight: 700,
+                      }}
+                    >
+                      将稿件放入工作台
+                    </span>
+                    <span style={{ color: 'var(--muted)', lineHeight: 1.7 }}>
+                      点击挑选文件，把原稿放到托盘中等待整理与生成。
+                    </span>
+                  </div>
+
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: 'fit-content',
+                      minWidth: 136,
+                      padding: '11px 18px',
+                      borderRadius: 999,
+                      background: 'rgba(197,106,45,0.12)',
+                      border: '1px solid rgba(197,106,45,0.18)',
+                      color: 'var(--editorial-ink)',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                    }}
+                  >
+                    挑选稿件
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gap: 12,
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 10,
+                      padding: '16px 18px',
+                      borderRadius: 20,
+                      border: '1px solid rgba(114,75,35,0.1)',
+                      background: 'rgba(255,252,247,0.72)',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--editorial-ink)',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      支持格式
+                    </span>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {['.md', '.txt', '.docx'].map((extension) => (
+                        <span
+                          key={extension}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: 999,
+                            border: '1px solid rgba(197,106,45,0.16)',
+                            background: 'rgba(255,248,238,0.92)',
+                            color: 'var(--editorial-ink)',
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          {extension}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gap: 8,
+                      padding: '16px 18px',
+                      borderRadius: 20,
+                      border: `1px solid ${fileStatusTone.borderColor}`,
+                      background: fileStatusTone.background,
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 13,
+                        color: 'var(--editorial-ink)',
+                        fontWeight: 700,
+                        letterSpacing: '0.08em',
+                      }}
+                    >
+                      当前状态
+                    </span>
+                    <strong style={{ fontSize: 16 }}>
+                      {file ? '已放入托盘' : '等待放入稿件'}
+                    </strong>
+                    <span style={{ color: 'var(--muted)', lineHeight: 1.6 }}>
+                      {file
+                        ? file.name
+                        : '选择文件后，会在这里显示稿件名称。'}
+                    </span>
+                  </div>
+                </div>
+              </label>
+
               <span style={{ color: 'var(--muted)', fontSize: 14 }}>
                 当前支持 .md、.txt、.docx；旧版 .doc 暂不支持。
               </span>
-            </label>
+            </div>
           )}
 
           <div
