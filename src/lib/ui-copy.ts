@@ -41,6 +41,22 @@ export const uiCopy = {
     previous: '上一步',
     retryHome: '重新加载首页',
   },
+  auth: {
+    authenticatedHint: '已登录，可同步阅读进度与生词。',
+    codeHint: '验证码已发送到你的邮箱；开发环境会显示预览码。',
+    codeLabel: '6 位验证码',
+    devCodePreview: (code: string) => `开发环境验证码：${code}`,
+    emailLabel: '登录邮箱',
+    errorFallback: '这一步暂时没有成功，请稍后重试。',
+    logout: '退出登录',
+    requestCode: '发送验证码',
+    sendingCode: '发送中...',
+    signedOutDescription:
+      '登录后，后续迁移版本就可以把阅读进度、生词和生成内容同步到你的账号。',
+    signedOutTitle: '登录后可跨设备同步',
+    verify: '验证并登录',
+    verifying: '验证中...',
+  },
   home: {
     empty: {
       description:

@@ -17,6 +17,10 @@ const generationContentMocks = vi.hoisted(() => ({
   generateArticle: vi.fn(),
 }));
 
+const currentUserMocks = vi.hoisted(() => ({
+  getCurrentUser: vi.fn(),
+}));
+
 vi.mock(
   '@/features/generation/generation-job-service',
   () => generationJobMocks,
@@ -27,6 +31,7 @@ vi.mock(
   '@/features/generation/article-generator',
   () => generationContentMocks,
 );
+vi.mock('@/features/auth/current-user', () => currentUserMocks);
 
 import { POST } from './route';
 
@@ -60,7 +65,11 @@ describe('POST /api/generate', () => {
     });
   });
 
-  it('enforces the daily generation limit', async () => {
+  it('enforces the daily generation limit per authenticated user', async () => {
+    currentUserMocks.getCurrentUser.mockResolvedValue({
+      email: 'reader@example.com',
+      id: 'user-1',
+    });
     generationJobMocks.countRecentGenerationJobs.mockResolvedValue(5);
 
     const formData = new FormData();
@@ -69,6 +78,10 @@ describe('POST /api/generate', () => {
     const response = await POST(createFormRequest(formData));
 
     expect(response.status).toBe(429);
+    expect(generationJobMocks.countRecentGenerationJobs).toHaveBeenCalledWith(
+      'user-1',
+      expect.any(Date),
+    );
     expect(generationJobMocks.createGenerationJob).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       error: '今日生成次数已用完，请明天再试。',
@@ -76,6 +89,10 @@ describe('POST /api/generate', () => {
   });
 
   it('creates a job for url input and starts async processing', async () => {
+    currentUserMocks.getCurrentUser.mockResolvedValue({
+      email: 'reader@example.com',
+      id: 'user-1',
+    });
     generationJobMocks.countRecentGenerationJobs.mockResolvedValue(1);
     generationJobMocks.createGenerationJob.mockResolvedValue({
       id: 'job-1',
@@ -133,6 +150,10 @@ describe('POST /api/generate', () => {
   });
 
   it('uses the uploaded filename as the source ref', async () => {
+    currentUserMocks.getCurrentUser.mockResolvedValue({
+      email: 'reader@example.com',
+      id: 'user-1',
+    });
     generationJobMocks.countRecentGenerationJobs.mockResolvedValue(0);
     generationJobMocks.createGenerationJob.mockResolvedValue({
       id: 'job-2',
@@ -170,6 +191,11 @@ describe('POST /api/generate', () => {
       expect(generationContentMocks.extractContent).toHaveBeenCalledWith({
         type: 'file',
         file: expect.any(File),
+      });
+      expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
+        content: 'raw content',
+        ownerId: 'user-1',
+        title: 'Article Title',
       });
     });
   });

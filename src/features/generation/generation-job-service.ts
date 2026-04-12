@@ -52,6 +52,15 @@ export async function getGenerationJob(id: string) {
   });
 }
 
+export async function getGenerationJobForUser(id: string, userId: string) {
+  return db.generationJob.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  });
+}
+
 export async function markGenerationJobProcessing(id: string) {
   const currentJob = await getGenerationJob(id);
 

@@ -13,6 +13,7 @@ enum ArticleVisibility {
 
 model User {
   id                String                  @id @default(cuid())
+  articles          Article[]
   email             String                  @unique
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
@@ -54,6 +55,7 @@ model Session {
 
 model Article {
   id                       String            @id @default(cuid())
+  ownerId                  String?
   slug                     String            @unique
   title                    String
   chineseTitle             String
@@ -77,6 +79,7 @@ model Article {
   savedWords               SavedWord[]
   learningEvents           LearningEvent[]
 
+  @@index([ownerId, visibility])
   @@index([visibility, estimatedMinutes, createdAt])
   @@index([ownerId, createdAt])
 }

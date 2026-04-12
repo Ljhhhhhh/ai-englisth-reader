@@ -1,3 +1,4 @@
+import { getCurrentUser } from '@/features/auth/current-user';
 import {
   extractContent,
   type ExtractContentInput,
