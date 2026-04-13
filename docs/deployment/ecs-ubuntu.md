@@ -36,7 +36,7 @@ The migration lanes will expand this list, but the deploy surface should already
 ```bash
 docker build -t lexora:local .
 docker run --rm -p 3000:3000 \
-  -e DATABASE_URL='mysql://user:pass@host.docker.internal:3306/ai_english_read' \
+  -e DATABASE_URL='mysql://user:pass@host.docker.internal:3306/lexora' \
   -e LLM_API_KEY='replace-me' \
   lexora:local
 ```

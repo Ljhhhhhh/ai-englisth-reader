@@ -1,0 +1,28 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: lexora-mysql
+    restart: unless-stopped
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: Guanmo!01
+      MYSQL_USER: lexora
+      MYSQL_PASSWORD: Guanmo!01
+      MYSQL_DATABASE: lexora
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -ulexora -p$$MYSQL_PASSWORD
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    volumes:
+      - lexora-mysql-data:/var/lib/mysql
+
+volumes:
+  lexora-mysql-data:

@@ -5,6 +5,7 @@ import { ErrorState } from '@/components/system/error-state';
 import { ArticleCard } from '@/components/home/article-card';
 import { ContinueReading } from '@/components/home/continue-reading';
 import { listArticles } from '@/features/articles/article-service';
+import { requirePageSession } from '@/features/auth/page-guard';
 import { uiCopy } from '@/lib/ui-copy';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ type HomePageProps = {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  await requirePageSession('/');
 
   let articles;
 

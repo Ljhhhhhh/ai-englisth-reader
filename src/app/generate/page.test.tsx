@@ -1,27 +1,14 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+vi.mock('@/features/auth/page-guard', () => ({
+  requirePageSession: vi.fn().mockResolvedValue({ id: 'session-1' }),
+}));
+
 import GeneratePage from '@/app/generate/page';
 
 describe('GeneratePage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-  });
-
-  it('prompts unauthenticated readers to log in before generating', async () => {
-    vi.stubGlobal(
-      'fetch',
-      vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ authenticated: false, user: null }),
-      }),
-    );
-
-    render(<GeneratePage />);
-
-    expect(await screen.findByText(/请先登录账号/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /去登录/i })).toBeInTheDocument();
-    expect(
-      screen.queryByRole('button', { name: '开始生成' }),
-    ).not.toBeInTheDocument();
   });
 
   it('renders the study-room upload tray in file mode', async () => {
@@ -36,7 +23,7 @@ describe('GeneratePage', () => {
       }),
     );
 
-    render(<GeneratePage />);
+    render(await GeneratePage());
 
     await screen.findByText(/reader@example.com/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
@@ -57,7 +44,7 @@ describe('GeneratePage', () => {
       }),
     );
 
-    render(<GeneratePage />);
+    render(await GeneratePage());
 
     await screen.findByText(/reader@example.com/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
@@ -95,7 +82,7 @@ describe('GeneratePage', () => {
       });
     vi.stubGlobal('fetch', fetchMock);
 
-    render(<GeneratePage />);
+    render(await GeneratePage());
 
     await screen.findByText(/reader@example.com/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {

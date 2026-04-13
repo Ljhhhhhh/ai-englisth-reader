@@ -7,6 +7,7 @@ import {
   loadArticleForViewer,
 } from '@/features/articles/article-service';
 import { getCurrentUser } from '@/features/auth/current-user';
+import { requirePageSession } from '@/features/auth/page-guard';
 import type { Article } from '@/lib/content/article-schema';
 import { uiCopy } from '@/lib/ui-copy';
 
@@ -119,12 +120,30 @@ async function getReaderArticle(
   }
 }
 
+function toSearchParamEntries(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  return Object.entries(searchParams).flatMap(([key, value]) => {
+    if (Array.isArray(value)) {
+      return value.map((item) => [key, item] as [string, string]);
+    }
+
+    return value ? [[key, value] as [string, string]] : [];
+  });
+}
+
 export default async function ReaderPage({
   params,
   searchParams,
 }: ReaderPageProps) {
   const { slug } = await params;
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const readerSearch = resolvedSearchParams
+    ? new URLSearchParams(toSearchParamEntries(resolvedSearchParams)).toString()
+    : '';
+  await requirePageSession(
+    `/reader/${slug}${readerSearch ? `?${readerSearch}` : ''}`,
+  );
   const result = await getReaderArticle(slug, resolvedSearchParams);
 
   if (result.kind === 'not-found') {

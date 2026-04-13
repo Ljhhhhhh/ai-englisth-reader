@@ -37,20 +37,69 @@ pnpm install
 cp .env.example .env
 ```
 
-3. 准备本地 MySQL，并执行 Prisma 初始化
+3. 启动本地 MySQL
+
+项目默认连接串已经对齐到 `mysql://lexora:Guanmo!01@127.0.0.1:3306/lexora`，可以直接用仓库里的 Docker Compose：
+
+```bash
+docker compose -f docker-compose.mysql.yml up -d
+docker compose -f docker-compose.mysql.yml ps
+```
+
+如需查看数据库日志：
+
+```bash
+docker compose -f docker-compose.mysql.yml logs -f mysql
+```
+
+停止并保留数据：
+
+```bash
+docker compose -f docker-compose.mysql.yml down
+```
+
+停止并清空数据卷：
+
+```bash
+docker compose -f docker-compose.mysql.yml down -v
+```
+
+如果你之前已经用旧账号或旧库名启动过一次 MySQL，需要先清掉旧数据卷再重新初始化，否则 MySQL 不会应用新的用户和数据库初始化参数。
+
+4. 执行 Prisma 初始化
 
 ```bash
 pnpm db:push
 pnpm db:seed
 ```
 
-4. 启动开发环境
+5. 启动开发环境
 
 ```bash
 pnpm dev
 ```
 
 打开 http://127.0.0.1:3000。
+
+## Gmail 验证码邮件配置
+
+项目现在支持通过 Gmail SMTP 发送登录验证码邮件。最小配置如下：
+
+```bash
+MAIL_PROVIDER=gmail
+MAIL_FROM=your_account@gmail.com
+MAIL_SMTP_HOST=smtp.gmail.com
+MAIL_SMTP_PORT=465
+MAIL_SMTP_SECURE=true
+MAIL_SMTP_USER=your_account@gmail.com
+MAIL_SMTP_PASS=your_16_digit_app_password
+```
+
+补充要求：
+
+- Gmail 账号必须先开启两步验证，然后生成 App Password 作为 `MAIL_SMTP_PASS`
+- 生产环境不要保留 `AUTH_DEV_LOGIN_CODE`
+- 生产环境建议同时设置 `AUTH_COOKIE_SECURE=true`
 
 ## 常用命令
 

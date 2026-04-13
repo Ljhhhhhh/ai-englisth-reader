@@ -14,8 +14,7 @@ try {
 }
 
 const databaseUrl =
-  process.env.DATABASE_URL ??
-  'mysql://root:password@127.0.0.1:3306/ai_english_read';
+  process.env.DATABASE_URL ?? 'mysql://lexora:Guanmo!01@127.0.0.1:3306/lexora';
 
 export default defineConfig({
   schema: 'prisma/schema.prisma',

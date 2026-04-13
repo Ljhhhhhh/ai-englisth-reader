@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ErrorState } from '@/components/system/error-state';
 import { WordList } from '@/components/words/word-list';
+import { requirePageSession } from '@/features/auth/page-guard';
 import { uiCopy } from '@/lib/ui-copy';
 
 type WordsPageProps = {
@@ -13,8 +14,25 @@ function readFirstParam(
   return Array.isArray(value) ? value[0] : value;
 }
 
+function toSearchParamEntries(
+  searchParams: Record<string, string | string[] | undefined>,
+) {
+  return Object.entries(searchParams).flatMap(([key, value]) => {
+    if (Array.isArray(value)) {
+      return value.map((item) => [key, item] as [string, string]);
+    }
+
+    return value ? [[key, value] as [string, string]] : [];
+  });
+}
+
 export default async function WordsPage({ searchParams }: WordsPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  await requirePageSession(
+    `/words${resolvedSearchParams ? `?${new URLSearchParams(
+      toSearchParamEntries(resolvedSearchParams),
+    ).toString()}` : ''}`,
+  );
   const from = readFirstParam(resolvedSearchParams?.from);
   const articleSlug = readFirstParam(resolvedSearchParams?.articleSlug);
   const backHref =

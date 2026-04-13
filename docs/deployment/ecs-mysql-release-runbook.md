@@ -31,7 +31,12 @@
 - `APP_BASE_URL`：站点对外访问地址
 - `JWT_SECRET`：会话签名密钥
 - `MAIL_FROM`：登录验证码发件人
-- `MAIL_PROVIDER_API_KEY`（或等价邮件服务密钥）
+- `MAIL_PROVIDER`：`log` 或 `gmail`
+- `MAIL_SMTP_HOST`：Gmail SMTP 主机，默认 `smtp.gmail.com`
+- `MAIL_SMTP_PORT`：Gmail SMTP 端口，默认 `465`
+- `MAIL_SMTP_SECURE`：Gmail SMTP 是否启用 SSL，默认 `true`
+- `MAIL_SMTP_USER`：Gmail 发件账号
+- `MAIL_SMTP_PASS`：Gmail App Password
 - `LLM_API_KEY`
 - `LLM_BASE_URL`
 - `LLM_MODEL`
@@ -47,7 +52,7 @@ docker build -t lexora:server-mysql .
 ```bash
 docker run --rm \
   -p 3000:3000 \
-  -e DATABASE_URL='mysql://user:pass@host:3306/ai_english_read' \
+  -e DATABASE_URL='mysql://user:pass@host:3306/lexora' \
   -e RUN_PRISMA_MIGRATE_DEPLOY=1 \
   -e RUN_PRISMA_SEED=1 \
   lexora:server-mysql

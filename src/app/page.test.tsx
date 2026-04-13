@@ -1,4 +1,9 @@
 import { render, screen } from '@testing-library/react';
+
+vi.mock('@/features/auth/page-guard', () => ({
+  requirePageSession: vi.fn().mockResolvedValue({ id: 'session-1' }),
+}));
+
 import HomePage from '@/app/page';
 
 describe('HomePage', () => {
