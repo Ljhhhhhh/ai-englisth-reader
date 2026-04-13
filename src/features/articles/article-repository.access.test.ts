@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadArticleFile } from '@/lib/content/load-article';
 
 const articleMocks = vi.hoisted(() => ({
-  findUnique: vi.fn(),
+  findFirst: vi.fn(),
 }));
 
 vi.mock('@/lib/db', () => ({
@@ -24,7 +24,7 @@ describe('article-repository access', () => {
 
   it('loads public articles without user context', async () => {
     const article = await loadArticleFile('welcome-to-deep-reading.json');
-    articleMocks.findUnique.mockResolvedValue({
+    articleMocks.findFirst.mockResolvedValue({
       ...mapArticleToPersistenceInput(article),
       createdAt: new Date('2026-04-11T00:00:00.000Z'),
       id: 'article-1',
@@ -35,8 +35,9 @@ describe('article-repository access', () => {
       slug: article.slug,
       title: article.title,
     });
-    expect(articleMocks.findUnique).toHaveBeenCalledWith({
+    expect(articleMocks.findFirst).toHaveBeenCalledWith({
       where: {
+        OR: [{ visibility: 'PUBLIC' }],
         slug: article.slug,
       },
     });
@@ -45,7 +46,7 @@ describe('article-repository access', () => {
   it('allows a signed-in owner to load their private article', async () => {
     const article = await loadArticleFile('welcome-to-deep-reading.json');
     const slug = 'private-generated-article';
-    articleMocks.findUnique.mockResolvedValue({
+    articleMocks.findFirst.mockResolvedValue({
       ...mapArticleToPersistenceInput(
         {
           ...article,
@@ -60,6 +61,7 @@ describe('article-repository access', () => {
       createdAt: new Date('2026-04-11T00:00:00.000Z'),
       id: 'article-1',
       updatedAt: new Date('2026-04-11T00:00:00.000Z'),
+      visibility: 'PRIVATE',
     });
 
     await expect(
@@ -71,19 +73,12 @@ describe('article-repository access', () => {
   });
 
   it('does not allow anonymous access to a private article', async () => {
-    const article = await loadArticleFile('welcome-to-deep-reading.json');
-    articleMocks.findUnique.mockResolvedValue({
-      ...mapArticleToPersistenceInput(article, {
-        ownerId: 'user-1',
-        visibility: 'PRIVATE',
-      }),
-      createdAt: new Date('2026-04-11T00:00:00.000Z'),
-      id: 'article-1',
-      updatedAt: new Date('2026-04-11T00:00:00.000Z'),
-    });
+    articleMocks.findFirst.mockResolvedValue(null);
 
     await expect(
       loadPersistedArticle('private-generated-article'),
-    ).rejects.toThrow('Article not found: private-generated-article');
+    ).rejects.toThrow(
+      'Article not found: private-generated-article',
+    );
   });
 });

@@ -1,5 +1,5 @@
 import { getCurrentUser } from '@/features/auth/current-user';
-import { getGenerationJob } from '@/features/generation/generation-job-service';
+import { getGenerationJobForUser } from '@/features/generation/generation-job-service';
 
 type JobRouteProps = {
   params: Promise<{ jobId: string }>;

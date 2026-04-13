@@ -1,0 +1,13 @@
+{
+  "subject": "Additional work (1): Implement the approved migration from /Users/pipilu/Documen",
+  "description": "Continue implementation work on: Implement the approved migration from /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/prd-20260411T122309Z-server-mysql-migration.md and /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/test-spec-20260411T122309Z-server-mysql-migration.md. Split into 4 lanes: (1) auth and session foundation with email-code login and JWT-backed session cookies, (2) MySQL schema migration plus article and generation persistence cutover, (3) home/reader/words UI cutover from localStorage/deviceId to authenticated server-backed state, (4) tests, deployment docs, ECS Ubuntu container-first packaging, and final verification. Preserve homepage, reader, words, explain, and generation polling behavior unless the plan explicitly changes it. Verify with pnpm lint, pnpm test, pnpm build, pnpm prisma validate, MySQL-backed integration coverage, and Playwright before shutdown.",
+  "status": "completed",
+  "role": "executor",
+  "id": "4",
+  "depends_on": [],
+  "version": 5,
+  "created_at": "2026-04-11T12:59:51.700Z",
+  "owner": "worker-4",
+  "completed_at": "2026-04-11T13:34:44.564Z",
+  "result": "Completed lane-4 deployment/docs/verification slice in commit c564dff. Added Docker/ECS packaging baseline (.dockerignore, Dockerfile, scripts/container-entrypoint.sh, scripts/http-healthcheck.mjs), readiness endpoint and tests (src/app/api/health/route.ts, src/features/health/readiness.ts), deploy/smoke docs, and repaired stale reader/home tests so the verification harness is green again. Verification: PASS pnpm lint; PASS pnpm test (31 files, 101 tests); PASS pnpm exec tsc --noEmit; PASS pnpm build; PASS pnpm prisma validate; PASS pnpm exec vitest run src/features/health/readiness.test.ts src/app/api/health/route.test.ts src/components/reader/article-body.test.tsx src/components/reader/reader-shell.test.tsx; PASS HEALTHCHECK_URL=http://127.0.0.1:3100/api/health node scripts/http-healthcheck.mjs; PASS curl http://127.0.0.1:3100/api/health (status ok); PASS pnpm exec playwright test tests/e2e/home.spec.ts --project=chromium (5 passed). Note: MySQL-backed integration coverage still depends on lanes 1-3 landing together."
+}

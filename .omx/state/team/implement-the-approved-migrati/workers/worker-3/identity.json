@@ -1,0 +1,17 @@
+{
+  "name": "worker-3",
+  "index": 3,
+  "role": "executor",
+  "worker_cli": "codex",
+  "assigned_tasks": [
+    "3"
+  ],
+  "working_dir": "/Users/pipilu/Documents/MaDun/ai-english-read/.omx/team/implement-the-approved-migrati/worktrees/worker-3",
+  "worktree_repo_root": "/Users/pipilu/Documents/MaDun/ai-english-read",
+  "worktree_path": "/Users/pipilu/Documents/MaDun/ai-english-read/.omx/team/implement-the-approved-migrati/worktrees/worker-3",
+  "worktree_detached": true,
+  "worktree_created": true,
+  "team_state_root": "/Users/pipilu/Documents/MaDun/ai-english-read/.omx/state",
+  "pid": 75606,
+  "pane_id": "%26"
+}

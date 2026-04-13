@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const readinessMocks = vi.hoisted(() => ({
   getReadinessSnapshot: vi.fn(),
@@ -13,22 +13,33 @@ describe('GET /api/health', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('returns 200 when the database probe succeeds', async () => {
-    dbMocks.$queryRaw.mockResolvedValue([{ 1: 1 }]);
+  it('returns 200 when readiness is ok', async () => {
+    readinessMocks.getReadinessSnapshot.mockResolvedValue({
+      checkedAt: '2026-04-11T00:00:00.000Z',
+      status: 'ok',
+      checks: {
+        database: { ok: true, detail: 'query ok' },
+        environment: { ok: true, missing: [] },
+        llm: { configured: true, detail: 'LLM credentials configured' },
+      },
+    });
 
     const response = await GET();
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toMatchObject({
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toEqual({
+      checkedAt: '2026-04-11T00:00:00.000Z',
       status: 'ok',
+      checks: {
+        database: { ok: true, detail: 'query ok' },
+        environment: { ok: true, missing: [] },
+        llm: { configured: true, detail: 'LLM credentials configured' },
+      },
     });
   });
 
-  it('returns 503 when readiness fails', async () => {
+  it('returns 503 when readiness is error', async () => {
     readinessMocks.getReadinessSnapshot.mockResolvedValue({
       checkedAt: '2026-04-11T00:00:00.000Z',
       status: 'error',
@@ -42,27 +53,15 @@ describe('GET /api/health', () => {
     const response = await GET();
 
     expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    await expect(response.json()).resolves.toEqual({
+      checkedAt: '2026-04-11T00:00:00.000Z',
       status: 'error',
-    });
-  });
-
-  it('returns 503 when the database probe times out', async () => {
-    vi.useFakeTimers();
-    dbMocks.$queryRaw.mockReturnValue(new Promise(() => {}));
-
-    const responsePromise = GET();
-    await vi.advanceTimersByTimeAsync(2_000);
-    const response = await responsePromise;
-
-    expect(response.status).toBe(503);
-    await expect(response.json()).resolves.toMatchObject({
       checks: {
-        database: 'error',
+        database: { ok: false, detail: 'connect ECONNREFUSED' },
+        environment: { ok: true, missing: [] },
+        llm: { configured: false, detail: 'LLM credentials missing' },
       },
-      ok: false,
-      service: 'ai-english-read',
-      timestamp: expect.any(String),
     });
   });
 });

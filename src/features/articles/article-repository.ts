@@ -25,8 +25,13 @@ export function mapArticleRecordToArticle(record: ArticleRecord): Article {
 
 export function mapArticleToPersistenceInput(
   article: Article,
-  visibility: Prisma.ArticleCreateInput['visibility'] = 'PUBLIC',
+  options: {
+    ownerId?: string;
+    visibility?: Prisma.ArticleCreateInput['visibility'];
+  } = {},
 ) {
+  const { ownerId = null, visibility = 'PUBLIC' } = options;
+
   return {
     chineseTitle: article.chinese_title,
     chineseTranslation: article.chinese_translation,
@@ -39,6 +44,7 @@ export function mapArticleToPersistenceInput(
     languageEvolutionJson:
       article.language_evolution as Prisma.InputJsonValue,
     listSummaryZh: article.list_summary_zh,
+    ownerId,
     paragraphsJson: article.paragraphs as Prisma.InputJsonValue,
     slug: article.slug,
     source: article.source,
@@ -65,9 +71,25 @@ export async function listPersistedArticles() {
   return articles.map(mapArticleRecordToArticle);
 }
 
-export async function loadPersistedArticle(slug: string) {
-  const record = await db.article.findUnique({
+export async function loadPersistedArticle(
+  slug: string,
+  options: { viewerUserId?: string } = {},
+) {
+  const record = await db.article.findFirst({
     where: {
+      OR: [
+        {
+          visibility: 'PUBLIC',
+        },
+        ...(options.viewerUserId
+          ? [
+              {
+                ownerId: options.viewerUserId,
+                visibility: 'PRIVATE' as const,
+              },
+            ]
+          : []),
+      ],
       slug,
     },
   });
@@ -81,9 +103,12 @@ export async function loadPersistedArticle(slug: string) {
 
 export async function upsertPersistedArticle(
   article: Article,
-  visibility: Prisma.ArticleCreateInput['visibility'] = 'PUBLIC',
+  options: {
+    ownerId?: string;
+    visibility?: Prisma.ArticleCreateInput['visibility'];
+  } = {},
 ) {
-  const data = mapArticleToPersistenceInput(article, visibility);
+  const data = mapArticleToPersistenceInput(article, options);
 
   const record = await db.article.upsert({
     create: data,

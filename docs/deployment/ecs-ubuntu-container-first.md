@@ -28,7 +28,7 @@
 ### 本地构建
 
 ```bash
-docker build -t ai-english-read:local .
+docker build -t lexora:local .
 ```
 
 ### 本地运行（示例）
@@ -36,7 +36,7 @@ docker build -t ai-english-read:local .
 ```bash
 docker run --rm -p 3000:3000 \
   --env-file .env \
-  ai-english-read:local
+  lexora:local
 ```
 
 启动后确认：

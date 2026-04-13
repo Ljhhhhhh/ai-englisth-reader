@@ -69,8 +69,8 @@ pnpm test:e2e
 ### 本地镜像验证
 
 ```bash
-docker build -t ai-english-read:local .
-docker run --rm -p 3000:3000 --env-file .env ai-english-read:local
+docker build -t lexora:local .
+docker run --rm -p 3000:3000 --env-file .env lexora:local
 curl -fsS http://127.0.0.1:3000/api/health
 ```
 
@@ -107,7 +107,7 @@ Verification:
 - PASS | pnpm prisma validate
 - PASS | <mysql integration command>
 - PASS | pnpm test:e2e
-- PASS | docker build -t ai-english-read:local .
+- PASS | docker build -t lexora:local .
 - PASS | curl -fsS http://127.0.0.1:3000/api/health
 
 Smoke:

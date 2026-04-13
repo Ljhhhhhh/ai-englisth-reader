@@ -39,7 +39,7 @@
 ## 构建镜像
 
 ```bash
-docker build -t ai-english-read:server-mysql .
+docker build -t lexora:server-mysql .
 ```
 
 ## 本地模拟 ECS 启动
@@ -50,7 +50,7 @@ docker run --rm \
   -e DATABASE_URL='mysql://user:pass@host:3306/ai_english_read' \
   -e RUN_PRISMA_MIGRATE_DEPLOY=1 \
   -e RUN_PRISMA_SEED=1 \
-  ai-english-read:server-mysql
+  lexora:server-mysql
 ```
 
 如果要跳过迁移或导入，把对应变量留空或设为 `0`。
@@ -78,7 +78,7 @@ docker run --rm \
     "database": "ok"
   },
   "ok": true,
-  "service": "ai-english-read",
+  "service": "lexora",
   "timestamp": "2026-04-11T13:00:00.000Z"
 }
 ```

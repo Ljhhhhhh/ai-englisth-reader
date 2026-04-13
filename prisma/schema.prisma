@@ -16,8 +16,13 @@ model User {
   email             String                  @unique
   createdAt         DateTime                @default(now())
   updatedAt         DateTime                @updatedAt
+  ownedArticles     Article[]
   verificationCodes EmailVerificationCode[]
   sessions          Session[]
+  generationJobs    GenerationJob[]
+  readingProgresses ReadingProgress[]
+  savedWords        SavedWord[]
+  learningEvents    LearningEvent[]
 }
 
 model EmailVerificationCode {
@@ -63,14 +68,18 @@ model Article {
   highFrequencyPhrasesJson Json
   languageEvolutionJson    Json
   visibility               ArticleVisibility @default(PUBLIC)
+  ownerId                  String?
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
+  owner                    User?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   progresses               ReadingProgress[]
   quizAttempts             QuizAttempt[]
   savedWords               SavedWord[]
   learningEvents           LearningEvent[]
 
+  @@index([ownerId, visibility])
   @@index([visibility, estimatedMinutes, createdAt])
+  @@index([ownerId, createdAt])
 }
 
 model GenerationJob {

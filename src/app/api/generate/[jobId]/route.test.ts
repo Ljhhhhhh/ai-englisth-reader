@@ -8,16 +8,11 @@ const generationJobMocks = vi.hoisted(() => ({
   getGenerationJobForUser: vi.fn(),
 }));
 
-const currentUserMocks = vi.hoisted(() => ({
-  getCurrentUser: vi.fn(),
-}));
-
 vi.mock('@/features/auth/current-user', () => currentUserMocks);
 vi.mock(
   '@/features/generation/generation-job-service',
   () => generationJobMocks,
 );
-vi.mock('@/features/auth/current-user', () => currentUserMocks);
 
 import { GET } from './route';
 
@@ -43,22 +38,6 @@ describe('GET /api/generate/[jobId]', () => {
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
       error: 'Authentication required',
-    });
-  });
-
-  it('rejects unauthenticated requests', async () => {
-    currentUserMocks.getCurrentUser.mockResolvedValue(null);
-
-    const response = await GET(
-      new Request('http://localhost/api/generate/job-1'),
-      {
-        params: Promise.resolve({ jobId: 'job-1' }),
-      },
-    );
-
-    expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({
-      error: '请先登录，再查看生成任务。',
     });
   });
 

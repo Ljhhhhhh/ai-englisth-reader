@@ -17,10 +17,6 @@ const generationContentMocks = vi.hoisted(() => ({
   generateArticle: vi.fn(),
 }));
 
-const currentUserMocks = vi.hoisted(() => ({
-  getCurrentUser: vi.fn(),
-}));
-
 vi.mock(
   '@/features/generation/generation-job-service',
   () => generationJobMocks,
@@ -31,7 +27,6 @@ vi.mock(
   '@/features/generation/article-generator',
   () => generationContentMocks,
 );
-vi.mock('@/features/auth/current-user', () => currentUserMocks);
 
 import { POST } from './route';
 
@@ -193,9 +188,10 @@ describe('POST /api/generate', () => {
         file: expect.any(File),
       });
       expect(generationContentMocks.generateArticle).toHaveBeenCalledWith({
-        content: 'raw content',
         ownerId: 'user-1',
-        title: 'Article Title',
+        source: 'my-article.txt',
+        text: 'raw content',
+        titleHint: 'Article Title',
       });
     });
   });

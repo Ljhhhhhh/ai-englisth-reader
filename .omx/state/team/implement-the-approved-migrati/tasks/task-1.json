@@ -1,0 +1,13 @@
+{
+  "subject": "Implement: Implement the approved migration from /Users/pipilu/Documents/MaDun/a",
+  "description": "Implement the core functionality for: Implement the approved migration from /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/prd-20260411T122309Z-server-mysql-migration.md and /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/test-spec-20260411T122309Z-server-mysql-migration.md. Split into 4 lanes: (1) auth and session foundation with email-code login and JWT-backed session cookies, (2) MySQL schema migration plus article and generation persistence cutover, (3) home/reader/words UI cutover from localStorage/deviceId to authenticated server-backed state, (4) tests, deployment docs, ECS Ubuntu container-first packaging, and final verification. Preserve homepage, reader, words, explain, and generation polling behavior unless the plan explicitly changes it. Verify with pnpm lint, pnpm test, pnpm build, pnpm prisma validate, MySQL-backed integration coverage, and Playwright before shutdown.",
+  "status": "completed",
+  "role": "executor",
+  "id": "1",
+  "depends_on": [],
+  "version": 13,
+  "created_at": "2026-04-11T12:59:51.688Z",
+  "owner": "worker-1",
+  "completed_at": "2026-04-11T15:13:41.752Z",
+  "result": "Completed authenticated state cutover, article fallback hardening, and verification stabilization. Verification:\n- PASS pnpm test -> 33 passed, 108 passed\n- PASS pnpm lint\n- PASS pnpm exec tsc --noEmit\n- PASS pnpm exec prisma validate\n- PASS pnpm build\n- PASS pnpm test:e2e -> 27 passed, 17 skipped by project gating\nCommits: 5d14be8, f3ee07e"
+}

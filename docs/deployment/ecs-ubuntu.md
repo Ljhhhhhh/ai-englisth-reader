@@ -34,11 +34,11 @@ The migration lanes will expand this list, but the deploy surface should already
 ## Build and local container smoke
 
 ```bash
-docker build -t ai-english-read:local .
+docker build -t lexora:local .
 docker run --rm -p 3000:3000 \
   -e DATABASE_URL='mysql://user:pass@host.docker.internal:3306/ai_english_read' \
   -e LLM_API_KEY='replace-me' \
-  ai-english-read:local
+  lexora:local
 ```
 
 In another terminal:

@@ -9,10 +9,6 @@ import {
 } from '@/features/articles/article-repository';
 
 function shouldUseFileBackedArticles() {
-  return process.env.NODE_ENV === 'test';
-}
-
-function shouldUseFileBackedArticles() {
   return process.env.NODE_ENV === 'test' || process.env.USE_FILE_ARTICLES === '1';
 }
 
@@ -40,17 +36,22 @@ async function withDevelopmentFileFallback<T>(
 }
 
 export async function listArticles(): Promise<Article[]> {
-  if (shouldUseFileBackedArticles()) {
-    return loadAllArticles();
-  }
-
-  return listPersistedArticles();
+  return withDevelopmentFileFallback(
+    () => listPersistedArticles(),
+    () => loadAllArticles(),
+  );
 }
 
 export async function loadArticle(slug: string): Promise<Article> {
-  if (shouldUseFileBackedArticles()) {
-    return loadArticleContent(slug);
-  }
+  return loadArticleForViewer(slug);
+}
 
-  return loadPersistedArticle(slug);
+export async function loadArticleForViewer(
+  slug: string,
+  viewerUserId?: string,
+): Promise<Article> {
+  return withDevelopmentFileFallback(
+    () => loadPersistedArticle(slug, { viewerUserId }),
+    () => loadArticleContent(slug),
+  );
 }

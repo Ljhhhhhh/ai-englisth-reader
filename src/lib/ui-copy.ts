@@ -29,9 +29,9 @@ export function formatParagraphProgress(
 
 export const uiCopy = {
   app: {
-    description: '面向中文母语者的交互式英语精读阅读器',
+    description: '言序 Lexora，面向中文母语者的英语精读阅读器。',
     htmlLang: 'zh-CN',
-    title: '萌芽英语精读',
+    title: '言序 | Lexora',
   },
   common: {
     backHome: '返回首页',
@@ -73,7 +73,7 @@ export const uiCopy = {
     hero: {
       description:
         '把注意力留在同一篇文章里，在上下文中吃透难点，把真正重要的词汇留下来，而不是在零散工具之间来回切换、不断打断阅读节奏。',
-      eyebrow: '面向中文母语者的英语精读 MVP',
+      eyebrow: '言序 Lexora',
       title: '一次真正读懂一篇英文文章。',
     },
   },

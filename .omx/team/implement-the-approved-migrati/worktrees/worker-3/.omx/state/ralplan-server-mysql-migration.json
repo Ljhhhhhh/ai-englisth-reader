@@ -1,0 +1,12 @@
+{
+  "active": false,
+  "mode": "ralplan",
+  "completed_at": "2026-04-11T12:23:09Z",
+  "source_spec": ".omx/specs/deep-interview-server-mysql-migration-20260411.md",
+  "artifacts": {
+    "prd": ".omx/plans/prd-20260411T122309Z-server-mysql-migration.md",
+    "test_spec": ".omx/plans/test-spec-20260411T122309Z-server-mysql-migration.md"
+  },
+  "deliberate_mode": true,
+  "decision": "Approve monolithic Next.js + MySQL + first-party auth + document-shaped article storage migration plan"
+}

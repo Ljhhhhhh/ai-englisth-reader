@@ -1,0 +1,13 @@
+{
+  "subject": "Test: Implement the approved migration from /Users/pipilu/Documents/MaDun/ai-eng",
+  "description": "Write tests and verify: Implement the approved migration from /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/prd-20260411T122309Z-server-mysql-migration.md and /Users/pipilu/Documents/MaDun/ai-english-read/.omx/plans/test-spec-20260411T122309Z-server-mysql-migration.md. Split into 4 lanes: (1) auth and session foundation with email-code login and JWT-backed session cookies, (2) MySQL schema migration plus article and generation persistence cutover, (3) home/reader/words UI cutover from localStorage/deviceId to authenticated server-backed state, (4) tests, deployment docs, ECS Ubuntu container-first packaging, and final verification. Preserve homepage, reader, words, explain, and generation polling behavior unless the plan explicitly changes it. Verify with pnpm lint, pnpm test, pnpm build, pnpm prisma validate, MySQL-backed integration coverage, and Playwright before shutdown.",
+  "status": "completed",
+  "role": "executor",
+  "id": "2",
+  "depends_on": [],
+  "version": 12,
+  "created_at": "2026-04-11T12:59:51.695Z",
+  "owner": "worker-4",
+  "completed_at": "2026-04-11T14:40:16.419Z",
+  "result": "Verification:\n- PASS pnpm lint\n- PASS pnpm test (38 files, 121 tests)\n- PASS pnpm exec tsc --noEmit\n- PASS pnpm build\n- PASS pnpm prisma validate\n- PASS PLAYWRIGHT_BASE_URL=http://127.0.0.1:3000 PLAYWRIGHT_SKIP_WEB_SERVER=1 pnpm exec playwright test (29 passed, 17 skipped)\n\nImplemented/fixed:\n- generation route/service tests now mock authenticated current-user flow and assert userId-backed jobs\n- generation job service now persists the resolved userId field\n- article repository mapper test includes ownerId required by current Prisma schema\n- reader-flow E2E waits for persisted progress before reload to avoid false restore failures\n\nCommit: 5d84f24"
+}

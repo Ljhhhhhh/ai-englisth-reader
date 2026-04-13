@@ -32,11 +32,6 @@ export default defineConfig({
     baseURL,
     trace: 'on-first-retry',
   },
-  webServer: {
-    command: "USE_FILE_ARTICLES=1 pnpm exec next start --hostname 127.0.0.1 --port 3000",
-    url: "http://127.0.0.1:3000",
-    reuseExistingServer: !process.env.CI,
-  },
   webServer: shouldStartWebServer
     ? {
         command: webServerCommand,

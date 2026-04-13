@@ -27,7 +27,7 @@ function fileNameToTitle(name: string) {
 async function extractFromUrl(url: string): Promise<ExtractedContent> {
   const response = await fetch(url, {
     headers: {
-      'User-Agent': 'AI-English-Read/0.1',
+      'User-Agent': 'Lexora/0.1',
     },
   });
 
