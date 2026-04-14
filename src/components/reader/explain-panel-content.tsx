@@ -1,4 +1,6 @@
 import type { ReaderExplainMode } from '@/features/reader/reader-explain-utils';
+import { LlmDebugPanel } from '@/components/system/llm-debug-panel';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
 import { LlmLoadingCard } from '@/components/system/llm-loading-card';
 import { uiCopy } from '@/lib/ui-copy';
 
@@ -41,6 +43,7 @@ type ExplainPanelContentProps = {
   saveErrorMessage?: string | null;
   saved: boolean;
   state: ExplainPanelViewState;
+  llmDebug?: LlmDebugRecord | null;
 };
 
 function getPanelMode(state: ExplainPanelViewState) {
@@ -115,6 +118,7 @@ function renderAnchorNote(title: string, body: string) {
 }
 
 export function ExplainPanelContent({
+  llmDebug,
   onRetry,
   onToggleSave,
   remembered = false,
@@ -296,6 +300,14 @@ export function ExplainPanelContent({
             </div>
           ) : null}
         </>
+      ) : null}
+
+      {llmDebug !== undefined ? (
+        <LlmDebugPanel
+          emptyLabel="本次解释尚未产生 LLM 调用日志"
+          key={llmDebug?.callId ?? 'reader-empty'}
+          record={llmDebug ?? null}
+        />
       ) : null}
     </div>
   );

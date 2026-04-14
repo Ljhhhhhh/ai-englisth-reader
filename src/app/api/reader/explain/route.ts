@@ -1,8 +1,12 @@
 import { loadArticleForViewer } from '@/features/articles/article-service';
 import { getCurrentUser } from '@/features/auth/current-user';
+import { isServerLlmDebugEnabled } from '@/features/llm-debug/debug-config';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
 import { explainReaderSelection } from '@/features/reader/reader-explain-service';
 
 export async function POST(request: Request) {
+  let latestDebugRecord: LlmDebugRecord | null = null;
+
   try {
     const body = (await request.json()) as {
       articleSlug?: string;
@@ -36,13 +40,23 @@ export async function POST(request: Request) {
       selectedText: body.selectedText,
       sentenceId: body.sentenceId,
       sentenceText: body.sentenceText,
+    }, {
+      onDebugRecord: isServerLlmDebugEnabled()
+        ? (record) => {
+            latestDebugRecord = record;
+          }
+        : undefined,
     });
 
-    return Response.json(result);
+    return Response.json({
+      ...result,
+      llmDebug: isServerLlmDebugEnabled() ? latestDebugRecord : undefined,
+    });
   } catch (error) {
     return Response.json(
       {
         error: error instanceof Error ? error.message : 'Explain failed',
+        llmDebug: isServerLlmDebugEnabled() ? latestDebugRecord : undefined,
       },
       { status: 400 },
     );

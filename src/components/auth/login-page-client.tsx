@@ -84,125 +84,97 @@ export function LoginPageClient({ nextPath }: LoginPageClientProps) {
   }
 
   return (
-    <main
-      style={{
-        minHeight: '100vh',
-        padding: '48px 20px 72px',
-      }}
-    >
-      <section
-        style={{
-          maxWidth: 520,
-          margin: '0 auto',
-          display: 'grid',
-          gap: 20,
-          padding: 28,
-          borderRadius: 28,
-          border: '1px solid var(--border)',
-          background: 'var(--surface)',
-        }}
-      >
-        <div style={{ display: 'grid', gap: 10 }}>
-          <p style={{ margin: 0, color: 'var(--accent)', fontSize: 14 }}>
-            邮箱验证码登录
-          </p>
-          <h1 style={{ margin: 0, fontSize: 'clamp(2rem, 4vw, 3rem)' }}>
-            登录后再继续同步阅读进度
-          </h1>
-          <p style={{ margin: 0, color: 'var(--muted)', lineHeight: 1.7 }}>
-            先输入邮箱领取验证码，再用验证码换取会话 cookie。后续会把阅读进度、生词和生成任务逐步切到账号体系。
-          </p>
+    <main className="login-page">
+      <section className="login-page__frame">
+        <div className="login-page__hero">
+          <div className="login-page__hero-copy">
+            <p className="login-page__eyebrow">Lexora Reading Sync</p>
+            <h1 className="login-page__title">
+              让你的精读进度，
+              <br />
+              接着往下走。
+            </h1>
+            <p className="login-page__description">
+              登录后，阅读位置、生词和后续学习记录会跟着你的账号继续，不打断精读节奏。
+            </p>
+          </div>
         </div>
 
-        <label style={{ display: 'grid', gap: 8 }}>
-          <span>邮箱</span>
-          <input
-            type="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@example.com"
-            style={{
-              padding: '14px 16px',
-              borderRadius: 16,
-              border: '1px solid var(--border)',
-              background: '#fff',
-            }}
-          />
-        </label>
+        <div className="login-page__form-panel">
+          <div className="login-page__card">
+            <div className="login-page__card-header">
+              <p className="login-page__card-eyebrow">
+                {step === 'email' ? '发送验证码' : '验证身份'}
+              </p>
+              <h2 className="login-page__card-title">
+                {step === 'email' ? '输入邮箱' : '输入验证码'}
+              </h2>
+              <p className="login-page__card-description">
+                {step === 'email'
+                  ? '验证码将发送至你的邮箱。'
+                  : `验证成功后返回 ${nextPath}。`}
+              </p>
+            </div>
 
-        {step === 'verify' ? (
-          <label style={{ display: 'grid', gap: 8 }}>
-            <span>验证码</span>
-            <input
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              placeholder="6 位验证码"
-              style={{
-                padding: '14px 16px',
-                borderRadius: 16,
-                border: '1px solid var(--border)',
-                background: '#fff',
-                letterSpacing: '0.32em',
-              }}
-            />
-          </label>
-        ) : null}
+            <label className="login-page__field">
+              <span className="login-page__field-label">邮箱</span>
+              <input
+                aria-label="邮箱"
+                className="login-page__input"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+              />
+            </label>
 
-        {hintCode ? (
-          <p style={{ margin: 0, color: 'var(--muted)' }}>
-            开发环境验证码：<strong>{hintCode}</strong>
-          </p>
-        ) : null}
+            {step === 'verify' ? (
+              <label className="login-page__field">
+                <span className="login-page__field-label">验证码</span>
+                <input
+                  aria-label="验证码"
+                  className="login-page__input login-page__input--code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  placeholder="6 位验证码"
+                />
+              </label>
+            ) : null}
 
-        {error ? (
-          <p style={{ margin: 0, color: '#b42318' }}>{error}</p>
-        ) : null}
+            {hintCode ? (
+              <p className="login-page__dev-code">开发环境验证码：{hintCode}</p>
+            ) : null}
 
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {step === 'email' ? (
-            <button
-              type="button"
-              onClick={requestCode}
-              disabled={!email.trim() || isSending}
-              style={{
-                borderRadius: 999,
-                border: 'none',
-                background: 'var(--accent)',
-                color: '#fff',
-                cursor: email.trim() && !isSending ? 'pointer' : 'not-allowed',
-                fontWeight: 700,
-                padding: '14px 20px',
-              }}
-            >
-              {isSending ? '发送中…' : '发送验证码'}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={verifyCode}
-              disabled={!email.trim() || code.trim().length !== 6 || isVerifying}
-              style={{
-                borderRadius: 999,
-                border: 'none',
-                background: 'var(--accent)',
-                color: '#fff',
-                cursor:
-                  email.trim() && code.trim().length === 6 && !isVerifying
-                    ? 'pointer'
-                    : 'not-allowed',
-                fontWeight: 700,
-                padding: '14px 20px',
-              }}
-            >
-              {isVerifying ? '验证中…' : '完成登录'}
-            </button>
-          )}
+            {error ? <p className="login-page__error">{error}</p> : null}
 
-          <Link href="/" style={{ color: 'var(--accent)', fontWeight: 700 }}>
-            返回首页
-          </Link>
+            <div className="login-page__actions">
+              {step === 'email' ? (
+                <button
+                  type="button"
+                  onClick={requestCode}
+                  disabled={!email.trim() || isSending}
+                  className="login-page__primary-button"
+                >
+                  {isSending ? '发送中…' : '发送验证码'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={verifyCode}
+                  disabled={!email.trim() || code.trim().length !== 6 || isVerifying}
+                  className="login-page__primary-button"
+                >
+                  {isVerifying ? '验证中…' : '完成登录'}
+                </button>
+              )}
+
+              <Link href="/" className="login-page__secondary-link">
+                返回首页
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </main>

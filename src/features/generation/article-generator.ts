@@ -6,6 +6,12 @@ import { articleSchema } from '@/lib/content/article-schema';
 import { env } from '@/lib/env';
 import { upsertPersistedArticle } from '@/features/articles/article-repository';
 import {
+  createPostProcessFailureRecord,
+  invokeStructuredWithDebug,
+} from '@/features/llm-debug/capture';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
+import { sanitizeSourceRefLabel } from '@/features/llm-debug/debug-redaction';
+import {
   parseFeynmanSummary,
   splitSummaryIntoSentences,
 } from './feynman-parser';
@@ -17,6 +23,11 @@ type GenerateArticleInput = {
   source: string;
   text: string;
   titleHint: string;
+};
+
+type GenerateArticleOptions = {
+  attemptDebugRecord?: (record: LlmDebugRecord) => void;
+  sourceType?: 'url' | 'file';
 };
 
 function normalizeWhitespace(value: string) {
@@ -223,7 +234,11 @@ function buildArticle(
   });
 }
 
-async function invokeModel(text: string) {
+async function invokeModel(
+  input: GenerateArticleInput,
+  options: GenerateArticleOptions,
+  attempt: number,
+) {
   if (!env.LLM_API_KEY) {
     throw new Error('缺少 LLM_API_KEY，暂时无法生成文章。');
   }
@@ -235,22 +250,53 @@ async function invokeModel(text: string) {
     },
     model: env.LLM_MODEL,
     temperature: 0.3,
-  }).withStructuredOutput(promptOutputSchema);
+  });
 
   const prompt = await loadPrompt();
+  const result = await invokeStructuredWithDebug<PromptOutput>({
+    attempt,
+    llm,
+    messages: [
+      new SystemMessage(prompt),
+      new HumanMessage(`请处理以下原文：\n\n${input.text}`),
+    ],
+    schema: promptOutputSchema,
+    summary: {
+      callType: 'generate',
+      model: env.LLM_MODEL,
+      sourceRefLabel: sanitizeSourceRefLabel({
+        sourceRef: input.source,
+        sourceType: options.sourceType ?? 'url',
+      }),
+      sourceType: options.sourceType,
+      trigger: 'generate_page',
+    },
+  });
 
-  return llm.invoke([
-    new SystemMessage(prompt),
-    new HumanMessage(`请处理以下原文：\n\n${text}`),
-  ]);
+  options.attemptDebugRecord?.(result.record);
+
+  if (result.error || result.parsed === null) {
+    throw result.error ?? new Error('LLM structured output parse failed.');
+  }
+
+  return {
+    payload: result.parsed,
+    record: result.record,
+  };
 }
 
-export async function generateArticle(input: GenerateArticleInput) {
+export async function generateArticle(
+  input: GenerateArticleInput,
+  options: GenerateArticleOptions = {},
+) {
   let lastError: unknown = null;
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
+    let attemptRecord: LlmDebugRecord | null = null;
+
     try {
-      const payload = await invokeModel(input.text);
+      const { payload, record } = await invokeModel(input, options, attempt + 1);
+      attemptRecord = record;
       const article = buildArticle(payload, input);
 
       return upsertPersistedArticle(article, {
@@ -258,6 +304,20 @@ export async function generateArticle(input: GenerateArticleInput) {
         visibility: 'PRIVATE',
       });
     } catch (error) {
+      if (
+        error instanceof Error &&
+        options.attemptDebugRecord &&
+        attemptRecord
+      ) {
+        options.attemptDebugRecord(
+          createPostProcessFailureRecord({
+            attempt: attempt + 1,
+            baseRecord: attemptRecord,
+            message: error.message,
+          }),
+        );
+      }
+
       lastError = error;
     }
   }

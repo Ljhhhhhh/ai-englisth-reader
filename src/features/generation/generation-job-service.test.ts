@@ -1,3 +1,4 @@
+import { Prisma } from '@prisma/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const generationJobMocks = vi.hoisted(() => ({
@@ -6,6 +7,7 @@ const generationJobMocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
   findUnique: vi.fn(),
   update: vi.fn(),
+  updateMany: vi.fn(),
 }));
 
 vi.mock('@/lib/db', () => ({
@@ -15,13 +17,13 @@ vi.mock('@/lib/db', () => ({
 }));
 
 import {
+  claimGenerationJob,
   countRecentGenerationJobs,
   createGenerationJob,
   getGenerationJob,
   getGenerationJobForUser,
-  markGenerationJobDone,
-  markGenerationJobFailed,
-  markGenerationJobProcessing,
+  setGenerationJobFailure,
+  updateGenerationJobStage,
 } from './generation-job-service';
 
 describe('generation-job-service', () => {
@@ -29,11 +31,15 @@ describe('generation-job-service', () => {
     vi.clearAllMocks();
   });
 
-  it('creates a pending generation job', async () => {
+  it('creates a stage-aware generation job with canonical input and reserved slug', async () => {
     generationJobMocks.create.mockResolvedValue({ id: 'job-1' });
 
     const job = await createGenerationJob({
-      userId: 'user-1',
+      canonicalSource: 'https://example.com/article',
+      canonicalText: 'normalized content',
+      canonicalTitleHint: 'Article Title',
+      id: 'job-1',
+      reservedArticleSlug: 'article-title-job-1',
       sourceRef: 'https://example.com/article',
       sourceType: 'url',
       userId: 'user-1',
@@ -41,9 +47,29 @@ describe('generation-job-service', () => {
 
     expect(generationJobMocks.create).toHaveBeenCalledWith({
       data: {
-        userId: 'user-1',
+        activeAttempt: 0,
+        articleSlug: null,
+        canonicalSource: 'https://example.com/article',
+        canonicalText: 'normalized content',
+        canonicalTitleHint: 'Article Title',
+        claimToken: null,
+        claimedBy: null,
+        claimedUntil: null,
+        currentStep: null,
+        id: 'job-1',
+        lastErrorJson: Prisma.JsonNull,
+        reservedArticleSlug: 'article-title-job-1',
+        retryable: false,
+        revision: 0,
         sourceRef: 'https://example.com/article',
         sourceType: 'url',
+        stagesJson: {
+          english: { status: 'pending' },
+          finalize: { status: 'pending' },
+          grammar: { status: 'pending' },
+          translation: { status: 'pending' },
+          vocabulary: { status: 'pending' },
+        },
         status: 'pending',
         userId: 'user-1',
       },
@@ -78,10 +104,37 @@ describe('generation-job-service', () => {
   });
 
   it('loads a generation job scoped to a user', async () => {
-    generationJobMocks.findFirst.mockResolvedValue({ id: 'job-1', userId: 'user-1' });
-
-    await expect(getGenerationJobForUser('job-1', 'user-1')).resolves.toEqual({
+    generationJobMocks.findFirst.mockResolvedValue({
+      articleSlug: null,
+      claimToken: null,
+      claimedUntil: null,
+      createdAt: new Date('2026-04-14T00:00:00.000Z'),
+      currentStep: null,
       id: 'job-1',
+      lastErrorJson: null,
+      reservedArticleSlug: 'article-title-job-1',
+      retryable: false,
+      revision: 0,
+      sourceRef: 'https://example.com/article',
+      sourceType: 'url',
+      stagesJson: {
+        english: { status: 'pending' },
+        finalize: { status: 'pending' },
+        grammar: { status: 'pending' },
+        translation: { status: 'pending' },
+        vocabulary: { status: 'pending' },
+      },
+      status: 'pending',
+      updatedAt: new Date('2026-04-14T00:00:00.000Z'),
+      userId: 'user-1',
+    });
+
+    await expect(getGenerationJobForUser('job-1', 'user-1')).resolves.toMatchObject({
+      id: 'job-1',
+      retryable: false,
+      stages: {
+        english: { status: 'pending' },
+      },
       userId: 'user-1',
     });
     expect(generationJobMocks.findFirst).toHaveBeenCalledWith({
@@ -89,45 +142,137 @@ describe('generation-job-service', () => {
     });
   });
 
-  it('returns null when updating a missing job', async () => {
-    generationJobMocks.findUnique.mockResolvedValue(null);
+  it('claims a job only when the claim is absent or expired', async () => {
+    generationJobMocks.updateMany.mockResolvedValue({ count: 1 });
+    generationJobMocks.findUnique.mockResolvedValue({ id: 'job-1', revision: 1 });
 
-    await expect(markGenerationJobProcessing('job-404')).resolves.toBeNull();
-    expect(generationJobMocks.update).not.toHaveBeenCalled();
+    const now = new Date('2026-04-14T00:59:00.000Z');
+    const claimedUntil = new Date('2026-04-14T01:00:00.000Z');
+    const job = await claimGenerationJob({
+      claimToken: 'claim-1',
+      claimedBy: 'runner-1',
+      claimedUntil,
+      id: 'job-1',
+      now,
+    });
+
+    expect(generationJobMocks.updateMany).toHaveBeenCalledWith({
+      data: {
+        activeAttempt: {
+          increment: 1,
+        },
+        claimToken: 'claim-1',
+        claimedBy: 'runner-1',
+        claimedUntil,
+      },
+      where: {
+        id: 'job-1',
+        OR: [
+          { claimToken: null },
+          { claimedUntil: { lt: now } },
+        ],
+      },
+    });
+    expect(job).toEqual({ id: 'job-1', revision: 1 });
   });
 
-  it('marks a job as processing, done, and failed', async () => {
-    generationJobMocks.findUnique.mockResolvedValue({ id: 'job-1' });
-    generationJobMocks.update.mockResolvedValue({ id: 'job-1' });
+  it('writes a stage result only when the claim token and revision still match', async () => {
+    generationJobMocks.findUnique.mockResolvedValue({
+      id: 'job-1',
+      revision: 2,
+      stagesJson: {
+        english: { status: 'pending' },
+        finalize: { status: 'pending' },
+        grammar: { status: 'pending' },
+        translation: { status: 'pending' },
+        vocabulary: { status: 'pending' },
+      },
+    });
+    generationJobMocks.updateMany.mockResolvedValue({ count: 1 });
+    generationJobMocks.findUnique.mockResolvedValueOnce({
+      id: 'job-1',
+      revision: 2,
+      stagesJson: {
+        english: { status: 'pending' },
+        finalize: { status: 'pending' },
+        grammar: { status: 'pending' },
+        translation: { status: 'pending' },
+        vocabulary: { status: 'pending' },
+      },
+    });
+    generationJobMocks.findUnique.mockResolvedValueOnce({
+      id: 'job-1',
+      revision: 3,
+    });
 
-    await markGenerationJobProcessing('job-1');
-    await markGenerationJobDone('job-1', 'article-1');
-    await markGenerationJobFailed('job-1', 'boom');
+    const job = await updateGenerationJobStage({
+      claimToken: 'claim-1',
+      id: 'job-1',
+      nextStatus: 'processing',
+      revision: 2,
+      stage: 'english',
+      stageData: {
+        startedAt: '2026-04-14T01:00:00.000Z',
+        status: 'running',
+      },
+    });
 
-    expect(generationJobMocks.update).toHaveBeenNthCalledWith(1, {
+    expect(generationJobMocks.updateMany).toHaveBeenCalledWith({
       data: {
-        errorMsg: null,
+        currentStep: 'english',
+        revision: {
+          increment: 1,
+        },
+        stagesJson: {
+          english: {
+            startedAt: '2026-04-14T01:00:00.000Z',
+            status: 'running',
+          },
+          finalize: { status: 'pending' },
+          grammar: { status: 'pending' },
+          translation: { status: 'pending' },
+          vocabulary: { status: 'pending' },
+        },
         status: 'processing',
       },
       where: {
+        claimToken: 'claim-1',
         id: 'job-1',
+        revision: 2,
       },
     });
-    expect(generationJobMocks.update).toHaveBeenNthCalledWith(2, {
-      data: {
-        articleSlug: 'article-1',
-        errorMsg: null,
-        status: 'done',
-      },
-      where: {
-        id: 'job-1',
+    expect(job).toEqual({ id: 'job-1', revision: 3 });
+  });
+
+  it('truncates errorMsg while preserving the full failure in lastErrorJson', async () => {
+    generationJobMocks.findUnique.mockResolvedValue({
+      currentStep: 'grammar',
+      id: 'job-1',
+      stagesJson: {
+        english: { status: 'succeeded' },
+        finalize: { status: 'pending' },
+        grammar: { status: 'running' },
+        translation: { status: 'pending' },
+        vocabulary: { status: 'succeeded' },
       },
     });
-    expect(generationJobMocks.update).toHaveBeenNthCalledWith(3, {
-      data: {
-        errorMsg: 'boom',
-        status: 'failed',
-      },
+    generationJobMocks.update.mockResolvedValue({ id: 'job-1' });
+
+    const longMessage = 'x'.repeat(260);
+    await setGenerationJobFailure({
+      id: 'job-1',
+      message: longMessage,
+      stage: 'grammar',
+    });
+
+    expect(generationJobMocks.update).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        errorMsg: `${'x'.repeat(190)}…`,
+        lastErrorJson: {
+          message: longMessage,
+          stage: 'grammar',
+        },
+      }),
       where: {
         id: 'job-1',
       },

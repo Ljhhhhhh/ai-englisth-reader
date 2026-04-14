@@ -16,7 +16,7 @@ type HomePageProps = {
 
 export default async function HomePage({ searchParams }: HomePageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  await requirePageSession('/');
+  const session = await requirePageSession('/');
 
   let articles;
 
@@ -24,7 +24,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
     articles =
       resolvedSearchParams?.mockEmptyArticles === '1'
         ? []
-        : await listArticles();
+        : await listArticles(session.userId);
   } catch {
     return (
       <main

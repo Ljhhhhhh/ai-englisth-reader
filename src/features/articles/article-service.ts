@@ -35,9 +35,9 @@ async function withDevelopmentFileFallback<T>(
   }
 }
 
-export async function listArticles(): Promise<Article[]> {
+export async function listArticles(viewerUserId?: string): Promise<Article[]> {
   return withDevelopmentFileFallback(
-    () => listPersistedArticles(),
+    () => listPersistedArticles({ viewerUserId }),
     () => loadAllArticles(),
   );
 }

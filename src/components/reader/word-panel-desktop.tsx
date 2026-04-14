@@ -2,6 +2,7 @@ import {
   ExplainPanelContent,
   type ExplainPanelViewState,
 } from '@/components/reader/explain-panel-content';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
 import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelDesktopProps = {
@@ -13,6 +14,7 @@ type WordPanelDesktopProps = {
   saveEnabled: boolean;
   saveErrorMessage?: string | null;
   state: ExplainPanelViewState;
+  llmDebug?: LlmDebugRecord | null;
 };
 
 export function WordPanelDesktop({
@@ -24,6 +26,7 @@ export function WordPanelDesktop({
   saveEnabled,
   saveErrorMessage,
   state,
+  llmDebug,
 }: WordPanelDesktopProps) {
   return (
     <aside
@@ -70,6 +73,7 @@ export function WordPanelDesktop({
       </div>
       <div style={{ overflowY: 'auto', paddingRight: 6, paddingBottom: 4 }}>
         <ExplainPanelContent
+          llmDebug={llmDebug}
           onRetry={onRetry}
           onToggleSave={onToggleSave}
           remembered={remembered}

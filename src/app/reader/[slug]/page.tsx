@@ -6,7 +6,6 @@ import {
   listArticles,
   loadArticleForViewer,
 } from '@/features/articles/article-service';
-import { getCurrentUser } from '@/features/auth/current-user';
 import { requirePageSession } from '@/features/auth/page-guard';
 import type { Article } from '@/lib/content/article-schema';
 import { uiCopy } from '@/lib/ui-copy';
@@ -58,13 +57,13 @@ function validateReaderArticle(article: Article) {
 
 async function getReaderArticle(
   slug: string,
+  viewerUserId?: string,
   searchParams?: Record<string, string | string[] | undefined>,
 ) {
   try {
-    const user = await getCurrentUser();
     const [article, articles] = await Promise.all([
-      loadArticleForViewer(slug, user?.id),
-      listArticles(),
+      loadArticleForViewer(slug, viewerUserId),
+      listArticles(viewerUserId),
     ]);
     const nextArticle = applyReaderMocks(article, searchParams);
     const issue = validateReaderArticle(nextArticle);
@@ -141,10 +140,14 @@ export default async function ReaderPage({
   const readerSearch = resolvedSearchParams
     ? new URLSearchParams(toSearchParamEntries(resolvedSearchParams)).toString()
     : '';
-  await requirePageSession(
+  const session = await requirePageSession(
     `/reader/${slug}${readerSearch ? `?${readerSearch}` : ''}`,
   );
-  const result = await getReaderArticle(slug, resolvedSearchParams);
+  const result = await getReaderArticle(
+    slug,
+    session.userId,
+    resolvedSearchParams,
+  );
 
   if (result.kind === 'not-found') {
     notFound();

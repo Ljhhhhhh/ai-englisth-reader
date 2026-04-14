@@ -88,6 +88,19 @@ model GenerationJob {
   status      String   @default("pending")
   sourceType  String
   sourceRef   String
+  canonicalSource String? @db.Text
+  canonicalTitleHint String?
+  canonicalText String? @db.LongText
+  currentStep String?
+  stagesJson Json?
+  lastErrorJson Json?
+  retryable Boolean @default(false)
+  reservedArticleSlug String?
+  revision Int @default(0)
+  claimToken String?
+  claimedBy String?
+  claimedUntil DateTime?
+  activeAttempt Int @default(0)
   articleSlug String?
   errorMsg    String?
   createdAt   DateTime @default(now())

@@ -1,5 +1,7 @@
 import { getCurrentUser } from '@/features/auth/current-user';
 import { getGenerationJobForUser } from '@/features/generation/generation-job-service';
+import { isServerLlmDebugEnabled } from '@/features/llm-debug/debug-config';
+import { getGenerateJobDebugRecord } from '@/features/llm-debug/debug-store';
 
 type JobRouteProps = {
   params: Promise<{ jobId: string }>;
@@ -22,10 +24,20 @@ export async function GET(_request: Request, { params }: JobRouteProps) {
   return Response.json({
     articleSlug: job.articleSlug,
     createdAt: job.createdAt,
-    errorMsg: job.errorMsg,
+    currentStep: job.currentStep,
     id: job.id,
+    lastError: job.lastError,
+    llmDebug: isServerLlmDebugEnabled()
+      ? getGenerateJobDebugRecord({
+          jobId,
+          userId: user.id,
+        })
+      : undefined,
+    revision: job.revision,
+    retryable: job.retryable,
     sourceRef: job.sourceRef,
     sourceType: job.sourceType,
+    stages: job.stages,
     status: job.status,
     updatedAt: job.updatedAt,
   });

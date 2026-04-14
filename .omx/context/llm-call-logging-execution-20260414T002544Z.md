@@ -1,0 +1,8 @@
+# Context Snapshot
+
+- task statement: Execute the approved Ralph plan for the dev-only LLM call logging panel defined in `.omx/plans/prd-llm-call-logging.md`.
+- desired outcome: Implement a development-only, latest-call LLM debug panel for `generate` and `reader explain`, with redaction, browser visibility, verification, and no durable debug storage.
+- known facts/evidence: Existing LLM call sites live in `src/features/generation/article-generator.ts` and `src/features/reader/reader-explain-service.ts`; generate uses async job polling via `/api/generate/[jobId]`; reader explain uses synchronous `POST /api/reader/explain`; plan requires dev-only sidecar storage for generate and inline failure/success debug payloads for reader explain.
+- constraints: No long-term database log storage; no full prompts/source text/secrets/user identity in debug payloads; primary surface is in-browser; first release shows latest call only; must verify with tests/build; post-verification deslop pass required unless blocked.
+- unknowns/open questions: Exact `includeRaw` behavior in the installed LangChain version under parse-failure conditions; best cleanup semantics for local sidecar traces; any UI regressions caused by panel insertion in reader surfaces.
+- likely codebase touchpoints: `src/lib/env.ts`, new `src/features/llm-debug/*`, `src/features/generation/article-generator.ts`, `src/features/reader/reader-explain-service.ts`, `src/app/api/generate/[jobId]/route.ts`, `src/app/api/reader/explain/route.ts`, `src/components/generate/generate-page-client.tsx`, `src/components/reader/reader-shell.tsx`, reader panel components/tests.

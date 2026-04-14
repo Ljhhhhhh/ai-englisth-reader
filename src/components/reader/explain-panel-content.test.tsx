@@ -114,4 +114,53 @@ describe('ExplainPanelContent', () => {
 
     expect(screen.getByRole('button', { name: /重新加入生词库/i })).toBeInTheDocument();
   });
+
+  it('renders the debug section when llmDebug is provided', () => {
+    render(
+      <ExplainPanelContent
+        llmDebug={{
+          callId: 'call-1',
+          error: {
+            message: 'LLM structured output parse failed.',
+            stage: 'structured_output',
+          },
+          meta: {
+            durationMs: 120,
+          },
+          rawOutput: {
+            available: true,
+            preview: '{"broken":true}',
+            truncated: false,
+          },
+          status: 'failed',
+          structuredResult: {
+            data: null,
+            status: 'parse_failed',
+          },
+          summary: {
+            callType: 'word',
+            model: 'test-model',
+            selectedText: 'panic',
+            sentenceId: 's3',
+            trigger: 'reader_panel',
+          },
+          timestamp: '2026-04-14T00:00:00.000Z',
+        }}
+        onRetry={() => {}}
+        onToggleSave={() => {}}
+        saveEnabled={false}
+        saved={false}
+        state={{
+          status: 'error',
+          mode: 'word',
+          selectedText: 'panic',
+          message: '生成失败',
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/LLM 调用日志/i)).toBeInTheDocument();
+    expect(screen.getByText(/结构化结果 · parse_failed/i)).toBeInTheDocument();
+    expect(screen.getByText(/LLM structured output parse failed/i)).toBeInTheDocument();
+  });
 });

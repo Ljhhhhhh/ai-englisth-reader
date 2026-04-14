@@ -2,6 +2,7 @@ import {
   ExplainPanelContent,
   type ExplainPanelViewState,
 } from '@/components/reader/explain-panel-content';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
 import { uiCopy } from '@/lib/ui-copy';
 
 type WordPanelMobileProps = {
@@ -13,6 +14,7 @@ type WordPanelMobileProps = {
   saveEnabled: boolean;
   saveErrorMessage?: string | null;
   state: ExplainPanelViewState;
+  llmDebug?: LlmDebugRecord | null;
 };
 
 export function WordPanelMobile({
@@ -24,6 +26,7 @@ export function WordPanelMobile({
   saveEnabled,
   saveErrorMessage,
   state,
+  llmDebug,
 }: WordPanelMobileProps) {
   return (
     <div
@@ -75,6 +78,7 @@ export function WordPanelMobile({
         </div>
         <div style={{ overflowY: 'auto', paddingRight: 6, paddingBottom: 4 }}>
           <ExplainPanelContent
+            llmDebug={llmDebug}
             onRetry={onRetry}
             onToggleSave={onToggleSave}
             remembered={remembered}

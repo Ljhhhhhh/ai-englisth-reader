@@ -1,0 +1,12 @@
+{
+  "active": true,
+  "iteration": 1,
+  "max_iterations": 10,
+  "current_phase": "executing",
+  "started_at": "2026-04-14T00:00:00Z",
+  "state": {
+    "context_snapshot_path": ".omx/context/generation-multi-round-pipeline-20260413T134215Z.md",
+    "prd_path": ".omx/plans/prd-generate-multi-round-sse-retry.md",
+    "test_spec_path": ".omx/plans/test-spec-generate-multi-round-sse-retry.md"
+  }
+}

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { loadArticleFile } from '@/lib/content/load-article';
 
 const articleMocks = vi.hoisted(() => ({
+  findMany: vi.fn(),
   findFirst: vi.fn(),
 }));
 
@@ -13,6 +14,7 @@ vi.mock('@/lib/db', () => ({
 }));
 
 import {
+  listPersistedArticles,
   loadPersistedArticle,
   mapArticleToPersistenceInput,
 } from './article-repository';
@@ -39,6 +41,72 @@ describe('article-repository access', () => {
       where: {
         OR: [{ visibility: 'PUBLIC' }],
         slug: article.slug,
+      },
+    });
+  });
+
+  it('lists public articles plus the signed-in user private articles', async () => {
+    const article = await loadArticleFile('welcome-to-deep-reading.json');
+    articleMocks.findMany.mockResolvedValue([
+      {
+        ...mapArticleToPersistenceInput(article),
+        createdAt: new Date('2026-04-11T00:00:00.000Z'),
+        id: 'article-public',
+        updatedAt: new Date('2026-04-11T00:00:00.000Z'),
+        visibility: 'PUBLIC',
+      },
+      {
+        ...mapArticleToPersistenceInput(
+          {
+            ...article,
+            chinese_title: '我的私有文章',
+            slug: 'private-generated-article',
+            title: 'Private Article',
+          },
+          {
+            ownerId: 'user-1',
+            visibility: 'PRIVATE',
+          },
+        ),
+        createdAt: new Date('2026-04-12T00:00:00.000Z'),
+        id: 'article-private',
+        updatedAt: new Date('2026-04-12T00:00:00.000Z'),
+        visibility: 'PRIVATE',
+      },
+    ]);
+
+    await expect(
+      listPersistedArticles({ viewerUserId: 'user-1' }),
+    ).resolves.toMatchObject([
+      {
+        slug: article.slug,
+        title: article.title,
+      },
+      {
+        slug: 'private-generated-article',
+        title: 'Private Article',
+      },
+    ]);
+
+    expect(articleMocks.findMany).toHaveBeenCalledWith({
+      orderBy: [
+        {
+          estimatedMinutes: 'asc',
+        },
+        {
+          createdAt: 'asc',
+        },
+      ],
+      where: {
+        OR: [
+          {
+            visibility: 'PUBLIC',
+          },
+          {
+            ownerId: 'user-1',
+            visibility: 'PRIVATE',
+          },
+        ],
       },
     });
   });

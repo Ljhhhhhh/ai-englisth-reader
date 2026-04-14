@@ -21,7 +21,7 @@ body {
   padding: 0;
   background: radial-gradient(circle at top, #fff8ee 0%, var(--bg) 55%);
   color: var(--foreground);
-  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  font-family: 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', serif;
 }
 
 a {
@@ -41,8 +41,11 @@ select {
   padding: 18px;
   border-radius: 22px;
   border: 1px solid var(--border);
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.98) 0%, rgba(252, 245, 236, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 247, 0.98) 0%,
+    rgba(252, 245, 236, 0.98) 100%
+  );
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
 }
 
@@ -87,8 +90,11 @@ select {
   padding: 16px;
   overflow: hidden;
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(251, 243, 232, 0.9) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(251, 243, 232, 0.9) 100%
+  );
 }
 
 .llm-loading-card__skeleton::after {
@@ -110,7 +116,11 @@ select {
 .llm-loading-card__line {
   height: 10px;
   border-radius: 999px;
-  background: linear-gradient(90deg, rgba(197, 106, 45, 0.08), rgba(197, 106, 45, 0.18));
+  background: linear-gradient(
+    90deg,
+    rgba(197, 106, 45, 0.08),
+    rgba(197, 106, 45, 0.18)
+  );
 }
 
 .llm-loading-card__line--short {
@@ -271,7 +281,11 @@ button[disabled].llm-busy-button {
   width: 280px;
   height: 280px;
   border-radius: 999px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 72%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.52) 0%,
+    rgba(255, 255, 255, 0) 72%
+  );
   pointer-events: none;
 }
 
@@ -280,8 +294,12 @@ button[disabled].llm-busy-button {
   gap: 18px;
   padding: 34px 30px;
   border-radius: 32px;
-  background:
-    linear-gradient(135deg, rgba(255, 248, 238, 0.98) 0%, rgba(249, 235, 217, 0.98) 56%, rgba(244, 226, 204, 0.98) 100%);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 248, 238, 0.98) 0%,
+    rgba(249, 235, 217, 0.98) 56%,
+    rgba(244, 226, 204, 0.98) 100%
+  );
 }
 
 .generate-hero__eyebrow,
@@ -375,8 +393,11 @@ button[disabled].llm-busy-button {
   align-items: center;
   padding: 20px 24px;
   border-radius: 26px;
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.98) 0%, rgba(252, 245, 236, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 247, 0.98) 0%,
+    rgba(252, 245, 236, 0.98) 100%
+  );
 }
 
 .generate-account-bar__identity,
@@ -409,8 +430,11 @@ button[disabled].llm-busy-button {
   gap: 18px;
   padding: 24px;
   border-radius: 30px;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 249, 0.98) 0%, rgba(252, 247, 239, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 249, 0.98) 0%,
+    rgba(252, 247, 239, 0.98) 100%
+  );
 }
 
 .generate-panel__header,
@@ -473,8 +497,11 @@ button[disabled].llm-busy-button {
   padding: 16px 18px;
   border-radius: 18px;
   border: 1px solid var(--border);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(250, 245, 238, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(250, 245, 238, 0.98) 100%
+  );
   color: var(--foreground);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
@@ -488,7 +515,6 @@ button[disabled].llm-busy-button {
 
 .generate-upload-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(220px, 0.82fr);
   gap: 16px;
 }
 
@@ -514,8 +540,11 @@ button[disabled].llm-busy-button {
   padding: 26px 24px;
   border-radius: 26px;
   border: 1px dashed rgba(197, 106, 45, 0.24);
-  background:
-    linear-gradient(180deg, rgba(255, 251, 245, 0.98) 0%, rgba(248, 240, 229, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 251, 245, 0.98) 0%,
+    rgba(248, 240, 229, 0.98) 100%
+  );
   cursor: pointer;
   transition:
     transform 180ms ease,
@@ -532,8 +561,11 @@ button[disabled].llm-busy-button {
 .generate-dropzone--filled {
   border-style: solid;
   border-color: rgba(197, 106, 45, 0.34);
-  background:
-    linear-gradient(180deg, rgba(255, 248, 240, 0.98) 0%, rgba(249, 239, 225, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 248, 240, 0.98) 0%,
+    rgba(249, 239, 225, 0.98) 100%
+  );
 }
 
 .generate-dropzone__icon {
@@ -594,8 +626,11 @@ button[disabled].llm-busy-button {
   padding: 20px;
   border-radius: 24px;
   border: 1px solid rgba(114, 75, 35, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 254, 250, 0.98) 0%, rgba(249, 243, 234, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 254, 250, 0.98) 0%,
+    rgba(249, 243, 234, 0.98) 100%
+  );
 }
 
 .generate-format-card__file {
@@ -659,26 +694,38 @@ button[disabled].llm-busy-button {
 }
 
 .generate-status-card--idle {
-  background:
-    linear-gradient(180deg, rgba(255, 253, 249, 0.98) 0%, rgba(247, 240, 229, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 253, 249, 0.98) 0%,
+    rgba(247, 240, 229, 0.98) 100%
+  );
 }
 
 .generate-status-card--pending,
 .generate-status-card--processing {
-  background:
-    linear-gradient(180deg, rgba(255, 252, 247, 0.98) 0%, rgba(250, 242, 231, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 247, 0.98) 0%,
+    rgba(250, 242, 231, 0.98) 100%
+  );
 }
 
 .generate-status-card--done {
   border-color: rgba(197, 106, 45, 0.2);
-  background:
-    linear-gradient(180deg, rgba(255, 250, 244, 0.98) 0%, rgba(246, 236, 222, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 244, 0.98) 0%,
+    rgba(246, 236, 222, 0.98) 100%
+  );
 }
 
 .generate-status-card--failed {
   border-color: rgba(180, 35, 24, 0.16);
-  background:
-    linear-gradient(180deg, rgba(255, 249, 248, 0.98) 0%, rgba(250, 238, 235, 0.98) 100%);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 249, 248, 0.98) 0%,
+    rgba(250, 238, 235, 0.98) 100%
+  );
 }
 
 .generate-status-pill {
@@ -729,7 +776,697 @@ button[disabled].llm-busy-button {
   color: #8f2418;
 }
 
+.email-login-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(163, 117, 72, 0.2);
+  border-radius: 32px;
+  background: linear-gradient(
+    135deg,
+    rgba(111, 74, 36, 0.08) 0%,
+    rgba(255, 252, 247, 0.96) 28%,
+    rgba(251, 243, 230, 0.98) 100%
+  );
+  box-shadow:
+    0 24px 68px rgba(86, 58, 28, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+  isolation: isolate;
+}
+
+.email-login-card::before,
+.email-login-card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.email-login-card::before {
+  inset: -10% auto auto -8%;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 243, 222, 0.82) 0%,
+    rgba(255, 243, 222, 0) 70%
+  );
+}
+
+.email-login-card::after {
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.28), transparent 38%),
+    repeating-linear-gradient(
+      90deg,
+      rgba(125, 88, 50, 0.05) 0,
+      rgba(125, 88, 50, 0.05) 1px,
+      transparent 1px,
+      transparent 28px
+    );
+  opacity: 0.45;
+}
+
+.email-login-card__shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+}
+
+.email-login-card__story,
+.email-login-card__panel {
+  position: relative;
+  padding: 34px;
+}
+
+.email-login-card__story {
+  display: grid;
+  gap: 22px;
+  align-content: start;
+  border-right: 1px solid rgba(163, 117, 72, 0.12);
+}
+
+.email-login-card__story-header {
+  display: grid;
+  gap: 14px;
+  max-width: 30rem;
+}
+
+.email-login-card__eyebrow,
+.email-login-card__panel-eyebrow,
+.email-login-card__verification-kicker,
+.email-login-card__identity-label {
+  margin: 0;
+  color: var(--editorial-ink);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.email-login-card__headline,
+.email-login-card__panel-title,
+.email-login-card__identity-value {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.email-login-card__headline {
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.email-login-card__lede,
+.email-login-card__panel-description,
+.email-login-card__benefit-detail,
+.email-login-card__verification-text,
+.email-login-card__error {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.email-login-card__benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.email-login-card__benefit {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border: 1px solid rgba(163, 117, 72, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
+  backdrop-filter: blur(6px);
+}
+
+.email-login-card__benefit-title,
+.email-login-card__step-label,
+.email-login-card__field-label {
+  margin: 0;
+  color: var(--foreground);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.email-login-card__steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 4px 0 0;
+  list-style: none;
+}
+
+.email-login-card__step {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(163, 117, 72, 0.12);
+  background: rgba(255, 255, 255, 0.36);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.email-login-card__step[data-active='true'] {
+  transform: translateY(-2px);
+  border-color: rgba(197, 106, 45, 0.35);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 250, 243, 0.98),
+    rgba(246, 231, 212, 0.76)
+  );
+}
+
+.email-login-card__step[data-complete='true'] {
+  border-color: rgba(104, 142, 111, 0.28);
+  background: linear-gradient(
+    180deg,
+    rgba(246, 253, 247, 0.98),
+    rgba(227, 242, 229, 0.68)
+  );
+}
+
+.email-login-card__step-index {
+  color: rgba(104, 72, 37, 0.66);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.email-login-card__panel {
+  display: grid;
+  align-items: stretch;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.42),
+    rgba(255, 251, 245, 0.8)
+  );
+}
+
+.email-login-card__panel-frame {
+  display: grid;
+  gap: 24px;
+  padding: 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(163, 117, 72, 0.12);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(253, 248, 240, 0.88) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 14px 38px rgba(104, 71, 33, 0.08);
+}
+
+.email-login-card__panel-header,
+.email-login-card__form-stack,
+.email-login-card__authenticated,
+.email-login-card__verification {
+  display: grid;
+  gap: 16px;
+}
+
+.email-login-card__panel-title {
+  font-size: clamp(1.6rem, 3vw, 2.25rem);
+  line-height: 1.02;
+}
+
+.email-login-card__field {
+  display: grid;
+  gap: 8px;
+}
+
+.email-login-card__input {
+  width: 100%;
+  padding: 15px 16px;
+  border: 1px solid rgba(163, 117, 72, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--foreground);
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.email-login-card__input::placeholder {
+  color: rgba(107, 114, 128, 0.72);
+}
+
+.email-login-card__input:focus {
+  border-color: rgba(197, 106, 45, 0.48);
+  box-shadow: 0 0 0 4px rgba(197, 106, 45, 0.1);
+  transform: translateY(-1px);
+}
+
+.email-login-card__input--code {
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.36em;
+}
+
+.email-login-card__primary-button,
+.email-login-card__secondary-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.email-login-card__primary-button {
+  border: none;
+  background: linear-gradient(135deg, #be6430 0%, #d98744 50%, #af5427 100%);
+  color: #fffdf8;
+  box-shadow: 0 16px 28px rgba(190, 100, 48, 0.26);
+}
+
+.email-login-card__secondary-button {
+  border: 1px solid rgba(163, 117, 72, 0.18);
+  background: rgba(255, 255, 255, 0.74);
+  color: var(--foreground);
+}
+
+.email-login-card__primary-button:not(:disabled):hover,
+.email-login-card__secondary-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.email-login-card__primary-button:not(:disabled):hover {
+  box-shadow: 0 18px 34px rgba(190, 100, 48, 0.32);
+}
+
+.email-login-card__secondary-button:not(:disabled):hover {
+  border-color: rgba(197, 106, 45, 0.28);
+  background: rgba(255, 252, 246, 0.92);
+}
+
+.email-login-card__primary-button:disabled,
+.email-login-card__secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.email-login-card__verification {
+  padding-top: 8px;
+  border-top: 1px solid rgba(163, 117, 72, 0.12);
+}
+
+.email-login-card__dev-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(240, 223, 207, 0.62);
+  color: #8c4f22;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.email-login-card__identity {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  border-radius: 22px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 249, 239, 0.96) 0%,
+    rgba(255, 255, 255, 0.86) 100%
+  );
+  border: 1px solid rgba(163, 117, 72, 0.12);
+}
+
+.email-login-card__identity-value {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  line-height: 1.08;
+  word-break: break-word;
+}
+
+.email-login-card__status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.email-login-card__status-chip {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(246, 251, 244, 0.9);
+  border: 1px solid rgba(104, 142, 111, 0.2);
+  color: #49664f;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.email-login-card__loading {
+  display: grid;
+  gap: 10px;
+}
+
+.email-login-card__loading-line {
+  position: relative;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(197, 106, 45, 0.08);
+}
+
+.email-login-card__loading-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.75) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  animation: editorialSweep 1.8s ease-in-out infinite;
+}
+
+.email-login-card__loading-line--long {
+  width: 100%;
+}
+
+.email-login-card__loading-line--medium {
+  width: 72%;
+}
+
+.email-login-card__loading-line--short {
+  width: 48%;
+}
+
+.email-login-card__error {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(175, 48, 41, 0.16);
+  background: rgba(255, 239, 236, 0.9);
+  color: #9b2c2c;
+}
+
+.login-page {
+  min-height: 100vh;
+  padding: 40px 20px 64px;
+}
+
+.login-page__frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 520px);
+  gap: 24px;
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.login-page__hero,
+.login-page__card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(163, 117, 72, 0.16);
+  box-shadow: 0 18px 54px rgba(104, 71, 33, 0.08);
+}
+
+.login-page__hero {
+  display: grid;
+  gap: 16px;
+  align-content: center;
+  min-height: 0;
+  padding: 34px;
+  border-radius: 34px;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 242, 220, 0.82) 0%,
+      rgba(255, 242, 220, 0) 28%
+    ),
+    linear-gradient(
+      160deg,
+      rgba(255, 253, 249, 0.96) 0%,
+      rgba(246, 233, 217, 0.9) 52%,
+      rgba(237, 219, 198, 0.78) 100%
+    );
+}
+
+.login-page__hero::after,
+.login-page__card::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.login-page__hero::after {
+  inset: auto -10% -14% auto;
+  width: 340px;
+  height: 340px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.44) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+}
+
+.login-page__hero-copy,
+.login-page__card-header,
+.login-page__card,
+.login-page__form-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.login-page__eyebrow,
+.login-page__card-eyebrow {
+  margin: 0;
+  color: var(--editorial-ink);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.login-page__title,
+.login-page__card-title {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.login-page__title {
+  max-width: 9ch;
+  font-size: clamp(2.8rem, 6vw, 4.8rem);
+  line-height: 0.94;
+}
+
+.login-page__description,
+.login-page__card-description,
+.login-page__error {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.login-page__field-label,
+.login-page__step-label {
+  margin: 0;
+  color: var(--foreground);
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.94rem;
+  font-weight: 700;
+}
+
+.login-page__form-panel {
+  align-items: center;
+}
+
+.login-page__card {
+  padding: 28px;
+  border-radius: 30px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(252, 245, 236, 0.94) 100%
+  );
+}
+
+.login-page__card::after {
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.28),
+    transparent 44%
+  );
+}
+
+.login-page__card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.login-page__card-title {
+  font-size: clamp(1.9rem, 3.6vw, 2.5rem);
+  line-height: 1.02;
+}
+
+.login-page__field {
+  display: grid;
+  gap: 8px;
+}
+
+.login-page__input {
+  width: 100%;
+  padding: 15px 16px;
+  border: 1px solid rgba(163, 117, 72, 0.18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--foreground);
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.login-page__input::placeholder {
+  color: rgba(107, 114, 128, 0.72);
+}
+
+.login-page__input:focus {
+  border-color: rgba(197, 106, 45, 0.48);
+  box-shadow: 0 0 0 4px rgba(197, 106, 45, 0.1);
+  transform: translateY(-1px);
+}
+
+.login-page__input--code {
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.34em;
+}
+
+.login-page__dev-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(240, 223, 207, 0.62);
+  color: #8c4f22;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.login-page__error {
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(175, 48, 41, 0.16);
+  background: rgba(255, 239, 236, 0.9);
+  color: #9b2c2c;
+}
+
+.login-page__actions {
+  display: grid;
+  gap: 12px;
+}
+
+.login-page__primary-button,
+.login-page__secondary-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 18px;
+  border-radius: 999px;
+  font-family: 'Avenir Next', 'Segoe UI', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+}
+
+.login-page__primary-button {
+  border: none;
+  background: linear-gradient(135deg, #be6430 0%, #d98744 50%, #af5427 100%);
+  color: #fffdf8;
+  box-shadow: 0 16px 28px rgba(190, 100, 48, 0.26);
+}
+
+.login-page__secondary-link {
+  border: 1px solid rgba(163, 117, 72, 0.18);
+  background: rgba(255, 255, 255, 0.62);
+  color: var(--foreground);
+}
+
+.login-page__primary-button:not(:disabled):hover,
+.login-page__secondary-link:hover {
+  transform: translateY(-1px);
+}
+
+.login-page__primary-button:not(:disabled):hover {
+  box-shadow: 0 18px 34px rgba(190, 100, 48, 0.32);
+}
+
+.login-page__primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 @media (max-width: 980px) {
+  .login-page__frame {
+    grid-template-columns: 1fr;
+  }
+
+  .login-page__hero {
+    min-height: auto;
+  }
+
+  .email-login-card__shell {
+    grid-template-columns: 1fr;
+  }
+
+  .email-login-card__story {
+    border-right: none;
+    border-bottom: 1px solid rgba(163, 117, 72, 0.12);
+  }
+
+  .email-login-card__story,
+  .email-login-card__panel {
+    padding: 28px;
+  }
+
   .generate-studio,
   .generate-upload-grid {
     grid-template-columns: 1fr;
@@ -737,6 +1474,43 @@ button[disabled].llm-busy-button {
 }
 
 @media (max-width: 640px) {
+  .login-page {
+    padding-inline: 16px;
+  }
+
+  .login-page__hero,
+  .login-page__card {
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .login-page__title {
+    font-size: clamp(2.4rem, 13vw, 3.8rem);
+  }
+
+  .email-login-card {
+    border-radius: 26px;
+  }
+
+  .email-login-card__story,
+  .email-login-card__panel {
+    padding: 20px;
+  }
+
+  .email-login-card__panel-frame {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .email-login-card__steps,
+  .email-login-card__status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .email-login-card__headline {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
   .generate-page {
     padding-inline: 16px;
   }
@@ -773,6 +1547,21 @@ button[disabled].llm-busy-button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .login-page__input,
+  .login-page__primary-button,
+  .login-page__secondary-link {
+    transition: none;
+  }
+
+  .email-login-card__step,
+  .email-login-card__input,
+  .email-login-card__primary-button,
+  .email-login-card__secondary-button,
+  .email-login-card__loading-line::after {
+    animation: none;
+    transition: none;
+  }
+
   .generate-link-pill,
   .generate-mode-button,
   .generate-dropzone,

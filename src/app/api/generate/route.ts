@@ -2,18 +2,13 @@ import {
   extractContent,
   type ExtractContentInput,
 } from '@/features/generation/extract-content';
-import { generateArticle } from '@/features/generation/article-generator';
 import { getCurrentUser } from '@/features/auth/current-user';
 import {
-  countRecentGenerationJobs,
   createGenerationJob,
-  markGenerationJobDone,
-  markGenerationJobFailed,
-  markGenerationJobProcessing,
+  startOrResumeGenerationJob,
 } from '@/features/generation/generation-job-service';
-
-const DAILY_LIMIT = 5;
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+import { appendGenerationLog } from '@/features/generation/generation-logger';
+import { randomUUID } from 'node:crypto';
 
 function getStringValue(value: FormDataEntryValue | null) {
   return typeof value === 'string' ? value.trim() : '';
@@ -41,27 +36,20 @@ function parseGenerationInput(formData: FormData): ExtractContentInput {
   throw new Error('请提供链接或上传文件。');
 }
 
-async function processJob(
-  jobId: string,
-  input: ExtractContentInput,
-  userId: string,
-) {
-  try {
-    await markGenerationJobProcessing(jobId);
-    const extracted = await extractContent(input);
-    const article = await generateArticle({
-      ownerId: userId,
-      source: extracted.source,
-      text: extracted.text,
-      titleHint: extracted.titleHint,
-    });
-    await markGenerationJobDone(jobId, article.slug);
-  } catch (error) {
-    await markGenerationJobFailed(
-      jobId,
-      error instanceof Error ? error.message : '文章生成失败，请稍后重试。',
-    );
-  }
+function slugify(input: string) {
+  const ascii = input
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  return ascii || 'generated-reading';
+}
+
+function reserveArticleSlug(titleHint: string, source: string, jobId: string) {
+  const slugBase = slugify(titleHint || source);
+  return `${slugBase}-${jobId.slice(0, 6)}`;
 }
 
 export async function POST(request: Request) {
@@ -77,33 +65,44 @@ export async function POST(request: Request) {
 
     const formData = await request.formData();
 
-    const recentCount = await countRecentGenerationJobs(
-      user.id,
-      new Date(Date.now() - ONE_DAY_MS),
-    );
-
-    if (recentCount >= DAILY_LIMIT) {
-      return Response.json(
-        { error: '今日生成次数已用完，请明天再试。' },
-        { status: 429 },
-      );
-    }
-
     const input = parseGenerationInput(formData);
     const sourceRef = input.type === 'url' ? input.url : input.file.name;
+    const extracted = await extractContent(input);
+    const id = randomUUID();
     const job = await createGenerationJob({
+      canonicalSource: extracted.source,
+      canonicalText: extracted.text,
+      canonicalTitleHint: extracted.titleHint,
+      id,
+      reservedArticleSlug: reserveArticleSlug(
+        extracted.titleHint,
+        extracted.source,
+        id,
+      ),
       sourceRef,
       sourceType: input.type,
       userId: user.id,
     });
+    await appendGenerationLog({
+      event: 'job_created',
+      jobId: job.id,
+      payload: {
+        sourceRef,
+        sourceType: input.type,
+        titleHint: extracted.titleHint,
+        triggeredBy: 'route:create',
+      },
+      userId: user.id,
+    });
 
-    void processJob(job.id, input, user.id);
+    void startOrResumeGenerationJob({
+      jobId: job.id,
+      triggeredBy: `create:${user.id}`,
+    });
 
     return Response.json(
       {
         id: job.id,
-        limit: DAILY_LIMIT,
-        remaining: Math.max(DAILY_LIMIT - recentCount - 1, 0),
         status: job.status,
       },
       { status: 202 },

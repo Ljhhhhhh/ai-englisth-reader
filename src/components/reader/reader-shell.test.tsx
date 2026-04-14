@@ -192,4 +192,99 @@ describe('ReaderShell', () => {
       });
     });
   });
+
+  it('keeps debug evidence visible when explain fails', async () => {
+    const article = await loadArticle('welcome-to-deep-reading');
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: 'LLM structured output parse failed.',
+        llmDebug: {
+          callId: 'call-1',
+          error: {
+            message: 'LLM structured output parse failed.',
+            stage: 'structured_output',
+          },
+          meta: { durationMs: 90 },
+          rawOutput: {
+            available: true,
+            preview: '{"broken":true}',
+            truncated: false,
+          },
+          status: 'failed',
+          structuredResult: {
+            data: null,
+            status: 'parse_failed',
+          },
+          summary: {
+            callType: 'word',
+            model: 'test-model',
+            selectedText: 'clear',
+            sentenceId: 's3',
+            trigger: 'reader_panel',
+          },
+          timestamp: '2026-04-14T00:00:00.000Z',
+        },
+      }),
+    } as Response);
+
+    render(<ReaderShell article={article} navigation={{}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /进入正文开始精读/i }));
+    fireEvent.click(screen.getByText('clear'));
+    fireEvent.click(screen.getByRole('button', { name: /看这个词/i }));
+
+    expect(await screen.findByText(/LLM 调用日志/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/结构化结果 · parse_failed/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/LLM structured output parse failed/i),
+    ).toBeInTheDocument();
+  });
+
+  it('does not let fallback success hide a failed upstream explain call', async () => {
+    const article = await loadArticle('welcome-to-deep-reading');
+    vi.mocked(fetch).mockResolvedValue({
+      ok: false,
+      json: async () => ({
+        error: 'LLM structured output parse failed.',
+        llmDebug: {
+          callId: 'call-2',
+          error: {
+            message: 'LLM structured output parse failed.',
+            stage: 'structured_output',
+          },
+          meta: { durationMs: 95 },
+          rawOutput: {
+            available: true,
+            preview: '{"broken":true}',
+            truncated: false,
+          },
+          status: 'failed',
+          structuredResult: {
+            data: null,
+            status: 'parse_failed',
+          },
+          summary: {
+            callType: 'word',
+            model: 'test-model',
+            selectedText: 'guided',
+            sentenceId: 's3',
+            trigger: 'reader_panel',
+          },
+          timestamp: '2026-04-14T00:00:00.000Z',
+        },
+      }),
+    } as Response);
+
+    render(<ReaderShell article={article} navigation={{}} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /进入正文开始精读/i }));
+    fireEvent.click(screen.getByText('Guided'));
+    fireEvent.click(screen.getByRole('button', { name: /看这个词/i }));
+
+    expect(await screen.findByText(/被引导的/i)).toBeInTheDocument();
+    expect(screen.getByText(/LLM structured output parse failed/i)).toBeInTheDocument();
+  });
 });

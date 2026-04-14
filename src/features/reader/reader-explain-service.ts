@@ -4,6 +4,11 @@ import { z } from 'zod';
 import type { Article } from '@/lib/content/article-schema';
 import { env } from '@/lib/env';
 import {
+  type StructuredDebugInvokeResult,
+  invokeStructuredWithDebug,
+} from '@/features/llm-debug/capture';
+import type { LlmDebugRecord } from '@/features/llm-debug/debug-types';
+import {
   type ReaderExplainMode,
   validateExplainSelection,
 } from './reader-explain-utils';
@@ -31,6 +36,10 @@ const phraseExplainOutputSchema = z.object({
 
 type WordExplainOutput = z.infer<typeof wordExplainOutputSchema>;
 type PhraseExplainOutput = z.infer<typeof phraseExplainOutputSchema>;
+
+type ExplainReaderSelectionOptions = {
+  onDebugRecord?: (record: LlmDebugRecord) => void;
+};
 
 export type ReaderExplainResult = {
   mode: ReaderExplainMode;
@@ -107,7 +116,7 @@ async function requestExplanation(input: {
     chineseMeaning: string;
     contextMeaning: string;
   };
-}): Promise<WordExplainOutput>;
+}): Promise<StructuredDebugInvokeResult<WordExplainOutput>>;
 async function requestExplanation(input: {
   mode: 'phrase';
   selectedText: string;
@@ -116,7 +125,7 @@ async function requestExplanation(input: {
     chineseMeaning: string;
     contextMeaning: string;
   };
-}): Promise<PhraseExplainOutput>;
+}): Promise<StructuredDebugInvokeResult<PhraseExplainOutput>>;
 async function requestExplanation(input: {
   mode: ReaderExplainMode;
   selectedText: string;
@@ -125,7 +134,9 @@ async function requestExplanation(input: {
     chineseMeaning: string;
     contextMeaning: string;
   };
-}): Promise<WordExplainOutput | PhraseExplainOutput> {
+}): Promise<
+  StructuredDebugInvokeResult<WordExplainOutput | PhraseExplainOutput>
+> {
   if (!env.LLM_API_KEY) {
     throw new Error('LLM_API_KEY is required');
   }
@@ -137,14 +148,27 @@ async function requestExplanation(input: {
     },
     model: env.LLM_MODEL,
     temperature: input.mode === 'word' ? 0.2 : 0.3,
-  }).withStructuredOutput(
-    input.mode === 'word' ? wordExplainOutputSchema : phraseExplainOutputSchema,
-  );
+  });
 
-  return llm.invoke([
-    new SystemMessage(buildSystemPrompt(input.mode)),
-    new HumanMessage(buildHumanMessage(input)),
-  ]);
+  const result = await invokeStructuredWithDebug<
+    WordExplainOutput | PhraseExplainOutput
+  >({
+    llm,
+    messages: [
+      new SystemMessage(buildSystemPrompt(input.mode)),
+      new HumanMessage(buildHumanMessage(input)),
+    ],
+    schema:
+      input.mode === 'word' ? wordExplainOutputSchema : phraseExplainOutputSchema,
+    summary: {
+      callType: input.mode,
+      model: env.LLM_MODEL,
+      selectedText: input.selectedText,
+      trigger: 'reader_panel',
+    },
+  });
+
+  return result;
 }
 
 export async function explainReaderSelection(input: {
@@ -153,7 +177,7 @@ export async function explainReaderSelection(input: {
   selectedText: string;
   sentenceId: string;
   sentenceText: string;
-}): Promise<ReaderExplainResult> {
+}, options: ExplainReaderSelectionOptions = {}): Promise<ReaderExplainResult> {
   const sentence = findSentenceInArticle(input.article, input.sentenceId);
 
   if (!sentence) {
@@ -197,17 +221,29 @@ export async function explainReaderSelection(input: {
       sentenceText: sentence.text,
       wordReference,
     });
+    const record = {
+      ...response.record,
+      summary: {
+        ...response.record.summary,
+        sentenceId: input.sentenceId,
+      },
+    } satisfies LlmDebugRecord;
+    options.onDebugRecord?.(record);
+
+    if (response.error || response.parsed === null) {
+      throw response.error ?? new Error('LLM structured output parse failed.');
+    }
 
     return {
       mode: 'word',
       selectedText: validation.selectedText,
-      meaning: response.meaning,
-      contextMeaning: response.contextMeaning,
-      explanation: response.explanation,
-      lemma: response.lemma,
-      memoryHook: response.memoryHook,
+      meaning: response.parsed.meaning,
+      contextMeaning: response.parsed.contextMeaning,
+      explanation: response.parsed.explanation,
+      lemma: response.parsed.lemma,
+      memoryHook: response.parsed.memoryHook,
       sourceSentence: sentence.text,
-      usageExample: response.usageExample,
+      usageExample: response.parsed.usageExample,
     };
   }
 
@@ -216,15 +252,27 @@ export async function explainReaderSelection(input: {
     selectedText: validation.selectedText,
     sentenceText: sentence.text,
   });
+  const record = {
+    ...response.record,
+    summary: {
+      ...response.record.summary,
+      sentenceId: input.sentenceId,
+    },
+  } satisfies LlmDebugRecord;
+  options.onDebugRecord?.(record);
+
+  if (response.error || response.parsed === null) {
+    throw response.error ?? new Error('LLM structured output parse failed.');
+  }
 
   return {
     mode: 'phrase',
     selectedText: validation.selectedText,
-    meaning: response.meaning,
-    contextMeaning: response.contextMeaning,
-    explanation: response.explanation,
-    phraseType: response.phraseType,
+    meaning: response.parsed.meaning,
+    contextMeaning: response.parsed.contextMeaning,
+    explanation: response.parsed.explanation,
+    phraseType: response.parsed.phraseType,
     sourceSentence: sentence.text,
-    usageExample: response.usageExample,
+    usageExample: response.parsed.usageExample,
   };
 }

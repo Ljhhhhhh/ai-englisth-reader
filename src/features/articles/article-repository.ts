@@ -53,7 +53,9 @@ export function mapArticleToPersistenceInput(
   } satisfies Prisma.ArticleUncheckedCreateInput;
 }
 
-export async function listPersistedArticles() {
+export async function listPersistedArticles(
+  options: { viewerUserId?: string } = {},
+) {
   const articles = await db.article.findMany({
     orderBy: [
       {
@@ -64,7 +66,19 @@ export async function listPersistedArticles() {
       },
     ],
     where: {
-      visibility: 'PUBLIC',
+      OR: [
+        {
+          visibility: 'PUBLIC',
+        },
+        ...(options.viewerUserId
+          ? [
+              {
+                ownerId: options.viewerUserId,
+                visibility: 'PRIVATE' as const,
+              },
+            ]
+          : []),
+      ],
     },
   });
 

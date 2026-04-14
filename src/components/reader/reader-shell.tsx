@@ -10,6 +10,11 @@ import { WordPanelDesktop } from '@/components/reader/word-panel-desktop';
 import { WordPanelMobile } from '@/components/reader/word-panel-mobile';
 import { hasEvent, recordEvent } from '@/features/analytics/event-service';
 import { loadClientSession } from '@/features/auth/client-session';
+import { isClientLlmDebugEnabled } from '@/features/llm-debug/debug-config';
+import type {
+  LlmDebugEnvelope,
+  LlmDebugRecord,
+} from '@/features/llm-debug/debug-types';
 import {
   getLookupableWords,
   lookupWordFromArticle,
@@ -139,10 +144,14 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
   );
   const [lastLookupRequest, setLastLookupRequest] =
     useState<LookupRequest | null>(null);
+  const [latestExplainDebug, setLatestExplainDebug] =
+    useState<LlmDebugRecord | null>(null);
 
   const lookupableWords = getLookupableWords(article);
   const usesServerState =
     process.env.NODE_ENV !== 'test' && Boolean(authenticatedUserId);
+  const showDebugPanel =
+    isClientLlmDebugEnabled() || latestExplainDebug !== null;
 
   const recordEventForCurrentUser = useCallback(
     async (input: {
@@ -432,6 +441,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     const cached = explainCacheRef.current.get(cacheKey);
 
     if (cached) {
+      setLatestExplainDebug(null);
       setExplainPanelState({
         status: 'success',
         request: input,
@@ -460,6 +470,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
     const requestId = explainRequestIdRef.current + 1;
     explainRequestIdRef.current = requestId;
     setExplainPanelState({ status: 'loading', request: input });
+    setLatestExplainDebug(null);
 
     try {
       const response = await fetch('/api/reader/explain', {
@@ -476,25 +487,34 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
         }),
         signal: controller.signal,
       });
-
-      if (!response.ok || shouldFailOnce(consumedFailureFlagsRef.current, 'mockLookupError')) {
-        throw new Error('mock explain failure');
-      }
-
-      const payload = (await response.json()) as {
-        mode: ReaderExplainMode;
-        selectedText: string;
-        meaning: string;
-        contextMeaning: string;
-        explanation: string;
-        lemma?: string;
-        memoryHook?: string;
-        sourceSentence: string;
-        usageExample?: string;
-      };
+      const payload = (await response.json()) as
+        | ({
+            error?: string;
+          } & LlmDebugEnvelope & {
+              mode: ReaderExplainMode;
+              selectedText: string;
+              meaning: string;
+              contextMeaning: string;
+              explanation: string;
+              lemma?: string;
+              memoryHook?: string;
+              sourceSentence: string;
+              usageExample?: string;
+            })
+        | null;
 
       if (requestId !== explainRequestIdRef.current) {
         return;
+      }
+
+      setLatestExplainDebug(payload?.llmDebug ?? null);
+
+      if (!response.ok || shouldFailOnce(consumedFailureFlagsRef.current, 'mockLookupError')) {
+        throw new Error(payload?.error ?? 'mock explain failure');
+      }
+
+      if (!payload) {
+        throw new Error('mock explain failure');
       }
 
       const nextExplainData: ExplainPanelData = {
@@ -1145,6 +1165,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
       {!isMobilePanel && explainPanelState.status !== 'idle' ? (
         <WordPanelDesktop
+          llmDebug={showDebugPanel ? latestExplainDebug : undefined}
           onClose={closeWordPanel}
           onRetry={() => {
             if (lastLookupRequest) {
@@ -1180,6 +1201,7 @@ export function ReaderShell({ article, navigation }: ReaderShellProps) {
 
       {isMobilePanel && explainPanelState.status !== 'idle' ? (
         <WordPanelMobile
+          llmDebug={showDebugPanel ? latestExplainDebug : undefined}
           onClose={closeWordPanel}
           onRetry={() => {
             if (lastLookupRequest) {

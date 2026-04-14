@@ -7,7 +7,11 @@ function createDeviceId() {
 }
 
 export function getOrCreateDeviceId(storage?: Pick<Storage, "getItem" | "setItem">) {
-  if (!storage) {
+  if (
+    !storage ||
+    typeof storage.getItem !== 'function' ||
+    typeof storage.setItem !== 'function'
+  ) {
     return createDeviceId();
   }
 
