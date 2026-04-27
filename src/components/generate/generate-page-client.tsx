@@ -79,6 +79,14 @@ const stageLabels: Record<GenerationStageName, string> = {
   vocabulary: '单词与词组',
 };
 
+const detailedStageLabels: Record<GenerationStageName, string> = {
+  english: '第一轮 · 英文正文',
+  finalize: '第五轮 · 整理发布',
+  grammar: '第三轮 · 语法讲解',
+  translation: '第四轮 · 中文翻译',
+  vocabulary: '第二轮 · 单词与词组',
+};
+
 function createEmptyStages(): Record<
   GenerationStageName,
   GenerationStageRecord
@@ -205,7 +213,13 @@ function getStatusDescription(job: JobSnapshot) {
     return '四轮结果已经整理完成，可以进入阅读页查看最终文章。';
   }
 
-  return '本次任务在某一轮失败，已保留之前成功的预览结果。';
+  const failedStage = job.lastError?.stage
+    ? detailedStageLabels[job.lastError.stage]
+    : '本次任务';
+
+  return job.retryable
+    ? `${failedStage}生成失败，可从当前轮次继续。`
+    : `${failedStage}生成失败，请稍后重新发起任务。`;
 }
 
 function shouldRenderStagePreview(record: GenerationStageRecord) {
@@ -459,6 +473,8 @@ export default function GeneratePageClient() {
     );
   }, [job, liveDrafts]);
 
+  const hasStartedGeneration = Boolean(job);
+
   return (
     <main className="generate-page">
       <section className="generate-page__shell">
@@ -505,143 +521,150 @@ export default function GeneratePageClient() {
           </section>
         ) : (
           <form onSubmit={handleSubmit} className="generate-studio">
-            <section className="generate-panel generate-panel--main">
-              <div className="generate-panel__header">
-                <span className="generate-panel__eyebrow">稿件入口</span>
-                <h2 className="generate-panel__title">
-                  把素材整理进本次生成任务
-                </h2>
-                <p className="generate-panel__description">
-                  先确认来源，再检查稿件信息，提交后右侧会持续显示最新进度和结果入口。
-                </p>
-              </div>
-
-              <div
-                className="generate-mode-switch"
-                role="tablist"
-                aria-label="选择生成来源"
-              >
-                <button
-                  type="button"
-                  onClick={() => setMode('url')}
-                  className={`generate-mode-button ${
-                    mode === 'url' ? 'generate-mode-button--active' : ''
-                  }`}
-                  aria-pressed={mode === 'url'}
-                >
-                  链接
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('file')}
-                  className={`generate-mode-button ${
-                    mode === 'file' ? 'generate-mode-button--active' : ''
-                  }`}
-                  aria-pressed={mode === 'file'}
-                >
-                  文件
-                </button>
-              </div>
-
-              {mode === 'url' ? (
-                <label key="url-input" className="generate-field">
-                  <span className="generate-field__label">文章链接</span>
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(event) => setUrl(event.target.value)}
-                    placeholder="https://example.com/article"
-                    className="generate-input"
-                  />
-                  <span className="generate-field__hint">
-                    建议粘贴可直接访问的正文链接，生成前会自动抽取主要内容。
-                  </span>
-                </label>
-              ) : (
-                <div key="file-input" className="generate-upload-grid">
-                  <div className="generate-upload-stack">
-                    <input
-                      id={fileInputId}
-                      type="file"
-                      accept=".md,.txt,.docx"
-                      onChange={(event) => {
-                        const nextFile = event.target.files?.[0] ?? null;
-                        setFile(nextFile);
-                      }}
-                      className="generate-visually-hidden"
-                    />
-                    <label
-                      htmlFor={fileInputId}
-                      aria-label="将稿件放入工作台"
-                      className={`generate-dropzone ${
-                        file ? 'generate-dropzone--filled' : ''
-                      }`}
-                    >
-                      <span
-                        className="generate-dropzone__icon"
-                        aria-hidden="true"
-                      >
-                        FILE
-                      </span>
-                      <span className="generate-dropzone__title">
-                        将稿件放入工作台
-                      </span>
-                      <span className="generate-dropzone__description">
-                        点击挑选要加工的稿件，系统会按当前 prompt
-                        抽取正文并生成新的精读文章。
-                      </span>
-                      <div className="generate-chip-row">
-                        {['.md', '.txt', '.docx'].map((item) => (
-                          <span key={item} className="generate-chip">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    </label>
-                  </div>
+            {!hasStartedGeneration ? (
+              <section className="generate-panel generate-panel--main">
+                <div className="generate-panel__header">
+                  <span className="generate-panel__eyebrow">稿件入口</span>
+                  <h2 className="generate-panel__title">
+                    把素材整理进本次生成任务
+                  </h2>
+                  <p className="generate-panel__description">
+                    先确认来源，再检查稿件信息，提交后右侧会持续显示最新进度和结果入口。
+                  </p>
                 </div>
-              )}
 
-              <div className="generate-submit-row">
-                <div className="generate-submit-row__primary">
+                <div
+                  className="generate-mode-switch"
+                  role="tablist"
+                  aria-label="选择生成来源"
+                >
                   <button
-                    type="submit"
-                    disabled={!canSubmit}
-                    className="generate-submit-button"
+                    type="button"
+                    onClick={() => setMode('url')}
+                    className={`generate-mode-button ${
+                      mode === 'url' ? 'generate-mode-button--active' : ''
+                    }`}
+                    aria-pressed={mode === 'url'}
                   >
-                    {isSubmitting ? uiCopy.generate.submitBusy : '开始生成'}
+                    链接
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode('file')}
+                    className={`generate-mode-button ${
+                      mode === 'file' ? 'generate-mode-button--active' : ''
+                    }`}
+                    aria-pressed={mode === 'file'}
+                  >
+                    文件
                   </button>
                 </div>
-              </div>
 
-              {error ? (
-                <p className="generate-feedback generate-feedback--error">
-                  {error}
-                </p>
-              ) : null}
-            </section>
+                {mode === 'url' ? (
+                  <label key="url-input" className="generate-field">
+                    <span className="generate-field__label">文章链接</span>
+                    <input
+                      type="url"
+                      value={url}
+                      onChange={(event) => setUrl(event.target.value)}
+                      placeholder="https://example.com/article"
+                      className="generate-input"
+                    />
+                    <span className="generate-field__hint">
+                      建议粘贴可直接访问的正文链接，生成前会自动抽取主要内容。
+                    </span>
+                  </label>
+                ) : (
+                  <div key="file-input" className="generate-upload-grid">
+                    <div className="generate-upload-stack">
+                      <input
+                        id={fileInputId}
+                        type="file"
+                        accept=".md,.txt,.docx"
+                        onChange={(event) => {
+                          const nextFile = event.target.files?.[0] ?? null;
+                          setFile(nextFile);
+                        }}
+                        className="generate-visually-hidden"
+                      />
+                      <label
+                        htmlFor={fileInputId}
+                        aria-label="将稿件放入工作台"
+                        className={`generate-dropzone ${
+                          file ? 'generate-dropzone--filled' : ''
+                        }`}
+                      >
+                        <span
+                          className="generate-dropzone__icon"
+                          aria-hidden="true"
+                        >
+                          FILE
+                        </span>
+                        <span className="generate-dropzone__title">
+                          将稿件放入工作台
+                        </span>
+                        <span className="generate-dropzone__description">
+                          点击挑选要加工的稿件，系统会按当前 prompt
+                          抽取正文并生成新的精读文章。
+                        </span>
+                        <div className="generate-chip-row">
+                          {['.md', '.txt', '.docx'].map((item) => (
+                            <span key={item} className="generate-chip">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                <div className="generate-submit-row">
+                  <div className="generate-submit-row__primary">
+                    <button
+                      type="submit"
+                      disabled={!canSubmit}
+                      className="generate-submit-button"
+                    >
+                      {isSubmitting ? uiCopy.generate.submitBusy : '开始生成'}
+                    </button>
+                  </div>
+                </div>
+
+                {error ? (
+                  <p
+                    className="generate-feedback generate-feedback--error"
+                    role="alert"
+                  >
+                    {error}
+                  </p>
+                ) : null}
+              </section>
+            ) : null}
 
             <aside className="generate-side-stack">
-              <section className="generate-panel">
-                <div className="generate-side-card__header">
-                  <span className="generate-panel__eyebrow">本次素材</span>
-                  <strong className="generate-side-card__title">
-                    {sourceLabel}
-                  </strong>
-                </div>
-                <p className="generate-side-card__lead">{sourceTitle}</p>
-                <p className="generate-side-card__body">{sourceDescription}</p>
-                <div className="generate-process-list">
-                  {stageOrder.map((stage) => (
-                    <div key={stage} className="generate-process-item">
-                      <span className="generate-process-item__index">
-                        {stageStepNumbers[stage]}
-                      </span>
-                      <span>{stageLabels[stage]}</span>
-                    </div>
-                  ))}
-                </div>
-              </section>
+              {!hasStartedGeneration ? (
+                <section className="generate-panel">
+                  <div className="generate-side-card__header">
+                    <span className="generate-panel__eyebrow">本次素材</span>
+                    <strong className="generate-side-card__title">
+                      {sourceLabel}
+                    </strong>
+                  </div>
+                  <p className="generate-side-card__lead">{sourceTitle}</p>
+                  <p className="generate-side-card__body">{sourceDescription}</p>
+                  <div className="generate-process-list">
+                    {stageOrder.map((stage) => (
+                      <div key={stage} className="generate-process-item">
+                        <span className="generate-process-item__index">
+                          {stageStepNumbers[stage]}
+                        </span>
+                        <span>{stageLabels[stage]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ) : null}
 
               <section
                 className={`generate-status-card ${
@@ -684,7 +707,7 @@ export default function GeneratePageClient() {
                     </span>
                     {job.lastError?.message ? (
                       <span className="generate-feedback-text">
-                        {job.lastError.message}
+                        {`失败原因：${job.lastError.message}`}
                       </span>
                     ) : null}
                     {job.status === 'done' && job.articleSlug ? (

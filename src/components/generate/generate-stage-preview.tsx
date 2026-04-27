@@ -1,3 +1,4 @@
+import { GenerateJsonInspector } from '@/components/generate/generate-json-inspector';
 import { renderStreamingStageDraft } from '@/features/generation/stages/streaming-stage-render';
 
 type GenerationStageName =
@@ -45,6 +46,24 @@ const statusLabels: Record<string, string> = {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function extractStructuredJson(rawText: string) {
+  const normalized = rawText.replace(/\r\n/g, '\n').trim();
+  const unfenced = normalized
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+    .trim();
+
+  if (!unfenced || (!unfenced.startsWith('{') && !unfenced.startsWith('['))) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(unfenced) as unknown;
+  } catch {
+    return null;
+  }
 }
 
 function toStringArray(value: unknown) {
@@ -299,13 +318,19 @@ function renderStageBody(stage: GenerationStageName, record: GenerationStageReco
 }
 
 function renderLiveDraft(stage: GenerationStageName, draft: LiveStageDraft) {
+  const structuredJson = extractStructuredJson(draft.text);
+
   return (
     <div className="generate-stage-preview__stack">
       <div>
         <strong className="generate-stage-preview__subhead">实时生成中</strong>
-        <p className="generate-stage-preview__body">
-          {renderStreamingStageDraft(stage, draft.text)}
-        </p>
+        {structuredJson ? (
+          <GenerateJsonInspector value={structuredJson} />
+        ) : (
+          <p className="generate-stage-preview__body">
+            {renderStreamingStageDraft(stage, draft.text)}
+          </p>
+        )}
       </div>
     </div>
   );

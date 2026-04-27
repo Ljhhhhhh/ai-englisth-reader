@@ -112,11 +112,11 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
 
     expect(screen.getByText(/将稿件放入工作台/i)).toBeInTheDocument();
-    expect(screen.getByText(/支持格式/i)).toBeInTheDocument();
+    expect(screen.getByText('.docx')).toBeInTheDocument();
   });
 
   it('shows the selected file in the tray confirmation area', async () => {
@@ -133,7 +133,7 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.click(screen.getByRole('button', { name: '文件' }));
 
     fireEvent.change(screen.getByLabelText(/将稿件放入工作台/i, { selector: 'input' }), {
@@ -146,8 +146,10 @@ describe('GeneratePage', () => {
       },
     });
 
-    expect(screen.getByText(/已放入托盘/i)).toBeInTheDocument();
-    expect(screen.getByText('desk-notes.docx')).toBeInTheDocument();
+    expect(screen.getByText(/已接收 1 份待加工稿件/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/文件已经放入工作台，生成时会按当前 prompt 读取内容并重写为精读文章。/i),
+    ).toBeInTheDocument();
   });
 
   it('shows the editorial loading card after a generation job is created', async () => {
@@ -171,7 +173,7 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
       target: { value: 'https://example.com/article' },
     });
@@ -187,6 +189,44 @@ describe('GeneratePage', () => {
       '/api/generate',
       expect.objectContaining({ method: 'POST' }),
     );
+  });
+
+  it('hides the source cards once generation starts', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          authenticated: true,
+          user: { id: 'user-1', email: 'reader@example.com' },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: 'job-1',
+          status: 'pending',
+        }),
+      });
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(await GeneratePage());
+
+    await screen.findByText(/稿件入口/i);
+    expect(screen.getByText('稿件入口')).toBeInTheDocument();
+    expect(screen.getByText('本次素材')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
+      target: { value: 'https://example.com/article' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '开始生成' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/文章已进入生成队列/i)).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('稿件入口')).not.toBeInTheDocument();
+    expect(screen.queryByText('本次素材')).not.toBeInTheDocument();
   });
 
   it('renders stage previews from SSE snapshots as each round succeeds', async () => {
@@ -210,7 +250,7 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
       target: { value: 'https://example.com/article' },
     });
@@ -320,7 +360,7 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
       target: { value: 'https://example.com/article' },
     });
@@ -408,7 +448,7 @@ describe('GeneratePage', () => {
 
     render(await GeneratePage());
 
-    await screen.findByText(/reader@example.com/i);
+    await screen.findByText(/稿件入口/i);
     fireEvent.change(screen.getByPlaceholderText(/https:\/\/example.com\/article/i), {
       target: { value: 'https://example.com/article' },
     });
@@ -458,6 +498,10 @@ describe('GeneratePage', () => {
     });
 
     await screen.findByText(/english preview survives the failure/i);
+    expect(
+      screen.getByText(/第三轮 · 语法讲解生成失败，可从当前轮次继续。/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/失败原因：语法讲解暂时生成失败。/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '从失败处继续' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: '从失败处继续' }));
